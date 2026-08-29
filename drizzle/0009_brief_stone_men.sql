@@ -1,0 +1,2 @@
+ALTER TABLE `stores` ADD `mobile_columns` integer DEFAULT 1 NOT NULL;--> statement-breakpoint
+ALTER TABLE `stores` ADD `promo_text` text DEFAULT '🔥 OFERTA ESPECIAL · PIDE HOY POR WHATSAPP · NUEVOS MODELOS DISPONIBLES' NOT NULL;

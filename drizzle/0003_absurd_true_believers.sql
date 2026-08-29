@@ -1,0 +1,1 @@
+ALTER TABLE `products` ADD `whatsapp_message` text DEFAULT '' NOT NULL;
