@@ -5,6 +5,7 @@ import './notice.css';
 import './clothing.css';
 import './cover.css';
 import './inventory.css';
+import './flyer.css';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
