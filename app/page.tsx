@@ -200,77 +200,200 @@ const flyerTemplates:{id:FlyerTemplate;name:string;description:string}[]=[
  {id:'editorial',name:'Editorial beige',description:'Dos vistas limpias con estilo premium.'},
  {id:'premium',name:'Ficha premium',description:'Producto grande, características y llamada a comprar.'}
 ];
+type FlyerBackgroundItem={name:string;url:string;kind:'image'|'video'};
+type FlyerTypography='street'|'intentions'|'tee'|'poster'|'spray'|'scans'|'restore'|'signature'|'chrome';
+type FlyerFrame='none'|'polaroid'|'dark'|'glass'|'uploaded';
+type FlyerOrnament='none'|'sparkles'|'orbit'|'shooting'|'chrome';
+type FlyerPriceAccent='none'|'sparkle-oval'|'arrow-oval'|'red-sketch'|'white-sketch';
+
+const flyerBackgroundLibrary:FlyerBackgroundItem[]=[
+ {name:'Túnel urbano',url:'/api/media/asset-public-3f791c46-b201-4cc5-b340-c03307f96ee4.png',kind:'image'},
+ {name:'Tela negra',url:'/api/media/asset-public-f91e74fa-e38c-41ae-bfc8-9e3a7106413d.png',kind:'image'},
+ {name:'Metal suave',url:'/api/media/asset-public-fc3013f2-38dc-4641-9089-63c049088edc.png',kind:'image'},
+ {name:'Negro limpio',url:'/api/media/asset-public-dd365f65-dbb6-44e0-998d-8cef462a6423.png',kind:'image'},
+ {name:'Rosa líquido',url:'/api/media/asset-public-a13c9f3b-92e7-4925-bf3f-de48c2017dc7.png',kind:'image'},
+ {name:'Holográfico',url:'/api/media/asset-public-f705c1db-46c3-427b-b61b-1299d8f2cc4f.png',kind:'image'},
+ {name:'Cromo negro',url:'/api/media/asset-public-2312352b-69b4-42f3-a6b5-988df7f0209a.png',kind:'image'},
+ {name:'Azul pastel',url:'/api/media/asset-public-f588da79-d526-4e31-8436-7aca636ba7e8.webp',kind:'image'},
+ {name:'Seda azul',url:'/api/media/asset-public-9b4ff5db-1553-4d22-82f8-0add4bb850c8.png',kind:'image'},
+ {name:'Marco retro',url:'/api/media/asset-public-63ab38c1-683d-4901-822b-a2621eae5bc6.png',kind:'image'}
+];
+const flyerTypographyPresets=[
+ {id:'street' as FlyerTypography,name:'Streetwear Design',font:'Impact, Arial Black, sans-serif',css:'Impact, Arial Black, sans-serif',accent:'#f4f0e8'},
+ {id:'intentions' as FlyerTypography,name:'Bad Intentions',font:'Impact, Arial Black, sans-serif',css:'Impact, Arial Black, sans-serif',accent:'#d3131d'},
+ {id:'tee' as FlyerTypography,name:'Typography Tee',font:'Arial Black, sans-serif',css:'Arial Black, sans-serif',accent:'#d6b58d'},
+ {id:'poster' as FlyerTypography,name:'Street Poster',font:'Impact, Arial Black, sans-serif',css:'Impact, Arial Black, sans-serif',accent:'#f2f0ec'},
+ {id:'spray' as FlyerTypography,name:'Spray A',font:'Impact, Arial Black, sans-serif',css:'Impact, Arial Black, sans-serif',accent:'#ff321f'},
+ {id:'scans' as FlyerTypography,name:'Spray Scans',font:'Arial Black, Impact, sans-serif',css:'Arial Black, Impact, sans-serif',accent:'#ffffff'},
+ {id:'restore' as FlyerTypography,name:'Restore Distressed',font:'Impact, Arial Black, sans-serif',css:'Impact, Arial Black, sans-serif',accent:'#f4f4f2'},
+ {id:'signature' as FlyerTypography,name:'Firma / Graffiti',font:'Brush Script MT, Segoe Script, cursive',css:'Brush Script MT, Segoe Script, cursive',accent:'#f0f0ed'},
+ {id:'chrome' as FlyerTypography,name:'Chrome Futurista',font:'Arial Black, Impact, sans-serif',css:'Arial Black, Impact, sans-serif',accent:'#d9e2ee'}
+];
+const flyerColorPresets=[
+ {name:'Negro + crema',solid:'#121212',a:'#080808',b:'#63584b',text:'#f4efe7',accent:'#e8d7bd'},
+ {name:'Rojo urbano',solid:'#171010',a:'#090909',b:'#7c1119',text:'#ffffff',accent:'#e21d2b'},
+ {name:'Rosa metal',solid:'#40162d',a:'#190d1a',b:'#e35592',text:'#fff7fb',accent:'#ff8cbb'},
+ {name:'Azul nocturno',solid:'#07152b',a:'#030914',b:'#185a9d',text:'#f3f8ff',accent:'#54a9ff'}
+];
+function flyerPresetSample(id:FlyerTypography){return id==='intentions'?'intentions':id==='tee'?'Tee':id==='spray'?'a':id==='scans'?'SCANS':id==='restore'?'RESTORE':id==='signature'?'Final':id==='chrome'?'CHROME':'DESIGN'}
+
 function FlyerStudio({products,store}:{products:Product[];store:Store}){
  const activeProducts=products.filter(product=>product.active);
  const categories=[...new Set(activeProducts.map(product=>product.category))];
- const[scope,setScope]=useState<'photo'|'model'|'category'>('model');
+ const[scope,setScope]=useState<'photo'|'model'|'category'>('photo');
  const[productId,setProductId]=useState(activeProducts[0]?.id||0);
  const[category,setCategory]=useState(categories[0]||'');
  const[photoIndex,setPhotoIndex]=useState(0);
- const[templateStyle,setTemplateStyle]=useState<FlyerTemplate>('street-pack');
- const[headline,setHeadline]=useState('NUEVA COLECCIÓN');
- const[flyerBackground,setFlyerBackground]=useState('');
- const[flyerFont,setFlyerFont]=useState(store.heroFont||'Arial Black');
+ const[headline,setHeadline]=useState('STREETWEAR DESIGN');
+ const[kicker,setKicker]=useState('NUEVA COLECCIÓN');
+ const[extraText,setExtraText]=useState('Diseñado para destacar');
+ const[typography,setTypography]=useState<FlyerTypography>('street');
+ const[priceTypography,setPriceTypography]=useState<FlyerTypography>('poster');
+ const[priceScale,setPriceScale]=useState(100);
+ const[priceAccent,setPriceAccent]=useState<FlyerPriceAccent>('sparkle-oval');
+ const[detailText,setDetailText]=useState('a');
+ const[showDetail,setShowDetail]=useState(true);
+ const[ornament,setOrnament]=useState<FlyerOrnament>('sparkles');
  const[textScale,setTextScale]=useState(100);
- const[textX,setTextX]=useState(8);
- const[textY,setTextY]=useState(9);
- const[referenceStyle,setReferenceStyle]=useState<'catalog'|'tech'|'street'|'premium'>('catalog');
+ const[textX,setTextX]=useState(7);
+ const[textY,setTextY]=useState(7);
+ const[background,setBackground]=useState(flyerBackgroundLibrary[0].url);
+ const[backgroundKind,setBackgroundKind]=useState<'image'|'video'|'color'>('image');
+ const[customBackgrounds,setCustomBackgrounds]=useState<FlyerBackgroundItem[]>([]);
+ const[showColors,setShowColors]=useState(false);
+ const[colorMode,setColorMode]=useState<'solid'|'gradient'>('gradient');
+ const[solidColor,setSolidColor]=useState('#121212');
+ const[colorA,setColorA]=useState('#080808');
+ const[colorB,setColorB]=useState('#63584b');
+ const[gradientAngle,setGradientAngle]=useState(145);
+ const[textColor,setTextColor]=useState('#f4efe7');
+ const[accentColor,setAccentColor]=useState('#e8d7bd');
+ const[frameStyle,setFrameStyle]=useState<FlyerFrame>('none');
+ const[frameImage,setFrameImage]=useState('');
+ const[productLayer,setProductLayer]=useState('');
  const[downloading,setDownloading]=useState(false);
  const[aiGenerating,setAiGenerating]=useState(false);
  const[aiCode,setAiCode]=useState('');
- const[aiImage,setAiImage]=useState('');
  const[error,setError]=useState('');
- useEffect(()=>{setAiCode(sessionStorage.getItem('flyer-ai-code')||'')},[]);
+ useEffect(()=>{setAiCode(sessionStorage.getItem('flyer-ai-code')||'');try{const saved=JSON.parse(localStorage.getItem('flyer-background-library')||'[]');if(Array.isArray(saved))setCustomBackgrounds(saved.filter(item=>item&&typeof item.url==='string'))}catch{}},[]);
  const product=activeProducts.find(item=>item.id===productId)||activeProducts[0];
  const gallery=product?productGallery(product):[];
  const categoryProducts=activeProducts.filter(item=>item.category===category);
- const previewImages=scope==='category'?categoryProducts.slice(0,4).map(item=>item.image):scope==='model'?gallery.slice(0,4).map(item=>item.image):gallery[photoIndex]?.image?[gallery[photoIndex].image]:[];
+ const catalogImages=scope==='category'?categoryProducts.slice(0,4).map(item=>item.image):scope==='model'?gallery.slice(0,4).map(item=>item.image):gallery[photoIndex]?.image?[gallery[photoIndex].image]:[];
+ const productImage=productLayer||catalogImages[0]||'';
  const subject=scope==='category'?clothingCategoryLabel(category):product?.name||'Tu colección';
- async function download(){
-  if(!previewImages.length)return setError('Primero agrega una foto al producto elegido.');
-  setDownloading(true);setError('');
-  try{
-   const canvas=document.createElement('canvas');canvas.width=1080;canvas.height=1350;const ctx=canvas.getContext('2d');if(!ctx)throw new Error('canvas');
-   if(flyerBackground)await drawEditableFlyer(ctx,flyerBackground,previewImages,{headline,subject,price:product?.price||0,description:product?.description||'',store,font:flyerFont,textScale,textX,textY,referenceStyle});
-   else await drawFashionFlyer(ctx,templateStyle,previewImages,{headline,subject,price:product?.price||0,description:product?.description||'',store});
-   const blob=await new Promise<Blob|null>(resolve=>canvas.toBlob(resolve,'image/png',.96));if(!blob)throw new Error('export');const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`flyer-${templateStyle}-${subject.toLowerCase().replace(/[^a-z0-9]+/g,'-')||'catalogo'}.png`;link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1500);
-  }catch{setError('No se pudo combinar alguna imagen. Prueba con fotos cargadas desde tu computadora.')}finally{setDownloading(false)}
- }
- async function generateAI(){
-  if(!previewImages.length)return setError('Primero agrega una foto al producto elegido.');
-  if(!aiCode.trim())return setError('Ingresa el código de acceso a la IA.');
-  setAiGenerating(true);setError('');setAiImage('');
-  try{
-   const form=new FormData();
-   form.append('prompt',buildFlyerAIPrompt(templateStyle,scope,subject,product?.description||''));
-   const references=await Promise.all(previewImages.slice(0,4).map((image,index)=>flyerReferenceFile(image,index)));
-   references.forEach((file,index)=>form.append(`input_image_${index}`,file,file.name));
-   const response=await fetch('/api/ai-flyer',{method:'POST',headers:{'x-flyer-code':aiCode.trim()},body:form});
-   const result=await response.json().catch(()=>({}));
-   if(!response.ok)throw new Error(String(result.error||'generation_failed'));
-   if(typeof result.image!=='string')throw new Error('empty_generation');
-   sessionStorage.setItem('flyer-ai-code',aiCode.trim());setAiImage(result.image);
-  }catch(cause){const code=cause instanceof Error?cause.message:'';setError(code==='invalid_access_code'?'El código de IA no es correcto.':code==='service_not_configured'?'La IA todavía está terminando de conectarse.':code==='invalid_image'?'Una imagen no pudo prepararse. Prueba otra foto.':'No se pudo generar ahora. Puedes continuar usando el editor manual.')}finally{setAiGenerating(false)}
- }
- async function uploadFlyerBackground(file?:File){
+ const typePreset=flyerTypographyPresets.find(item=>item.id===typography)!;
+ const pricePreset=flyerTypographyPresets.find(item=>item.id===priceTypography)!;
+ const cssBackground=colorMode==='solid'?solidColor:`linear-gradient(${gradientAngle}deg,${colorA},${colorB})`;
+ const allBackgrounds=[...flyerBackgroundLibrary,...customBackgrounds];
+ const renderData={headline,kicker,extraText,subject,price:product?.price||0,description:product?.description||'',store,typography,font:typePreset.font,priceTypography,priceFont:pricePreset.font,priceScale,priceAccent,detailText,showDetail,ornament,textScale,textX,textY,textColor,accentColor,frameStyle,backgroundKind,colorMode,solidColor,colorA,colorB,gradientAngle,background,productImage,frameImage};
+
+ async function uploadAsset(kind:'background'|'product'|'frame',file?:File){
   if(!file)return;setError('');
   const form=new FormData();form.append('file',file);
   const response=await fetch('/api/upload',{method:'POST',body:form});
-  if(!response.ok)return setError('No se pudo subir el fondo. Usa JPG, PNG, WebP o GIF.');
-  const result=await response.json();setFlyerBackground(String(result.url));setAiImage('');
+  if(!response.ok)return setError(kind==='background'?'No se pudo subir. Usa JPG, PNG, WebP, GIF o MP4.':'No se pudo subir el archivo. Usa JPG, PNG o WebP.');
+  const result=await response.json();const url=String(result.url||'');if(!url)return setError('El archivo no devolvió una dirección válida.');
+  if(kind==='product'){setProductLayer(url);return}
+  if(kind==='frame'){setFrameImage(url);setFrameStyle('uploaded');return}
+  const item={name:file.name.replace(/\.[^.]+$/,''),url,kind:file.type==='video/mp4'?'video' as const:'image' as const};
+  const next=[item,...customBackgrounds.filter(saved=>saved.url!==url)].slice(0,18);setCustomBackgrounds(next);localStorage.setItem('flyer-background-library',JSON.stringify(next));setBackground(url);setBackgroundKind(item.kind);
  }
- async function downloadAI(){
-  if(!aiImage)return;
-  setDownloading(true);setError('');
+ function chooseBackground(item:FlyerBackgroundItem){setBackground(item.url);setBackgroundKind(item.kind);setShowColors(false)}
+ function applyColorPreset(preset:typeof flyerColorPresets[number]){setSolidColor(preset.solid);setColorA(preset.a);setColorB(preset.b);setTextColor(preset.text);setAccentColor(preset.accent);setBackgroundKind('color')}
+ async function generateProductPng(){
+  if(!catalogImages[0])return setError('Primero elige una foto del artículo.');
+  if(!aiCode.trim())return setError('Ingresa el código de acceso a la IA.');
+  setAiGenerating(true);setError('');
   try{
-   const canvas=document.createElement('canvas');canvas.width=1080;canvas.height=1350;const ctx=canvas.getContext('2d');if(!ctx)throw new Error('canvas');
-   await drawFinalAIFlyer(ctx,aiImage,previewImages,{headline,subject,price:product?.price||0,description:product?.description||'',store});
-   const blob=await new Promise<Blob|null>(resolve=>canvas.toBlob(resolve,'image/png',.97));if(!blob)throw new Error('export');const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`flyer-ia-${subject.toLowerCase().replace(/[^a-z0-9]+/g,'-')||'catalogo'}.png`;link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1500);
-  }catch{setError('No se pudo descargar el flyer. Intenta generarlo nuevamente.')}finally{setDownloading(false)}
+   const form=new FormData();
+   form.append('prompt',`Extract the exact catalog product from the reference image. OUTPUT REQUIREMENT: transparent RGBA PNG with alpha channel; every background pixel must have alpha 0, never white, gray or checkerboard. Preserve every real color, print, logo, seam, texture and proportion. Remove only the original background and any unrelated person, hanger, floor, wall, text or shadow. Center the complete product with transparent padding, no new text, no watermark, no invented details. Product: ${subject}.`);
+   const reference=await flyerReferenceFile(catalogImages[0],0);form.append('input_image_0',reference,reference.name);
+   const response=await fetch('/api/ai-flyer',{method:'POST',headers:{'x-flyer-code':aiCode.trim()},body:form});
+   const result=await response.json().catch(()=>({}));if(!response.ok)throw new Error(String(result.error||'generation_failed'));if(typeof result.image!=='string')throw new Error('empty_generation');
+   sessionStorage.setItem('flyer-ai-code',aiCode.trim());setProductLayer(await removeConnectedLightBackground(result.image));
+  }catch(cause){const code=cause instanceof Error?cause.message:'';setError(code==='invalid_access_code'?'El código de IA no es correcto.':code==='service_not_configured'?'La IA todavía está conectándose.':'No se pudo preparar el PNG ahora. Puedes subirlo manualmente.')}finally{setAiGenerating(false)}
+ }
+ async function exportJpg(){
+  if(!productImage)return setError('Primero selecciona o sube el artículo.');setDownloading(true);setError('');
+  try{const canvas=document.createElement('canvas');canvas.width=1080;canvas.height=1350;const ctx=canvas.getContext('2d');if(!ctx)throw new Error('canvas');const assets=await prepareLayeredFlyerAssets(renderData);drawLayeredFlyerFrame(ctx,assets,renderData,1080,1350);const blob=await new Promise<Blob|null>(resolve=>canvas.toBlob(resolve,'image/jpeg',.95));cleanupLayeredFlyerAssets(assets);if(!blob)throw new Error('export');downloadFlyerBlob(blob,`flyer-${flyerFileName(subject)}.jpg`)}catch{setError('No se pudo exportar el JPG. Prueba con otro archivo de fondo.')}finally{setDownloading(false)}
+ }
+ async function exportMp4(){
+  if(!productImage)return setError('Primero selecciona o sube el artículo.');setDownloading(true);setError('');
+  try{await exportLayeredFlyerMp4(renderData,`flyer-${flyerFileName(subject)}.mp4`)}catch(cause){setError(cause instanceof Error&&cause.message==='video_unsupported'?'Para exportar MP4 usa Chrome o Edge actualizado.':'No se pudo exportar el MP4. Prueba con un fondo más liviano.')}finally{setDownloading(false)}
  }
  if(!activeProducts.length)return <div className="admin-card"><b>Agrega productos visibles para crear flyers.</b></div>;
- const templateInfo=flyerTemplates.find(item=>item.id===templateStyle)!;
- return <div className="flyer-studio"><section className="admin-card flyer-controls"><div><small>ESTUDIO DE FLYERS</small><h2>Flyers editables sin depender de créditos</h2><p>Sube un fondo o una referencia, usa fotos PNG del producto, cambia fuente, tamaño y posición del texto. La IA queda solo como ayuda opcional.</p></div><div className="flyer-template-grid">{flyerTemplates.map(item=><button type="button" key={item.id} className={templateStyle===item.id?'active':''} onClick={()=>setTemplateStyle(item.id)}><i className={`flyer-template-icon ${item.id}`}></i><b>{item.name}</b><span>{item.description}</span></button>)}</div><label>Qué deseas promocionar<select value={scope} onChange={e=>{setScope(e.target.value as 'photo'|'model'|'category');setAiImage('')}}><option value="photo">Una foto específica del modelo</option><option value="model">Todas las fotos de un modelo</option><option value="category">Un sector completo (Polos, Poleras…)</option></select></label>{scope!=='category'&&<label>Modelo<select value={product?.id||0} onChange={e=>{setProductId(Number(e.target.value));setPhotoIndex(0);setAiImage('')}}>{activeProducts.map(item=><option value={item.id} key={item.id}>{item.name}</option>)}</select></label>}{scope==='photo'&&<label>Foto del carrusel<select value={photoIndex} onChange={e=>{setPhotoIndex(Number(e.target.value));setAiImage('')}}>{gallery.map((_,index)=><option value={index} key={index}>Foto {index+1}</option>)}</select></label>}{scope==='category'&&<label>Sector<select value={category} onChange={e=>{setCategory(e.target.value);setAiImage('')}}>{categories.map(item=><option value={item} key={item}>{clothingCategoryLabel(item)}</option>)}</select></label>}<label>Frase principal<input value={headline} onChange={e=>setHeadline(e.target.value)} maxLength={34}/></label><section className="flyer-editor-box"><b>Editor manual tipo Canva</b><label>Subir fondo o referencia<input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={e=>uploadFlyerBackground(e.target.files?.[0])}/></label><label>O pegar URL del fondo<input value={flyerBackground} onChange={e=>{setFlyerBackground(e.target.value);setAiImage('')}} placeholder="https://.../fondo.png"/></label><div className="flyer-editor-row"><label>Referencia<select value={referenceStyle} onChange={e=>setReferenceStyle(e.target.value as 'catalog'|'tech'|'street'|'premium')}><option value="catalog">Catálogo limpio</option><option value="tech">Ficha con beneficios</option><option value="street">Streetwear fuerte</option><option value="premium">Premium minimal</option></select></label><label>Fuente<select value={flyerFont} onChange={e=>setFlyerFont(e.target.value)}><option>Arial Black</option><option>Impact</option><option>Georgia</option><option>Trebuchet MS</option><option>Verdana</option><option>Courier New</option></select></label></div><div className="flyer-slider-grid"><label>Tamaño texto <output>{textScale}%</output><input type="range" min="70" max="150" value={textScale} onChange={e=>setTextScale(Number(e.target.value))}/></label><label>Mover horizontal <output>{textX}%</output><input type="range" min="2" max="55" value={textX} onChange={e=>setTextX(Number(e.target.value))}/></label><label>Mover vertical <output>{textY}%</output><input type="range" min="3" max="45" value={textY} onChange={e=>setTextY(Number(e.target.value))}/></label></div>{flyerBackground&&<button type="button" className="clear-collection-image" onClick={()=>setFlyerBackground('')}>Quitar fondo subido</button>}</section><div className="flyer-action-grid"><button type="button" className="flyer-template-action" disabled={downloading||aiGenerating} onClick={download}>Descargar flyer editable<small>{flyerBackground?'Con tu fondo/referencia · sin IA':'Con plantilla · sin IA'} · 1080 × 1350</small></button><div className="flyer-ai-access"><label>Código IA<input type="password" value={aiCode} onChange={e=>setAiCode(e.target.value)} placeholder="Solo si quieres fondo IA" autoComplete="off"/></label><button type="button" className="admin-primary flyer-download" disabled={downloading||aiGenerating} onClick={generateAI}>{aiGenerating?'Creando fondo premium…':'✦ Fondo IA opcional'}</button></div></div>{error&&<p className="upload-error">{error}</p>}<small className="flyer-ai-note">Recomendado para vender: usar PNG del producto + fondos/referencias subidas. Así el cliente crea flyers ilimitados sin gastar créditos.</small></section>{aiImage?<section className="flyer-ai-panel"><div className="flyer-preview flyer-ai-result"><img src={aiImage} alt="Fondo generado con IA"/><div className="flyer-ai-overlay"><header><b>{store.name}</b><span>DROP LIMITADO</span></header><h2>{headline}</h2><div className="ai-product-card"><strong>{subject}</strong><small>{product?.description||'Producto premium listo para entrega'}</small><b>S/ {product?.price||''}</b><span style={{background:store.buttonColor,color:contrastText(store.buttonColor)}}>PIDE POR WHATSAPP →</span></div></div></div><button type="button" className="flyer-ai-download" disabled={downloading} onClick={downloadAI}>{downloading?'Preparando…':'Descargar flyer final 1080 × 1350'}</button></section>:flyerBackground?<section className={`flyer-preview flyer-manual-preview ref-${referenceStyle}`} style={{backgroundImage:`url(${flyerBackground})`}}><div style={{left:`${textX}%`,top:`${textY}%`,fontFamily:flyerFont,fontSize:`${textScale}%`}} className="manual-title"><small>{store.name}</small><h2>{headline}</h2></div><div className="manual-products">{previewImages.slice(0,4).map((image,index)=><img src={image} alt={`Producto ${index+1}`} key={`${image}-${index}`}/>)}</div><div className="manual-info"><b>{subject}</b><span>{product?.description}</span><strong>S/ {product?.price||''}</strong><em style={{background:store.buttonColor,color:contrastText(store.buttonColor)}}>PIDE POR WHATSAPP →</em></div></section>:<section className={`flyer-preview flyer-style-${templateStyle}`}><header><i style={{background:store.accent}}></i><b>{store.name}</b></header><small>{templateInfo.name.toUpperCase()}</small><h2>{headline}</h2><div className={`flyer-preview-images count-${Math.min(4,previewImages.length)}`}>{previewImages.map((image,index)=><img src={image} alt={`Vista ${index+1}`} key={`${image}-${index}`}/>)}</div><strong>{subject}</strong><div className="flyer-preview-benefits"><span>PREMIUM</span><span>OVERSIZED</span><span>EDICIÓN LIMITADA</span></div><b className="flyer-preview-price">S/ {product?.price||''}</b><span className="flyer-preview-cta" style={{background:store.buttonColor,color:contrastText(store.buttonColor)}}>PIDE POR WHATSAPP →</span></section>}</div>
+ return <div className="flyer-composer">
+  <section className="admin-card flyer-layer-controls">
+   <div className="flyer-studio-heading"><small>CREADOR DE FLYERS POR CAPAS</small><h2>Fondo + artículo PNG + marco + texto</h2><p>La IA solo prepara el artículo del catálogo como PNG. El diseño completo lo controlas tú.</p></div>
+   <section className="flyer-control-block"><header><b>1. Fondo del flyer</b><span>Elige uno, usa los ya subidos o carga JPG/MP4.</span></header><div className="flyer-upload-row"><label className="upload-action"><b>Subir fondo</b><small>JPG, PNG, GIF o MP4</small><input type="file" accept="image/png,image/jpeg,image/webp,image/gif,video/mp4" onChange={e=>uploadAsset('background',e.target.files?.[0])}/></label><button type="button" className={showColors?'active colors-toggle':'colors-toggle'} onClick={()=>setShowColors(value=>!value)}>Colores</button></div><div className="flyer-background-gallery">{allBackgrounds.map((item,index)=><button type="button" className={backgroundKind!=='color'&&background===item.url?'active':''} onClick={()=>chooseBackground(item)} key={`${item.url}-${index}`}><span>{item.kind==='video'?<video src={item.url} muted loop playsInline/>:<img src={item.url} alt=""/>}</span><b>{item.name}</b><small>{item.kind==='video'?'MP4':'Fondo'}</small></button>)}</div>{showColors&&<div className="flyer-color-drawer"><div className="flyer-color-presets">{flyerColorPresets.map(preset=><button type="button" key={preset.name} onClick={()=>applyColorPreset(preset)}><i style={{background:`linear-gradient(135deg,${preset.a},${preset.b})`}}></i><b>{preset.name}</b></button>)}</div><div className="flyer-color-mode"><button type="button" className={colorMode==='solid'?'active':''} onClick={()=>{setColorMode('solid');setBackgroundKind('color')}}>Color sólido</button><button type="button" className={colorMode==='gradient'?'active':''} onClick={()=>{setColorMode('gradient');setBackgroundKind('color')}}>Degradado</button></div>{colorMode==='solid'?<ColorField label="Color de fondo" value={solidColor} change={value=>{setSolidColor(value);setBackgroundKind('color')}}/>:<div className="flyer-gradient-fields"><ColorField label="Color inicial" value={colorA} change={value=>{setColorA(value);setBackgroundKind('color')}}/><ColorField label="Color final" value={colorB} change={value=>{setColorB(value);setBackgroundKind('color')}}/><label>Ángulo <output>{gradientAngle}°</output><input type="range" min="0" max="360" value={gradientAngle} onChange={e=>{setGradientAngle(Number(e.target.value));setBackgroundKind('color')}}/></label></div>}<div className="flyer-gradient-fields"><ColorField label="Color del texto" value={textColor} change={setTextColor}/><ColorField label="Color destacado" value={accentColor} change={setAccentColor}/></div></div>}</section>
+   <section className="flyer-control-block"><header><b>2. Artículo</b><span>Usa una foto del catálogo, sube tu PNG o deja que la IA quite el fondo.</span></header><label>Qué deseas promocionar<select value={scope} onChange={e=>{setScope(e.target.value as 'photo'|'model'|'category');setProductLayer('')}}><option value="photo">Una foto específica</option><option value="model">Un modelo del catálogo</option><option value="category">Un tipo completo</option></select></label>{scope!=='category'&&<label>Modelo<select value={product?.id||0} onChange={e=>{setProductId(Number(e.target.value));setPhotoIndex(0);setProductLayer('')}}>{activeProducts.map(item=><option value={item.id} key={item.id}>{item.name}</option>)}</select></label>}{scope==='photo'&&<label>Foto<select value={photoIndex} onChange={e=>{setPhotoIndex(Number(e.target.value));setProductLayer('')}}>{gallery.map((_,index)=><option value={index} key={index}>Foto {index+1}</option>)}</select></label>}{scope==='category'&&<label>Tipo<select value={category} onChange={e=>{setCategory(e.target.value);setProductLayer('')}}>{categories.map(item=><option value={item} key={item}>{clothingCategoryLabel(item)}</option>)}</select></label>}<div className="flyer-upload-row"><label className="upload-action"><b>Subir artículo</b><small>PNG recomendado</small><input type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>uploadAsset('product',e.target.files?.[0])}/></label>{productLayer&&<button type="button" className="clear-collection-image" onClick={()=>setProductLayer('')}>Volver a foto del catálogo</button>}</div><div className="flyer-ai-cutout"><label>Código IA<input type="password" value={aiCode} onChange={e=>setAiCode(e.target.value)} placeholder="Código de acceso" autoComplete="off"/></label><button type="button" disabled={aiGenerating||downloading} onClick={generateProductPng}>{aiGenerating?'Preparando artículo…':'✦ Preparar artículo PNG con IA'}</button><small>La IA no crea el flyer: solo entrega el artículo recortado en PNG.</small></div></section>
+   <section className="flyer-control-block"><header><b>3. Marco de la foto</b><span>Prueba estilos o sube un marco PNG transparente.</span></header><div className="flyer-frame-options">{([['none','Sin marco'],['polaroid','Polaroid'],['dark','Editorial oscuro'],['glass','Vidrio']] as [FlyerFrame,string][]).map(([id,name])=><button type="button" className={frameStyle===id?'active':''} onClick={()=>setFrameStyle(id)} key={id}><i className={`frame-sample ${id}`}></i><b>{name}</b></button>)}</div><label className="upload-action"><b>Subir marco propio</b><small>PNG transparente recomendado</small><input type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>uploadAsset('frame',e.target.files?.[0])}/></label></section>
+   <section className="flyer-control-block"><header><b>4. Textos y tipografías</b><span>Incluye Spray, Restore, firmas y Chrome inspirados en tus referencias.</span></header><div className="flyer-type-presets">{flyerTypographyPresets.map(preset=><button type="button" className={`${preset.id} ${typography===preset.id?'active':''}`} onClick={()=>{setTypography(preset.id);setAccentColor(preset.accent)}} key={preset.id}><strong>{preset.id==='spray'?'a':'STREET'}</strong><em>{flyerPresetSample(preset.id)}</em><small>{preset.name}</small></button>)}</div><div className="flyer-text-fields"><label>Texto pequeño<input value={kicker} onChange={e=>setKicker(e.target.value)} maxLength={34}/></label><label>Texto principal<input value={headline} onChange={e=>setHeadline(e.target.value)} maxLength={42}/></label><label>Texto adicional<input value={extraText} onChange={e=>setExtraText(e.target.value)} maxLength={58}/></label></div><div className="flyer-slider-grid"><label>Tamaño del texto <output>{textScale}%</output><input type="range" min="65" max="155" value={textScale} onChange={e=>setTextScale(Number(e.target.value))}/></label><label>Mover horizontal <output>{textX}%</output><input type="range" min="2" max="45" value={textX} onChange={e=>setTextX(Number(e.target.value))}/></label><label>Mover vertical <output>{textY}%</output><input type="range" min="2" max="35" value={textY} onChange={e=>setTextY(Number(e.target.value))}/></label></div></section>
+   <section className="flyer-control-block"><header><b>5. Precio y detalles</b><span>El bloque inferior anterior desaparece: aquí queda únicamente el precio.</span></header><div className="flyer-price-controls"><label>Tipografía del precio<select value={priceTypography} onChange={e=>setPriceTypography(e.target.value as FlyerTypography)}>{flyerTypographyPresets.map(preset=><option value={preset.id} key={preset.id}>{preset.name}</option>)}</select></label><label>Tamaño del precio <output>{priceScale}%</output><input type="range" min="70" max="175" value={priceScale} onChange={e=>setPriceScale(Number(e.target.value))}/></label><label>Marco detrás del precio<select value={priceAccent} onChange={e=>setPriceAccent(e.target.value as FlyerPriceAccent)}><option value="none">Sin marco</option><option value="sparkle-oval">Óvalo con destellos</option><option value="arrow-oval">Óvalo con flechas</option><option value="red-sketch">Círculo rojo dibujado</option><option value="white-sketch">Círculo blanco dibujado</option></select></label></div><div className="flyer-detail-controls"><label className="checkbox"><input type="checkbox" checked={showDetail} onChange={e=>setShowDetail(e.target.checked)}/><span>Mostrar letra decorativa</span></label><label>Letra o símbolo<input value={detailText} onChange={e=>setDetailText(e.target.value.slice(0,3))} maxLength={3}/></label><label>Detalles cromados<select value={ornament} onChange={e=>setOrnament(e.target.value as FlyerOrnament)}><option value="none">Sin detalles</option><option value="sparkles">Destellos</option><option value="orbit">Órbita</option><option value="shooting">Estrella fugaz</option><option value="chrome">Composición chrome</option></select></label></div></section>
+   <div className="flyer-export-actions"><button type="button" disabled={downloading||aiGenerating} onClick={exportJpg}>{downloading?'Preparando…':'Exportar JPG'}<small>1080 × 1350</small></button><button type="button" disabled={downloading||aiGenerating} onClick={exportMp4}>{downloading?'Procesando…':'Exportar MP4'}<small>5 segundos · sin audio</small></button></div>{error&&<p className="upload-error">{error}</p>}
+  </section>
+  <section className={`flyer-layer-preview typography-${typography} frame-${frameStyle}`} style={{'--flyer-text':textColor,'--flyer-accent':accentColor,'--flyer-font':typePreset.css,'--flyer-color-bg':cssBackground} as React.CSSProperties}>
+   {backgroundKind==='video'?<video className="flyer-background-media" src={background} autoPlay muted loop playsInline/>:backgroundKind==='image'?<img className="flyer-background-media" src={background} alt="Fondo seleccionado"/>:<span className="flyer-color-background"></span>}<span className="flyer-preview-shade"></span>{showDetail&&detailText&&<span className="flyer-monogram">{detailText}</span>}<div className={`flyer-ornaments ornament-${ornament}`} aria-hidden="true"><i>✦</i><i>✧</i><i>✦</i></div><div className="flyer-preview-copy" style={{left:`${textX}%`,top:`${textY}%`,fontSize:`${textScale}%`}}><small>{kicker}</small><h2>{headline}</h2><em>{extraText}</em></div><div className="flyer-product-layer"><img src={productImage} alt={subject}/>{aiGenerating&&<span>QUITANDO FONDO…</span>}</div>{frameStyle==='uploaded'&&frameImage&&<img className="flyer-uploaded-frame" src={frameImage} alt="Marco subido"/>}<div className={`flyer-price-only price-${priceTypography} price-accent-${priceAccent}`} style={{'--price-size':`${42*priceScale/100}px`,'--price-font':pricePreset.css} as React.CSSProperties}><span className="flyer-price-accent" aria-hidden="true"><i>✦</i><i>✦</i><b>↓</b><b>↓</b><b>↓</b></span><small>PRECIO</small><strong>S/ {product?.price||''}</strong></div>
+  </section>
+ </div>
+}
+
+type LayeredFlyerData={headline:string;kicker:string;extraText:string;subject:string;price:number;description:string;store:Store;typography:FlyerTypography;font:string;priceTypography:FlyerTypography;priceFont:string;priceScale:number;priceAccent:FlyerPriceAccent;detailText:string;showDetail:boolean;ornament:FlyerOrnament;textScale:number;textX:number;textY:number;textColor:string;accentColor:string;frameStyle:FlyerFrame;backgroundKind:'image'|'video'|'color';colorMode:'solid'|'gradient';solidColor:string;colorA:string;colorB:string;gradientAngle:number;background:string;productImage:string;frameImage:string};
+type LayeredFlyerAssets={backgroundImage?:ImageBitmap;backgroundVideo?:HTMLVideoElement;backgroundObjectUrl?:string;product?:ImageBitmap;frame?:ImageBitmap};
+
+async function prepareLayeredFlyerAssets(data:LayeredFlyerData):Promise<LayeredFlyerAssets>{
+ const assets:LayeredFlyerAssets={};
+ if(data.backgroundKind==='image'&&data.background)assets.backgroundImage=await flyerBitmap(data.background);
+ if(data.backgroundKind==='video'&&data.background){const response=await fetch(data.background);if(!response.ok)throw new Error('video');const objectUrl=URL.createObjectURL(await response.blob());const video=document.createElement('video');video.src=objectUrl;video.muted=true;video.loop=true;video.playsInline=true;await new Promise<void>((resolve,reject)=>{video.onloadeddata=()=>resolve();video.onerror=()=>reject(new Error('video'))});assets.backgroundVideo=video;assets.backgroundObjectUrl=objectUrl}
+ if(data.productImage)assets.product=await flyerBitmap(data.productImage);
+ if(data.frameStyle==='uploaded'&&data.frameImage)assets.frame=await flyerBitmap(data.frameImage);
+ return assets;
+}
+async function removeConnectedLightBackground(source:string){
+ const bitmap=await flyerBitmap(source),limit=1500,scale=Math.min(1,limit/Math.max(bitmap.width,bitmap.height));
+ const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));const ctx=canvas.getContext('2d',{willReadFrequently:true});if(!ctx){bitmap.close();return source}ctx.drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close();
+ const frame=ctx.getImageData(0,0,canvas.width,canvas.height),pixels=frame.data,total=canvas.width*canvas.height,seen=new Uint8Array(total),queue=new Int32Array(total);let head=0,tail=0;
+ const corners=[[0,0],[canvas.width-1,0],[0,canvas.height-1],[canvas.width-1,canvas.height-1]];let bgR=0,bgG=0,bgB=0;for(const[x,y]of corners){const offset=(y*canvas.width+x)*4;bgR+=pixels[offset];bgG+=pixels[offset+1];bgB+=pixels[offset+2]}bgR/=4;bgG/=4;bgB/=4;
+ const removable=(index:number)=>{const offset=index*4,r=pixels[offset],g=pixels[offset+1],b=pixels[offset+2],distance=Math.hypot(r-bgR,g-bgG,b-bgB);return pixels[offset+3]<12||(distance<52&&r+g+b>610)};
+ const enqueue=(index:number)=>{if(index<0||index>=total||seen[index]||!removable(index))return;seen[index]=1;queue[tail++]=index};
+ for(let x=0;x<canvas.width;x++){enqueue(x);enqueue((canvas.height-1)*canvas.width+x)}for(let y=0;y<canvas.height;y++){enqueue(y*canvas.width);enqueue(y*canvas.width+canvas.width-1)}
+ while(head<tail){const index=queue[head++],x=index%canvas.width;pixels[index*4+3]=0;if(x>0)enqueue(index-1);if(x<canvas.width-1)enqueue(index+1);if(index>=canvas.width)enqueue(index-canvas.width);if(index<total-canvas.width)enqueue(index+canvas.width)}
+ ctx.putImageData(frame,0,0);return canvas.toDataURL('image/png');
+}
+async function flyerBitmap(url:string){const response=await fetch(url);if(!response.ok)throw new Error('image');return createImageBitmap(await response.blob())}
+function cleanupLayeredFlyerAssets(assets:LayeredFlyerAssets){assets.backgroundImage?.close();assets.product?.close();assets.frame?.close();assets.backgroundVideo?.pause();if(assets.backgroundObjectUrl)URL.revokeObjectURL(assets.backgroundObjectUrl)}
+function drawLayeredFlyerFrame(ctx:CanvasRenderingContext2D,assets:LayeredFlyerAssets,data:LayeredFlyerData,width:number,height:number){
+ ctx.save();ctx.clearRect(0,0,width,height);ctx.scale(width/1080,height/1350);
+ if(data.backgroundKind==='color'){if(data.colorMode==='solid'){ctx.fillStyle=data.solidColor}else{const angle=data.gradientAngle*Math.PI/180,x=Math.cos(angle),y=Math.sin(angle),gradient=ctx.createLinearGradient(540-x*700,675-y*850,540+x*700,675+y*850);gradient.addColorStop(0,data.colorA);gradient.addColorStop(1,data.colorB);ctx.fillStyle=gradient}ctx.fillRect(0,0,1080,1350)}else{const source=assets.backgroundVideo||assets.backgroundImage;if(source)drawFlyerSourceCover(ctx,source,0,0,1080,1350);else{ctx.fillStyle='#111';ctx.fillRect(0,0,1080,1350)}}
+ const shade=ctx.createLinearGradient(0,0,0,1350);shade.addColorStop(0,'rgba(0,0,0,.46)');shade.addColorStop(.48,'rgba(0,0,0,.03)');shade.addColorStop(1,'rgba(0,0,0,.78)');ctx.fillStyle=shade;ctx.fillRect(0,0,1080,1350);
+ if(data.showDetail&&data.detailText){ctx.save();ctx.globalAlpha=.72;const detailGradient=ctx.createLinearGradient(600,80,990,470);detailGradient.addColorStop(0,'#ffe08a');detailGradient.addColorStop(.42,'#ff5a20');detailGradient.addColorStop(1,'#d40016');ctx.fillStyle=detailGradient;ctx.shadowColor='#ff2010';ctx.shadowBlur=28;ctx.font='900 390px Impact, Arial Black';ctx.textAlign='right';ctx.fillText(data.detailText.slice(0,3),1010,430);ctx.restore()}
+ const frame={x:165,y:330,w:750,h:600};
+ if(data.frameStyle==='polaroid'){ctx.fillStyle='#f4f0e8';roundedRect(ctx,130,290,820,690,18);ctx.fill()}
+ if(data.frameStyle==='dark'){ctx.fillStyle='rgba(7,8,11,.9)';roundedRect(ctx,130,290,820,690,32);ctx.fill();ctx.strokeStyle=data.accentColor;ctx.lineWidth=4;ctx.stroke()}
+ if(data.frameStyle==='glass'){ctx.fillStyle='rgba(255,255,255,.18)';roundedRect(ctx,130,290,820,690,32);ctx.fill();ctx.strokeStyle='rgba(255,255,255,.62)';ctx.lineWidth=3;ctx.stroke()}
+ if(assets.product)drawFlyerSourceContain(ctx,assets.product,frame.x,frame.y,frame.w,frame.h);
+ if(assets.frame)drawFlyerSourceContain(ctx,assets.frame,0,0,1080,1350);
+ drawFlyerOrnaments(ctx,data.ornament,data.accentColor);
+ const scale=data.textScale/100,x=1080*data.textX/100,y=1350*data.textY/100;
+ ctx.textAlign='left';ctx.shadowColor='rgba(0,0,0,.7)';ctx.shadowBlur=12;ctx.fillStyle=data.textColor;ctx.font=`900 ${Math.round(24*scale)}px Arial`;ctx.fillText(data.kicker.toUpperCase(),x,y);
+ const headlineSize=flyerHeadlineSize(data.typography);ctx.font=`900 ${Math.round(headlineSize*scale)}px ${data.font}`;ctx.fillStyle=data.typography==='intentions'||data.typography==='spray'?data.accentColor:data.textColor;if(data.typography==='restore'){ctx.shadowBlur=2;ctx.globalAlpha=.9}drawFlyerText(ctx,data.headline.toUpperCase(),x,y+95*scale,900-x,headlineSize*.82*scale);ctx.globalAlpha=1;
+ ctx.shadowBlur=8;ctx.fillStyle=data.typography==='tee'||data.typography==='intentions'||data.typography==='signature'?data.accentColor:data.textColor;ctx.font=`italic 700 ${Math.round((data.typography==='intentions'||data.typography==='signature'?54:34)*scale)}px ${data.typography==='intentions'?'Georgia':data.font}`;ctx.fillText(data.extraText,x,y+250*scale);
+ drawFlyerPriceAccent(ctx,data.priceAccent,data.accentColor);ctx.shadowBlur=16;ctx.shadowColor='rgba(0,0,0,.85)';ctx.textAlign='right';ctx.fillStyle=data.textColor;ctx.font='900 17px Arial';ctx.fillText('PRECIO',990,1155);const priceSize=Math.round(82*data.priceScale/100);ctx.font=`900 ${priceSize}px ${data.priceFont}`;if(data.priceTypography==='spray'){const priceGradient=ctx.createLinearGradient(690,1160,990,1270);priceGradient.addColorStop(0,'#ffe17d');priceGradient.addColorStop(.45,'#ff4b22');priceGradient.addColorStop(1,'#df0019');ctx.fillStyle=priceGradient}else if(data.priceTypography==='chrome'){const priceGradient=ctx.createLinearGradient(700,1160,700,1280);priceGradient.addColorStop(0,'#fff');priceGradient.addColorStop(.36,'#77808d');priceGradient.addColorStop(.58,'#f8fbff');priceGradient.addColorStop(1,'#4a5360');ctx.fillStyle=priceGradient}ctx.fillText(`S/ ${data.price}`,990,1250);ctx.restore();
+}
+function drawFlyerPriceAccent(ctx:CanvasRenderingContext2D,type:FlyerPriceAccent,color:string){if(type==='none')return;ctx.save();ctx.lineCap='round';ctx.lineJoin='round';const stroke=type==='red-sketch'?'#f11b26':type==='white-sketch'?'#fff':color;ctx.strokeStyle=stroke;ctx.lineWidth=type==='sparkle-oval'?10:8;ctx.shadowColor='rgba(0,0,0,.35)';ctx.shadowBlur=8;ctx.beginPath();ctx.ellipse(820,1210,205,82,-.05,0,Math.PI*2);ctx.stroke();if(type==='red-sketch'||type==='white-sketch'){ctx.globalAlpha=.86;ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(825,1204,225,68,.08,.12,Math.PI*1.92);ctx.stroke()}if(type==='sparkle-oval'){ctx.fillStyle=stroke;ctx.shadowColor=stroke;ctx.shadowBlur=14;ctx.font='68px Arial';ctx.textAlign='center';ctx.fillText('✦',620,1260);ctx.fillText('✦',1015,1148)}if(type==='arrow-oval'){ctx.fillStyle=stroke;ctx.font='900 58px Arial';ctx.textAlign='center';ctx.fillText('↓',680,1108);ctx.fillText('↓',820,1090);ctx.fillText('↓',960,1110)}ctx.restore()}
+function flyerHeadlineSize(type:FlyerTypography){return type==='poster'?92:type==='intentions'?112:type==='spray'?128:type==='signature'?102:type==='restore'?98:type==='chrome'?94:88}
+function drawFlyerOrnaments(ctx:CanvasRenderingContext2D,type:FlyerOrnament,color:string){if(type==='none')return;ctx.save();ctx.textAlign='center';ctx.shadowColor='#fff';ctx.shadowBlur=16;const gradient=ctx.createLinearGradient(0,350,0,930);gradient.addColorStop(0,'#fff');gradient.addColorStop(.45,color);gradient.addColorStop(1,'#7d8794');ctx.fillStyle=gradient;if(type==='orbit'){ctx.font='120px Arial';ctx.fillText('◌',885,500);ctx.font='58px Arial';ctx.fillText('✦',885,500)}else if(type==='shooting'){ctx.font='110px Arial';ctx.fillText('✦',865,565);ctx.strokeStyle=color;ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(830,600);ctx.lineTo(680,735);ctx.stroke()}else{const points=type==='chrome'?[[120,520,86],[900,700,116],[790,960,60],[230,850,52]]:[[110,560,60],[915,680,74],[820,950,44]];for(const[px,py,size]of points){ctx.font=`${size}px Arial`;ctx.fillText('✦',px,py)}}ctx.restore()}
+function drawFlyerSourceCover(ctx:CanvasRenderingContext2D,source:CanvasImageSource,x:number,y:number,w:number,h:number){const dims=flyerSourceSize(source),scale=Math.max(w/dims.width,h/dims.height),sw=w/scale,sh=h/scale,sx=(dims.width-sw)/2,sy=(dims.height-sh)/2;ctx.drawImage(source,sx,sy,sw,sh,x,y,w,h)}
+function drawFlyerSourceContain(ctx:CanvasRenderingContext2D,source:CanvasImageSource,x:number,y:number,w:number,h:number){const dims=flyerSourceSize(source),scale=Math.min(w/dims.width,h/dims.height),dw=dims.width*scale,dh=dims.height*scale;ctx.drawImage(source,x+(w-dw)/2,y+(h-dh)/2,dw,dh)}
+function flyerSourceSize(source:CanvasImageSource){if(source instanceof HTMLVideoElement)return{width:source.videoWidth,height:source.videoHeight};if(source instanceof ImageBitmap)return{width:source.width,height:source.height};return{width:1080,height:1350}}
+function flyerFileName(value:string){return value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'catalogo'}
+function downloadFlyerBlob(blob:Blob,name:string){const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=name;link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1800)}
+async function exportLayeredFlyerMp4(data:LayeredFlyerData,name:string){
+ const browserWindow=window as unknown as {VideoEncoder?:any;VideoFrame?:any};if(!browserWindow.VideoEncoder||!browserWindow.VideoFrame)throw new Error('video_unsupported');
+ const {Muxer,ArrayBufferTarget}=await import('mp4-muxer');const width=720,height=900,fps=24,seconds=5,total=fps*seconds;const config={codec:'avc1.42001f',width,height,bitrate:3_500_000,framerate:fps};const support=await browserWindow.VideoEncoder.isConfigSupported(config);if(!support.supported)throw new Error('video_unsupported');
+ const target=new ArrayBufferTarget();const muxer=new Muxer({target,video:{codec:'avc',width,height,frameRate:fps},fastStart:'in-memory',firstTimestampBehavior:'offset'});let encodeError:Error|undefined;const encoder=new browserWindow.VideoEncoder({output:(chunk:any,meta:any)=>muxer.addVideoChunk(chunk,meta),error:(cause:any)=>{encodeError=cause instanceof Error?cause:new Error('encode')}});encoder.configure(config);const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;const ctx=canvas.getContext('2d');if(!ctx)throw new Error('canvas');const assets=await prepareLayeredFlyerAssets(data);
+ try{if(assets.backgroundVideo){assets.backgroundVideo.currentTime=0;await assets.backgroundVideo.play()}const started=performance.now();for(let i=0;i<total;i++){if(assets.backgroundVideo){const targetTime=started+i*1000/fps,wait=targetTime-performance.now();if(wait>1)await new Promise(resolve=>setTimeout(resolve,wait))}drawLayeredFlyerFrame(ctx,assets,data,width,height);const frame=new browserWindow.VideoFrame(canvas,{timestamp:Math.round(i*1_000_000/fps),duration:Math.round(1_000_000/fps)});encoder.encode(frame,{keyFrame:i%(fps*2)===0});frame.close()}await encoder.flush();if(encodeError)throw encodeError;muxer.finalize();if(!target.buffer)throw new Error('encode');downloadFlyerBlob(new Blob([target.buffer],{type:'video/mp4'}),name)}finally{encoder.close();cleanupLayeredFlyerAssets(assets)}
 }
 
 function buildFlyerAIPrompt(style:FlyerTemplate,scope:'photo'|'model'|'category',subject:string,description:string){
