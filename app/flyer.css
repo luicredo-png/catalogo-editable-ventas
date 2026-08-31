@@ -43,10 +43,10 @@
 .flyer-price-controls input[type="range"] { padding: 0; accent-color: #168cff; }
 
 .flyer-product-layer {
-  left: 15%;
-  top: 25%;
-  width: 70%;
-  height: 47%;
+  left: 10%;
+  top: 18%;
+  width: 80%;
+  height: 60%;
   padding: 0;
   box-sizing: border-box;
   overflow: hidden;
@@ -92,10 +92,10 @@
 
 .flyer-uploaded-frame {
   inset: auto;
-  left: 15%;
-  top: 25%;
-  width: 70%;
-  height: 47%;
+  left: 10%;
+  top: 18%;
+  width: 80%;
+  height: 60%;
   object-fit: fill;
 }
 
