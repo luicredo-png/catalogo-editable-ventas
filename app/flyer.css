@@ -36,7 +36,7 @@
   gap: 9px;
 }
 
-.flyer-detail-controls { grid-template-columns: .7fr .6fr 1.2fr; }
+.flyer-detail-controls { grid-template-columns: .8fr 1.2fr; }
 .flyer-price-controls label,
 .flyer-detail-controls label { display: grid; gap: 7px; font-size: 10px; font-weight: 850; }
 .flyer-price-controls output { float: right; color: #087cff; }
@@ -47,8 +47,10 @@
   top: 25%;
   width: 70%;
   height: 47%;
-  padding: 3.5%;
+  padding: 0;
   box-sizing: border-box;
+  overflow: hidden;
+  border-radius: 12px;
 }
 
 .flyer-product-layer img {
@@ -77,12 +79,37 @@
 }
 
 .frame-polaroid .flyer-product-layer {
-  padding: 4.5% 4.5% 7%;
+  padding: 2.2%;
   background: #f5efe6;
+  transform: rotate(-1deg);
 }
 
 .frame-dark .flyer-product-layer,
-.frame-glass .flyer-product-layer { padding: 4.5%; }
+.frame-glass .flyer-product-layer { padding: 2%; }
+
+.frame-dark .flyer-product-layer { border-width: 1.5px; }
+.frame-glass .flyer-product-layer { border-width: 1px; }
+
+.flyer-uploaded-frame {
+  inset: auto;
+  left: 15%;
+  top: 25%;
+  width: 70%;
+  height: 47%;
+  object-fit: fill;
+}
+
+.flyer-brand-logo {
+  position: absolute;
+  z-index: 3;
+  top: 3%;
+  right: 3%;
+  width: 28%;
+  height: 20%;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 12px rgba(0,0,0,.55));
+  pointer-events: none;
+}
 
 .flyer-monogram {
   position: absolute;
