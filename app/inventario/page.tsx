@@ -2,7 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
-type Product={id:number;sku:string;name:string;category:string;stock:number;minStock:number;cost:number;salePrice:number;active:boolean};
+type Product={id:number;sku:string;name:string;category:string;stock:number;minStock:number;cost:number;salePrice:number;image?:string;color?:string;size?:string;model?:string;catalogUrl?:string;active:boolean};
 type Movement={id:number;productId:number;productName:string;sku:string;type:'entrada'|'venta';quantity:number;unitPrice:number;total:number;note:string;createdAt:string};
 type Snapshot={products:Product[];movements:Movement[];metrics:{totalUnits:number;inventoryValue:number;lowStockCount:number;salesToday:number;unitsSoldToday:number}};
 type MovementDraft={type:'entrada'|'venta';productId:string;quantity:string;unitPrice:string;note:string};
@@ -20,6 +20,7 @@ export default function InventoryPage(){
  const [query,setQuery]=useState('');
  const [movement,setMovement]=useState<MovementDraft|null>(null);
  const [newProduct,setNewProduct]=useState(false);
+ const [catalogUrl,setCatalogUrl]=useState('');
 
  const refresh=useCallback(async()=>{
   try{
@@ -76,6 +77,17 @@ export default function InventoryPage(){
   finally{setWorking(false);}
  }
 
+ async function importCatalog(event:FormEvent){
+  event.preventDefault();setWorking(true);setError('');
+  try{
+   const response=await fetch('/api/inventory/import-catalog',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:catalogUrl})});
+   const result=await response.json();
+   if(!response.ok)throw new Error(result.error||'No se pudo importar el catálogo.');
+   setToast(`${result.imported} variantes importadas desde ${result.store}.`);await refresh();
+  }catch(reason){setError(reason instanceof Error?reason.message:'No se pudo importar el catálogo.');}
+  finally{setWorking(false);}
+ }
+
  return <main className="inv-shell">
   <aside className="inv-sidebar">
    <div className="inv-brand"><span className="inv-brand-mark">S</span><span>STOCKA<small>Inventario simple</small></span></div>
@@ -98,6 +110,8 @@ export default function InventoryPage(){
    {error&&<div className="inv-alert"><span>!</span>{error}<button onClick={()=>setError('')}>×</button></div>}
    {toast&&<div className="inv-toast"><span>✓</span>{toast}</div>}
 
+   <form className="inv-catalog-import" onSubmit={importCatalog}><div><span className="inv-import-icon">↗</span><div><p className="inv-eyebrow">CONECTAR CATÁLOGO</p><h2>Importa productos, colores, tallas, modelos y fotos</h2><p>Pega el enlace público de tu catálogo. Puedes repetir la importación para actualizarlo sin duplicar variantes ni perder el stock.</p></div></div><div className="inv-import-action"><input type="url" required value={catalogUrl} onChange={event=>setCatalogUrl(event.target.value)} placeholder={`${typeof location==='undefined'?'https://tu-catalogo.com':location.origin}/ropa`}/><button disabled={working}>{working?'Importando…':'Importar catálogo'}</button></div></form>
+
    <section className="inv-metrics" aria-label="Indicadores principales">
     <article className="inv-metric purple"><div className="inv-icon">▦</div><div><span>Unidades disponibles</span><strong>{loading?'—':data.metrics.totalUnits}</strong><small>En todos tus productos</small></div></article>
     <article className="inv-metric mint"><div className="inv-icon">S/</div><div><span>Valor del inventario</span><strong>{loading?'—':money.format(data.metrics.inventoryValue)}</strong><small>Calculado al costo</small></div></article>
@@ -116,7 +130,7 @@ export default function InventoryPage(){
      <div className="inv-panel-head"><div><p className="inv-eyebrow">EXISTENCIAS</p><h2>Productos</h2></div><label className="inv-search"><span>⌕</span><input value={query} onChange={event=>setQuery(event.target.value)} placeholder="Buscar producto o SKU"/></label></div>
      <div className="inv-table-wrap"><table><thead><tr><th>Producto</th><th>Categoría</th><th>Stock</th><th>Precio</th><th>Estado</th><th></th></tr></thead><tbody>
       {filtered.map(product=>{const low=product.stock<=product.minStock;return <tr key={product.id}>
-       <td><div className="inv-product-name"><span>{product.name.slice(0,1)}</span><div><strong>{product.name}</strong><small>{product.sku}</small></div></div></td>
+       <td><div className="inv-product-name">{product.image?<img src={product.image} alt=""/>:<span>{product.name.slice(0,1)}</span>}<div><strong>{product.name}</strong><small>{[product.color,product.size&&`Talla ${product.size}`,product.model&&product.model!==product.name?product.model:''].filter(Boolean).join(' · ')||product.sku}</small><small>{product.sku}</small></div></div></td>
        <td><span className="inv-category">{product.category}</span></td><td><strong className="inv-stock">{product.stock}</strong><small className="inv-min">mín. {product.minStock}</small></td><td><strong>{money.format(product.salePrice)}</strong></td>
        <td><span className={`inv-status ${low?'low':'ok'}`}><i/>{low?'Stock bajo':'Disponible'}</span></td>
        <td><div className="inv-row-actions"><button title="Registrar entrada" onClick={()=>openMovement('entrada',product)}>＋</button><button title="Registrar venta" onClick={()=>openMovement('venta',product)}>−</button></div></td>

@@ -8,9 +8,13 @@ export async function initInventoryDB(){
   db.prepare('CREATE UNIQUE INDEX IF NOT EXISTS idx_inventory_products_sku ON inventory_products(sku)'),
   db.prepare('CREATE INDEX IF NOT EXISTS idx_inventory_products_active ON inventory_products(active)'),
   db.prepare('CREATE INDEX IF NOT EXISTS idx_inventory_movements_product_date ON inventory_movements(product_id,created_at)'),
-  db.prepare('CREATE INDEX IF NOT EXISTS idx_inventory_movements_type_date ON inventory_movements(type,created_at)'),
-  db.prepare('PRAGMA optimize')
+  db.prepare('CREATE INDEX IF NOT EXISTS idx_inventory_movements_type_date ON inventory_movements(type,created_at)')
  ]);
+ const columns=await db.prepare('PRAGMA table_info(inventory_products)').all<{name:string}>();
+ const existing=new Set(columns.results.map(column=>column.name));
+ const additions=[['image','TEXT NOT NULL DEFAULT \'\''],['color','TEXT NOT NULL DEFAULT \'\''],['size','TEXT NOT NULL DEFAULT \'\''],['model','TEXT NOT NULL DEFAULT \'\''],['catalog_url','TEXT NOT NULL DEFAULT \'\''],['source_key','TEXT']];
+ for(const [name,type] of additions)if(!existing.has(name))await db.prepare(`ALTER TABLE inventory_products ADD COLUMN ${name} ${type}`).run();
+ await db.batch([db.prepare('CREATE UNIQUE INDEX IF NOT EXISTS idx_inventory_products_source_key ON inventory_products(source_key)'),db.prepare('PRAGMA optimize')]);
  const count=await db.prepare('SELECT COUNT(*) AS total FROM inventory_products').first<{total:number}>();
  if(Number(count?.total||0)===0){
   const now=new Date().toISOString();
@@ -25,7 +29,7 @@ export async function initInventoryDB(){
 
 export async function inventorySnapshot(){
  const db=env.DB;
- const products=await db.prepare('SELECT id,sku,name,category,stock,min_stock AS minStock,cost,sale_price AS salePrice,active,created_at AS createdAt FROM inventory_products WHERE active=1 ORDER BY name').all();
+ const products=await db.prepare('SELECT id,sku,name,category,stock,min_stock AS minStock,cost,sale_price AS salePrice,active,created_at AS createdAt,image,color,size,model,catalog_url AS catalogUrl FROM inventory_products WHERE active=1 ORDER BY name,color,size').all();
  const movements=await db.prepare("SELECT m.id,m.product_id AS productId,p.name AS productName,p.sku,m.type,m.quantity,m.unit_price AS unitPrice,m.total,m.note,m.created_at AS createdAt FROM inventory_movements m JOIN inventory_products p ON p.id=m.product_id ORDER BY m.id DESC LIMIT 16").all();
  const metrics=await db.prepare("SELECT COALESCE(SUM(stock),0) AS totalUnits,COALESCE(SUM(stock*cost),0) AS inventoryValue,COALESCE(SUM(CASE WHEN stock<=min_stock THEN 1 ELSE 0 END),0) AS lowStockCount FROM inventory_products WHERE active=1").first<Record<string,unknown>>();
  const sales=await db.prepare("SELECT COALESCE(SUM(total),0) AS salesToday,COALESCE(SUM(quantity),0) AS unitsSoldToday FROM inventory_movements WHERE type='venta' AND date(created_at)=date('now')").first<Record<string,unknown>>();
