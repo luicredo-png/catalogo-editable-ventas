@@ -6,6 +6,10 @@ const FALLBACK_FLYER_SECRET =
   '0900b56982a7c0f40d5bc8c2b6e1c1b8f97f4e5d725f56f519372edd5084fd2b';
 const FALLBACK_ACCESS_CODE = 'MODA-4827';
 
+type FlyerServiceBinding = {
+  fetch(request: Request): Promise<Response>;
+};
+
 export async function POST(request: Request) {
   const flyerUrl = env.CLOUDFLARE_FLYER_URL || FALLBACK_FLYER_URL;
   const flyerSecret = env.CLOUDFLARE_FLYER_SECRET || FALLBACK_FLYER_SECRET;
@@ -38,12 +42,17 @@ export async function POST(request: Request) {
     }
     if (!imageCount) return Response.json({ error: 'image_required' }, { status: 400 });
 
-    const response = await fetch(`${flyerUrl.replace(/\/$/, '')}/generate`, {
+    const service = (env as typeof env & { FLYER_AI?: FlyerServiceBinding }).FLYER_AI;
+    const target = service
+      ? 'https://catalogo-flyer-ai/generate'
+      : `${flyerUrl.replace(/\/$/, '')}/generate`;
+    const flyerRequest = new Request(target, {
       method: 'POST',
       headers: { 'x-flyer-secret': flyerSecret },
       body: outgoing,
     });
-    const result = await response.json<Record<string, unknown>>().catch(() => ({}));
+    const response = service ? await service.fetch(flyerRequest) : await fetch(flyerRequest);
+    const result = (await response.json().catch(() => ({}))) as Record<string, unknown>;
     if (!response.ok) {
       const code = String(result.error || 'generation_failed');
       return Response.json({ error: code }, { status: response.status === 429 ? 429 : 502 });
