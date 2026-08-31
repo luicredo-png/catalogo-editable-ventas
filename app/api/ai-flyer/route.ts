@@ -49,15 +49,10 @@ export async function POST(request: Request) {
       body: outgoing,
     });
     const response = await fetch(flyerRequest);
-    const result = (await response.json().catch(() => ({}))) as Record<string, unknown>;
-    if (!response.ok) {
-      const code = String(result.error || 'generation_failed');
-      return Response.json({ error: code }, { status: response.status === 429 ? 429 : 502 });
-    }
-    if (typeof result.image !== 'string' || !result.image.startsWith('data:image/')) {
-      return Response.json({ error: 'empty_generation' }, { status: 502 });
-    }
-    return Response.json({ image: result.image });
+    return new Response(response.body, {
+      status: response.status,
+      headers: { 'content-type': response.headers.get('content-type') || 'application/json' },
+    });
   } catch (error) {
     console.error('ai_flyer_proxy_failed', error);
     return Response.json({ error: 'generation_failed' }, { status: 502 });
