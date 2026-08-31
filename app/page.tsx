@@ -4209,10 +4209,10 @@ function FlyerStudio({
   const [productScale, setProductScale] = useState(100);
   const [downloading, setDownloading] = useState(false);
   const [aiGenerating, setAiGenerating] = useState(false);
-  const [aiCode, setAiCode] = useState("");
+  const [aiCode, setAiCode] = useState("MODA-4827");
   const [error, setError] = useState("");
   useEffect(() => {
-    setAiCode(sessionStorage.getItem("flyer-ai-code") || "");
+    setAiCode(sessionStorage.getItem("flyer-ai-code") || "MODA-4827");
     try {
       const saved = JSON.parse(
         localStorage.getItem("flyer-background-library") || "[]",
@@ -4373,7 +4373,7 @@ function FlyerStudio({
       const code = cause instanceof Error ? cause.message : "";
       setError(
         code === "invalid_access_code"
-          ? "El código de IA no es correcto."
+          ? "El código de IA no es correcto. Usa MODA-4827."
           : code === "service_not_configured"
             ? "La IA todavía está conectándose."
             : "No se pudo preparar el PNG ahora. Puedes subirlo manualmente.",
@@ -5290,24 +5290,21 @@ function drawLayeredFlyerFrame(
   }
   const frame = { x: 110, y: 240, w: 860, h: 760 };
   if (data.frameStyle === "polaroid") {
-    ctx.fillStyle = "#f4f0e8";
-    roundedRect(ctx, 88, 218, 904, 804, 14);
-    ctx.fill();
+    ctx.strokeStyle = "#f4f0e8";
+    ctx.lineWidth = 3;
+    roundedRect(ctx, frame.x, frame.y, frame.w, frame.h, 8);
+    ctx.stroke();
   }
   if (data.frameStyle === "dark") {
-    ctx.fillStyle = "rgba(7,8,11,.9)";
-    roundedRect(ctx, 88, 218, 904, 804, 24);
-    ctx.fill();
     ctx.strokeStyle = data.accentColor;
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 3;
+    roundedRect(ctx, frame.x, frame.y, frame.w, frame.h, 18);
     ctx.stroke();
   }
   if (data.frameStyle === "glass") {
-    ctx.fillStyle = "rgba(255,255,255,.16)";
-    roundedRect(ctx, 88, 218, 904, 804, 24);
-    ctx.fill();
     ctx.strokeStyle = "rgba(255,255,255,.62)";
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 3;
+    roundedRect(ctx, frame.x, frame.y, frame.w, frame.h, 22);
     ctx.stroke();
   }
   if (assets.product)
