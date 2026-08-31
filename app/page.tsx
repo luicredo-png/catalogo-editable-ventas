@@ -4207,6 +4207,8 @@ function FlyerStudio({
   const [frameImage, setFrameImage] = useState("");
   const [productLayer, setProductLayer] = useState("");
   const [productScale, setProductScale] = useState(100);
+  const [productX, setProductX] = useState(0);
+  const [productY, setProductY] = useState(0);
   const [downloading, setDownloading] = useState(false);
   const [aiGenerating, setAiGenerating] = useState(false);
   const [aiCode, setAiCode] = useState("MODA-4827");
@@ -4954,9 +4956,11 @@ function FlyerStudio({
           {
             "--flyer-text": textColor,
             "--flyer-accent": accentColor,
-            "--flyer-font": typePreset.css,
-            "--flyer-color-bg": cssBackground,
-            "--product-scale": productScale / 100,
+          "--flyer-font": typePreset.css,
+          "--flyer-color-bg": cssBackground,
+          "--product-scale": productScale / 100,
+          "--product-x": `${productX}%`,
+          "--product-y": `${productY}%`,
           } as React.CSSProperties
         }
       >
@@ -4970,6 +4974,11 @@ function FlyerStudio({
             onChange={(e) => setProductScale(Number(e.target.value))}
           />
           <small>Completa y sin recortes</small>
+          <span>Centrar horizontal <output>{productX}</output></span>
+          <input type="range" min="-35" max="35" value={productX} onChange={e=>setProductX(Number(e.target.value))}/>
+          <span>Centrar vertical <output>{productY}</output></span>
+          <input type="range" min="-35" max="35" value={productY} onChange={e=>setProductY(Number(e.target.value))}/>
+          <button type="button" onClick={()=>{setProductX(0);setProductY(0)}}>Centrar</button>
         </label>
         {backgroundKind === "video" ? (
           <video

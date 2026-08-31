@@ -42,16 +42,13 @@ export async function POST(request: Request) {
     }
     if (!imageCount) return Response.json({ error: 'image_required' }, { status: 400 });
 
-    const service = (env as typeof env & { FLYER_AI?: FlyerServiceBinding }).FLYER_AI;
-    const target = service
-      ? 'https://catalogo-flyer-ai/generate'
-      : `${flyerUrl.replace(/\/$/, '')}/generate`;
+    const target = `${flyerUrl.replace(/\/$/, '')}/generate`;
     const flyerRequest = new Request(target, {
       method: 'POST',
       headers: { 'x-flyer-secret': flyerSecret },
       body: outgoing,
     });
-    const response = service ? await service.fetch(flyerRequest) : await fetch(flyerRequest);
+    const response = await fetch(flyerRequest);
     const result = (await response.json().catch(() => ({}))) as Record<string, unknown>;
     if (!response.ok) {
       const code = String(result.error || 'generation_failed');
