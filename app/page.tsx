@@ -216,7 +216,10 @@ const flyerBackgroundLibrary:FlyerBackgroundItem[]=[
  {name:'Cromo negro',url:'/api/media/asset-public-2312352b-69b4-42f3-a6b5-988df7f0209a.png',kind:'image'},
  {name:'Azul pastel',url:'/api/media/asset-public-f588da79-d526-4e31-8436-7aca636ba7e8.webp',kind:'image'},
  {name:'Seda azul',url:'/api/media/asset-public-9b4ff5db-1553-4d22-82f8-0add4bb850c8.png',kind:'image'},
- {name:'Marco retro',url:'/api/media/asset-public-63ab38c1-683d-4901-822b-a2621eae5bc6.png',kind:'image'}
+ {name:'Marco retro',url:'/api/media/asset-public-63ab38c1-683d-4901-822b-a2621eae5bc6.png',kind:'image'},
+ {name:'VASTNESS',url:'/api/media/asset-public-3cfbd4e5-16b8-449d-91d3-350a991a073b.mp4',kind:'video'},
+ {name:'SS24 Liquid Wall',url:'/api/media/asset-public-e3e217f0-ffd2-4b7d-b1cd-c8ebfc468ddd.mp4',kind:'video'},
+ {name:'Chaotic Dispersion',url:'/api/media/asset-public-2a951eb0-a64f-4fd6-8eba-2acc6887ae09.mp4',kind:'video'}
 ];
 const flyerTypographyPresets=[
  {id:'street' as FlyerTypography,name:'Streetwear Design',font:'Impact, Arial Black, sans-serif',css:'Impact, Arial Black, sans-serif',accent:'#f4f0e8'},
