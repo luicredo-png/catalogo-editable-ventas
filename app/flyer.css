@@ -111,6 +111,16 @@
   pointer-events: none;
 }
 
+.flyer-brand-name {
+  display: grid;
+  place-items: center end;
+  color: var(--flyer-text);
+  font: 950 clamp(18px, 4vw, 48px)/.9 Impact, "Arial Black", sans-serif;
+  text-align: right;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
 .flyer-monogram {
   position: absolute;
   z-index: 0;
