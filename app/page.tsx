@@ -1,6 +1,10 @@
 "use client";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { templates, type TemplateKey } from "@/lib/catalog-templates";
+import {
+  generatedBusinessHeroDefaults,
+  isGeneratedBusinessKey,
+} from "@/lib/generated-business-catalogs";
 
 type OptionGroup = { name: string; values: string[] };
 type Product = {
@@ -368,9 +372,12 @@ export default function Home({
         <div className="template-links">
           <a href="/restaurantes">Restaurante</a>
           <a href="/comida-rapida">Fast food</a>
+          <a href="/detalles-romanticos">Detalles</a>
           <a href="/ropa">Ropa</a>
           <a href="/mujer">Mujer</a>
           <a href="/zapatos-mujer">Zapatos</a>
+          <a href="/perfumeria">Perfumería</a>
+          <a href="/postres">Postres</a>
           <a href="/accesorios">Accesorios</a>
         </div>
         <button
@@ -482,15 +489,25 @@ export default function Home({
             className="store-hero custom-cover"
             id="top"
             style={
-              store.heroImage
+              currentHero && !isVideoMedia(currentHero)
                 ? {
-                    backgroundImage: `linear-gradient(90deg,rgba(3,7,12,.9),rgba(3,7,12,.58) 55%,rgba(3,7,12,.18)),url(${store.heroImage})`,
+                    backgroundImage: `linear-gradient(90deg,rgba(3,7,12,.9),rgba(3,7,12,.58) 55%,rgba(3,7,12,.18)),url(${currentHero})`,
                     backgroundSize: "cover",
                     backgroundPosition: "center",
                   }
                 : undefined
             }
           >
+            {isVideoMedia(currentHero) && (
+              <video
+                className="hero-cover-video"
+                src={currentHero}
+                autoPlay
+                muted
+                loop
+                playsInline
+              />
+            )}
             <div className="hero-copy">
               <span>{store.heroEyebrow}</span>
               <h1>{store.catalogTitle}</h1>
@@ -742,6 +759,36 @@ function normalizeStore(s: Record<string, unknown>): Store {
 }
 
 function designDefaults(key: TemplateKey) {
+  if (key === "detalles-romanticos")
+    return {
+      fontFamily: "var(--font-outfit)",
+      headingFont: "var(--font-cormorant)",
+      buttonColor: "#25d366",
+      secondaryColor: "#ee668d",
+      textColor: "#fff7fa",
+      surfaceColor: "#3b1725",
+      overlayStrength: 0.42,
+    };
+  if (key === "perfumeria")
+    return {
+      fontFamily: "var(--font-outfit)",
+      headingFont: "var(--font-playfair)",
+      buttonColor: "#25d366",
+      secondaryColor: "#78aef8",
+      textColor: "#f5f9ff",
+      surfaceColor: "#09182b",
+      overlayStrength: 0.44,
+    };
+  if (key === "postres")
+    return {
+      fontFamily: "var(--font-outfit)",
+      headingFont: "var(--font-playfair)",
+      buttonColor: "#25d366",
+      secondaryColor: "#e7829e",
+      textColor: "#fff8f8",
+      surfaceColor: "#3b2025",
+      overlayStrength: 0.38,
+    };
   if (key === "restaurantes")
     return {
       fontFamily: "var(--font-outfit)",
@@ -793,6 +840,8 @@ function designDefaults(key: TemplateKey) {
   };
 }
 function heroDefaults(key: TemplateKey) {
+  if (isGeneratedBusinessKey(key))
+    return generatedBusinessHeroDefaults[key];
   if (key === "restaurantes")
     return {
       heroImage:
@@ -929,17 +978,7 @@ function PromoTicker({ text }: { text: string }) {
   );
 }
 function catalogPath(key: TemplateKey) {
-  return key === "ropa"
-    ? "/ropa"
-    : key === "restaurantes"
-      ? "/restaurantes"
-      : key === "comida-rapida"
-        ? "/comida-rapida"
-        : key === "mujer"
-          ? "/mujer"
-          : key === "zapatos-mujer"
-            ? "/zapatos-mujer"
-            : "/accesorios";
+  return `/${key}`;
 }
 type CatalogType = { key: string; label: string; image: string; color?: string };
 function parseCategorySettings(value: string): CatalogType[] {

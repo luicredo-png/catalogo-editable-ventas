@@ -1,6 +1,7 @@
 import { env } from 'cloudflare:workers';
 import { getCatalogIdentity } from '@/lib/catalog-user';
 import { templates, type TemplateKey } from '../../../lib/catalog-templates';
+import {generatedBusinessHeroDefaults,isGeneratedBusinessKey} from '../../../lib/generated-business-catalogs';
 import {ensureRopaCollection} from '@/lib/ropa-collection';
 import {ensureButtonStyleColumns} from '@/lib/button-styles-db';
 
@@ -23,9 +24,29 @@ async function init(){
  await ensureButtonStyleColumns(db);
 }
 
+async function ensureGeneratedBusinessCatalog(
+ db:typeof env.DB,
+ storeId:number,
+ key:TemplateKey,
+){
+ if(!isGeneratedBusinessKey(key))return;
+ const template=templates[key],hero=generatedBusinessHeroDefaults[key];
+ const current=await db.prepare('SELECT image FROM products WHERE store_id=? ORDER BY sort_order,id LIMIT 1').bind(storeId).first<{image:string}>();
+ if(current?.image===template.products[0]?.image)return;
+ const defaults=designDefaults(key),s=template.store;
+ await db.batch([
+  db.prepare('DELETE FROM products WHERE store_id=?').bind(storeId),
+  db.prepare('UPDATE stores SET name=?,slug=?,accent=?,background_color=?,collection_background_color=?,font_family=?,heading_font=?,hero_font=?,product_font=?,price_font=?,button_font=?,secondary_color=?,hero_button_color=?,text_color=?,surface_color=?,overlay_strength=?,catalog_title=?,hero_image=?,hero_eyebrow=?,hero_description=?,hero_highlight=?,hero_cta_label=? WHERE id=?').bind(s.name,key,s.accent,s.backgroundColor,s.backgroundColor,defaults.fontFamily,defaults.headingFont,defaults.headingFont,defaults.fontFamily,defaults.headingFont,defaults.fontFamily,defaults.secondaryColor,defaults.secondaryColor,defaults.textColor,defaults.surfaceColor,defaults.overlayStrength,s.catalogTitle,hero.heroImage,hero.heroEyebrow,hero.heroDescription,hero.heroHighlight,hero.heroCtaLabel,storeId),
+  ...template.products.map((p,i)=>db.prepare('INSERT INTO products (store_id,name,category,description,price,old_price,image,options_json,whatsapp_message,active,sort_order) VALUES (?,?,?,?,?,?,?,?,?,?,?)').bind(storeId,p.name,p.category,p.description,p.price,p.oldPrice,p.image,JSON.stringify(p.options||defaultOptions(key)),p.whatsappMessage||'',p.active?1:0,i)),
+ ]);
+}
+
 function defaultOptions(key:TemplateKey){
  if(key==='restaurantes')return [{name:'Presentación',values:['Clásico','Generoso']},{name:'Acompañamiento',values:['Papas doradas','Ensalada','Arroz']},{name:'Extras',values:['Sin extras','Huevo + S/ 3','Salsa extra + S/ 2']}];
  if(key==='comida-rapida')return [{name:'Tamaño',values:['Personal','Mediano','Grande']},{name:'Combo',values:['Solo producto','Con papas','Papas + bebida']},{name:'Extras',values:['Sin extras','Queso + S/ 3','Bebida + S/ 5']}];
+ if(key==='detalles-romanticos')return [{name:'Presentación',values:['Clásica','Premium']},{name:'Dedicatoria',values:['Sin tarjeta','Con tarjeta personalizada']}];
+ if(key==='perfumeria')return [{name:'Tamaño',values:['30 ml','50 ml','100 ml']},{name:'Presentación',values:['Perfume','Perfume + caja de regalo']}];
+ if(key==='postres')return [{name:'Tamaño',values:['Personal','Mediano','Grande']},{name:'Dedicatoria',values:['Sin dedicatoria','Con dedicatoria']}];
  if(key==='accesorios')return [{name:'Color',values:['Rosa','Dorado','Negro']}];
  if(key==='zapatos-mujer')return [{name:'Color',values:['Negro','Nude','Rosa']},{name:'Talla',values:['35','36','37','38','39','40']}];
  return [{name:'Color',values:['Negro','Beige','Rosa']},{name:'Talla',values:['S','M','L']}];
@@ -68,12 +89,16 @@ export async function GET(request:Request){
    store=await env.DB.prepare('SELECT * FROM stores WHERE id=?').bind(id).first<Record<string,unknown>>();
   }
  }
+ await ensureGeneratedBusinessCatalog(env.DB,Number(store!.id),key);
  if(key==='ropa')await ensureRopaCollection(env.DB,Number(store!.id));
  const rows=await env.DB.prepare('SELECT id,name,category,description,price,old_price AS oldPrice,image,options_json AS optionsJson,whatsapp_message AS whatsappMessage,active FROM products WHERE store_id=? ORDER BY sort_order,id').bind(store!.id).all();
  return Response.json({user:{email:'publico@catalogo.demo',displayName:'Editor público',guest:true},adminKey:'',store,products:rows.results.map(p=>productRow(p as Record<string,unknown>))},{headers:identity.setCookie?{'set-cookie':identity.setCookie}:{}});
 }
 
 function designDefaults(key:TemplateKey){
+ if(key==='detalles-romanticos')return{fontFamily:'var(--font-outfit)',headingFont:'var(--font-cormorant)',buttonColor:'#25d366',secondaryColor:'#ee668d',textColor:'#fff7fa',surfaceColor:'#3b1725',overlayStrength:.42};
+ if(key==='perfumeria')return{fontFamily:'var(--font-outfit)',headingFont:'var(--font-playfair)',buttonColor:'#25d366',secondaryColor:'#78aef8',textColor:'#f5f9ff',surfaceColor:'#09182b',overlayStrength:.44};
+ if(key==='postres')return{fontFamily:'var(--font-outfit)',headingFont:'var(--font-playfair)',buttonColor:'#25d366',secondaryColor:'#e7829e',textColor:'#fff8f8',surfaceColor:'#3b2025',overlayStrength:.38};
  if(key==='restaurantes')return{fontFamily:'var(--font-outfit)',headingFont:'var(--font-playfair)',buttonColor:'#25d366',secondaryColor:'#d6a85f',textColor:'#fffaf0',surfaceColor:'#101c17',overlayStrength:.48};
  if(key==='comida-rapida')return{fontFamily:'var(--font-outfit)',headingFont:'var(--font-space)',buttonColor:'#25d366',secondaryColor:'#ffcf24',textColor:'#ffffff',surfaceColor:'#250d09',overlayStrength:.42};
  if(key==='mujer'||key==='zapatos-mujer')return{fontFamily:'var(--font-outfit)',headingFont:'var(--font-playfair)',buttonColor:'#25d366',secondaryColor:'#ff74a6',textColor:'#fff7fb',surfaceColor:'#351826',overlayStrength:.42};
@@ -82,6 +107,7 @@ function designDefaults(key:TemplateKey){
 }
 
 function heroDefaults(key:TemplateKey){
+ if(isGeneratedBusinessKey(key)){const hero=generatedBusinessHeroDefaults[key];return{image:hero.heroImage,eyebrow:hero.heroEyebrow,description:hero.heroDescription,highlight:hero.heroHighlight,cta:hero.heroCtaLabel}}
  if(key==='restaurantes')return{image:'https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?auto=format&fit=crop&w=1800&q=88',eyebrow:'SABORES DE AUTOR',description:'Una experiencia especial, preparada para disfrutar.',highlight:'RESERVA Y PIDE',cta:'Ver la carta'};
  if(key==='comida-rapida')return{image:'https://images.unsplash.com/photo-1565299507177-b0ac66763828?auto=format&fit=crop&w=1800&q=88',eyebrow:'ANTOJO DEL DÍA',description:'Combos irresistibles, listos para pedir sin esperar.',highlight:'RÁPIDO Y DELICIOSO',cta:'Ver el menú'};
  if(key==='mujer')return{image:'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1800&q=88',eyebrow:'NUEVA TEMPORADA',description:'Prendas que celebran tu estilo y tu personalidad.',highlight:'2026',cta:'Ver colección'};
@@ -89,4 +115,5 @@ function heroDefaults(key:TemplateKey){
  if(key==='accesorios')return{image:'https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?auto=format&fit=crop&w=1800&q=88',eyebrow:'DETALLES ÚNICOS',description:'Accesorios elegidos para transformar cada look.',highlight:'NUEVOS FAVORITOS',cta:'Descubrir accesorios'};
  return{image:'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1800&q=88',eyebrow:'NUEVA TEMPORADA',description:'Estilo, comodidad y tendencia en cada prenda.',highlight:'2026',cta:'Ver colección'};
 }
+
 
