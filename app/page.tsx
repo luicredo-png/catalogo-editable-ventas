@@ -2628,11 +2628,28 @@ function AdminV2({
   const [previewDevice, setPreviewDevice] = useState<"mobile" | "desktop">(
     "mobile",
   );
+  const catalogPreviewRef = useRef<HTMLIFrameElement>(null);
   const [useCollectionColors, setUseCollectionColors] = useState(
     !store.collectionBackgroundImage && !store.surfaceBackgroundImage,
   );
   const update = (k: keyof Store, v: string | number) =>
     setStore({ ...store, [k]: v });
+  const revealCatalogPart = (selector: string) => {
+    requestAnimationFrame(() => {
+      try {
+        const frameWindow = catalogPreviewRef.current?.contentWindow;
+        const frameDocument = catalogPreviewRef.current?.contentDocument;
+        const target = frameDocument?.querySelector(selector) as HTMLElement | null;
+        if (!frameWindow || !target) return;
+        frameWindow.scrollTo({
+          top: Math.max(0, target.offsetTop - frameWindow.innerHeight * 0.18),
+          behavior: "smooth",
+        });
+      } catch {
+        // La vista previa puede seguir usándose aunque el navegador bloquee el acceso al iframe.
+      }
+    });
+  };
   const collectionVideo = isVideoMedia(store.collectionBackgroundImage);
   const catalogUrl =
     typeof window === "undefined"
@@ -2788,7 +2805,7 @@ function AdminV2({
   }
   const title =
     section === "products"
-      ? "Tipos y productos"
+      ? "Categorías y productos"
       : section === "design"
         ? "Diseño del catálogo"
         : section === "cover"
@@ -2824,22 +2841,22 @@ function AdminV2({
         </label>
         <nav>
           <button
+            className={section === "cover" ? "active" : ""}
+            onClick={() => setSection("cover")}
+          >
+            ▣ Portada
+          </button>
+          <button
             className={section === "products" ? "active" : ""}
             onClick={() => setSection("products")}
           >
-            ▦ Tipos y productos
+            ▦ Categorías y productos
           </button>
           <button
             className={section === "design" ? "active" : ""}
             onClick={() => setSection("design")}
           >
             ◈ Diseño
-          </button>
-          <button
-            className={section === "cover" ? "active" : ""}
-            onClick={() => setSection("cover")}
-          >
-            ▣ Portada
           </button>
           <button
             className={section === "flyers" ? "active" : ""}
@@ -2909,12 +2926,17 @@ function AdminV2({
             <div className="real-store-preview">
               <div className="real-store-screen">
                 <iframe
+                  ref={catalogPreviewRef}
                   src={catalogPath(template)}
                   title={`Vista real de ${templates[template].label}`}
                 />
               </div>
             </div>
-            <section className="admin-card media-upload-bar">
+            <section
+              className="admin-card media-upload-bar"
+              onFocusCapture={() => revealCatalogPart(".store-header")}
+              onClickCapture={() => revealCatalogPart(".store-header")}
+            >
               <div>
                 <small>ARCHIVOS DE PORTADA</small>
                 <h2>Carga y mira el resultado al instante</h2>
@@ -2986,7 +3008,10 @@ function AdminV2({
                 </span>
               </section>
             </div>
-            <div className="admin-card cover-fields cover-text-editor">
+            <div
+              className="admin-card cover-fields cover-text-editor"
+              onFocusCapture={() => revealCatalogPart(".store-hero, .clothing-entry")}
+            >
               <div>
                 <small>TEXTOS Y FUENTES</small>
                 <h2>Edita lo que aparece en la portada</h2>
@@ -3091,61 +3116,24 @@ function AdminV2({
                 Guardar portada
               </button>
             </div>
-            <section className="admin-card cover-typography-panel">
-              <div>
-                <small>TIPOGRAFÍAS Y BOTONES</small>
-                <h2>Personaliza cada sector de la portada</h2>
-              </div>
-              <div className="theme-presets">
-                {themes.map((theme) => (
-                  <button
-                    type="button"
-                    key={theme.name}
-                    onClick={() => setStore({ ...store, ...theme })}
-                  >
-                    <i
-                      style={{
-                        background: `linear-gradient(135deg,${theme.backgroundColor} 50%,${theme.secondaryColor} 50%)`,
-                      }}
-                    ></i>
-                    <span>{theme.name}</span>
-                  </button>
-                ))}
-              </div>
-              <div className="font-sector-grid">
-                <FontSelect
-                  label="Texto general"
-                  value={store.fontFamily}
-                  change={(v) => update("fontFamily", v)}
-                />
-                <FontSelect
-                  label="Portada principal"
-                  value={store.heroFont}
-                  change={(v) => update("heroFont", v)}
-                />
-                <FontSelect
-                  label="Nombre del modelo"
-                  value={store.productFont}
-                  change={(v) => update("productFont", v)}
-                />
-                <FontSelect
-                  label="Precios"
-                  value={store.priceFont}
-                  change={(v) => update("priceFont", v)}
-                />
-                <FontSelect
-                  label="Botones"
-                  value={store.buttonFont}
-                  change={(v) => update("buttonFont", v)}
-                />
-                <FontSelect
-                  label="Títulos secundarios"
-                  value={store.headingFont}
-                  change={(v) => update("headingFont", v)}
-                />
-              </div>
-            </section>
-            <section className="admin-card button-style-panel">
+            <section
+              className="admin-card button-style-panel"
+              onFocusCapture={(event) => {
+                const editor = (event.target as HTMLElement).closest(
+                  ".button-style-editor > div",
+                );
+                const index = editor
+                  ? Array.from(editor.parentElement?.children || []).indexOf(editor)
+                  : 0;
+                revealCatalogPart(
+                  index === 0
+                    ? ".hero-cta, .clothing-entry-copy a"
+                    : index === 1
+                      ? ".photo-gallery-strip, .colors"
+                      : ".whatsapp-glow",
+                );
+              }}
+            >
               <div>
                 <small>ESTILOS DE BOTONES</small>
                 <h2>Elige el efecto y el color de cada botón</h2>
@@ -3356,13 +3344,6 @@ function AdminV2({
                   change={(file) =>
                     uploadStoreImage("surfaceBackgroundImage", file)
                   }
-                />
-                <UploadButton
-                  label="Fondo general"
-                  hint="Imagen o GIF"
-                  accept="image/png,image/jpeg,image/webp,image/gif"
-                  disabled={uploading}
-                  change={(file) => uploadStoreImage("backgroundImage", file)}
                 />
               </div>
             </section>
