@@ -4210,6 +4210,7 @@ function FlyerStudio({
   const [productScale, setProductScale] = useState(100);
   const [productX, setProductX] = useState(0);
   const [productY, setProductY] = useState(0);
+  const [scalePanelOpen, setScalePanelOpen] = useState(true);
   const [downloading, setDownloading] = useState(false);
   const [aiGenerating, setAiGenerating] = useState(false);
   const [cutoutStatus, setCutoutStatus] = useState("");
@@ -4290,6 +4291,9 @@ function FlyerStudio({
     background,
     productImage,
     frameImage,
+    productScale,
+    productX,
+    productY,
   };
 
   async function uploadAsset(
@@ -4355,12 +4359,18 @@ function FlyerStudio({
     try {
       let png = "";
       try {
-        png = await Promise.race([
-          removePersonBackgroundLocally(catalogImages[0], setCutoutStatus),
-          new Promise<string>((_, reject) =>
-            window.setTimeout(() => reject(new Error("model_timeout")), 18000),
-          ),
-        ]);
+        setCutoutStatus("Separando solo el producto…");
+        const form = new FormData();
+        form.append("prompt", `Extract only the sellable product: ${subject}. Return the complete garment, polo, shoe or accessory by itself. Remove the human, face, skin, hair, hands, body, mannequin, hanger, floor, shadows, scenery, text and every other object. Preserve the exact product shape, print, logo, seams, texture and colors. Center the single product on a uniform pure white #FFFFFF background with generous padding.`);
+        const reference = await flyerReferenceFile(catalogImages[0], 0);
+        form.append("input_image_0", reference, reference.name);
+        const response = await fetch("https://catalogo-flyer-ai.luicredo.workers.dev/generate", {
+          method: "POST", headers: { "x-flyer-code": "MODA-4827" }, body: form,
+        });
+        const result = await response.json() as { image?: string };
+        if (!response.ok || !result.image) throw new Error("product_isolation_failed");
+        setCutoutStatus("Creando transparencia real…");
+        png = await removeBackgroundByEdgesLocally(result.image);
       } catch {
         setCutoutStatus("Recortando directamente en tu navegador…");
         png = await removeBackgroundByEdgesLocally(catalogImages[0]);
@@ -4371,8 +4381,8 @@ function FlyerStudio({
       const code = cause instanceof Error ? cause.message : "";
       setError(
         code === "no_person_detected"
-          ? "No detecté una persona completa en esta foto. Prueba otra toma del modelo o sube un PNG."
-          : "No se pudo cargar el recortador. Revisa tu conexión y vuelve a intentarlo.",
+          ? "No detecté el producto completo. Prueba otra foto con el polo o zapatilla visible."
+          : "No se pudo separar el producto en esta foto. Prueba una toma con el producto más visible.",
       );
       setCutoutStatus("");
     } finally {
@@ -4951,8 +4961,12 @@ function FlyerStudio({
           } as React.CSSProperties
         }
       >
-        <label className="flyer-product-scale">
-          Tamaño de foto <output>{productScale}%</output>
+        <div className={`flyer-product-scale ${scalePanelOpen ? "open" : "collapsed"}`}>
+          <button className="flyer-scale-toggle" type="button" onClick={() => setScalePanelOpen((open) => !open)} aria-expanded={scalePanelOpen}>
+            <span>Tamaño y posición</span><b>{scalePanelOpen ? "−" : "+"}</b>
+          </button>
+          {scalePanelOpen && <>
+          <label>Tamaño de foto <output>{productScale}%</output></label>
           <input
             type="range"
             min="45"
@@ -4966,7 +4980,8 @@ function FlyerStudio({
           <span>Centrar vertical <output>{productY}</output></span>
           <input type="range" min="-35" max="35" value={productY} onChange={e=>setProductY(Number(e.target.value))}/>
           <button type="button" onClick={()=>{setProductX(0);setProductY(0)}}>Centrar</button>
-        </label>
+          </>}
+        </div>
         {backgroundKind === "video" ? (
           <video
             className="flyer-background-media"
@@ -5090,6 +5105,9 @@ type LayeredFlyerData = {
   background: string;
   productImage: string;
   frameImage: string;
+  productScale: number;
+  productX: number;
+  productY: number;
 };
 type LayeredFlyerAssets = {
   backgroundImage?: ImageBitmap;
@@ -5341,36 +5359,36 @@ function drawLayeredFlyerFrame(
     }
     ctx.restore();
   }
-  const frame = { x: 110, y: 240, w: 860, h: 760 };
-  if (data.frameStyle === "polaroid") {
-    ctx.strokeStyle = "#f4f0e8";
-    ctx.lineWidth = 3;
-    roundedRect(ctx, frame.x, frame.y, frame.w, frame.h, 8);
-    ctx.stroke();
-  }
-  if (data.frameStyle === "dark") {
-    ctx.strokeStyle = data.accentColor;
-    ctx.lineWidth = 3;
-    roundedRect(ctx, frame.x, frame.y, frame.w, frame.h, 18);
-    ctx.stroke();
-  }
-  if (data.frameStyle === "glass") {
-    ctx.strokeStyle = "rgba(255,255,255,.62)";
-    ctx.lineWidth = 3;
-    roundedRect(ctx, frame.x, frame.y, frame.w, frame.h, 22);
-    ctx.stroke();
-  }
-  if (assets.product)
+  const frame = { x: 172.8, y: 324, w: 734.4, h: 702 },
+    productScale = data.productScale / 100,
+    productW = frame.w * productScale,
+    productH = frame.h * productScale,
+    productX = frame.x + (frame.w - productW) / 2 + frame.w * data.productX / 100,
+    productY = frame.y + (frame.h - productH) / 2 + frame.h * data.productY / 100;
+  if (assets.product) {
     drawFlyerSourceContain(
       ctx,
       assets.product,
-      frame.x,
-      frame.y,
-      frame.w,
-      frame.h,
+      productX,
+      productY,
+      productW,
+      productH,
     );
+  }
+  if (data.frameStyle === "polaroid") {
+    ctx.strokeStyle = "#f4f0e8"; ctx.lineWidth = 3;
+    roundedRect(ctx, frame.x, frame.y, frame.w, frame.h, 8); ctx.stroke();
+  }
+  if (data.frameStyle === "dark") {
+    ctx.strokeStyle = data.accentColor; ctx.lineWidth = 3;
+    roundedRect(ctx, frame.x, frame.y, frame.w, frame.h, 18); ctx.stroke();
+  }
+  if (data.frameStyle === "glass") {
+    ctx.strokeStyle = "rgba(255,255,255,.72)"; ctx.lineWidth = 3;
+    roundedRect(ctx, frame.x, frame.y, frame.w, frame.h, 22); ctx.stroke();
+  }
   if (assets.frame)
-    drawFlyerSourceContain(ctx, assets.frame, 88, 218, 904, 804);
+    drawFlyerSourceContain(ctx, assets.frame, 0, 0, 1080, 1350);
   drawFlyerOrnaments(ctx, data.ornament, data.accentColor);
   const scale = data.textScale / 100,
     x = (1080 * data.textX) / 100,
