@@ -149,6 +149,16 @@ export default function Home({
       setAppearanceOverride(requested);
   }, [startAdmin]);
   useEffect(() => {
+    if (startAdmin) return;
+    const receivePreview = (event: MessageEvent) => {
+      if (event.origin !== location.origin || event.data?.type !== "catalog-live-preview")
+        return;
+      setStore(normalizeStore(event.data.store));
+    };
+    window.addEventListener("message", receivePreview);
+    return () => window.removeEventListener("message", receivePreview);
+  }, [startAdmin]);
+  useEffect(() => {
     if (!startAdmin) return;
     let mounted = true;
     const shared = new URLSearchParams(location.search).get("llave") || "";
@@ -1438,6 +1448,14 @@ function Admin({
   const [uploading, setUploading] = useState(false);
   const update = (k: keyof Store, v: string | number) =>
     setStore({ ...store, [k]: v });
+  const syncCatalogPreview = () =>
+    catalogPreviewRef.current?.contentWindow?.postMessage(
+      { type: "catalog-live-preview", store },
+      location.origin,
+    );
+  useEffect(() => {
+    syncCatalogPreview();
+  }, [store]);
   const collectionVideo = isVideoMedia(store.collectionBackgroundImage);
   const backgroundPresets =
     template === "mujer" || template === "accesorios"
@@ -2929,6 +2947,7 @@ function AdminV2({
                   ref={catalogPreviewRef}
                   src={catalogPath(template)}
                   title={`Vista real de ${templates[template].label}`}
+                  onLoad={syncCatalogPreview}
                 />
               </div>
             </div>
@@ -3107,11 +3126,6 @@ function AdminV2({
                   change={(v) => update("heroCtaFont", v)}
                 />
               </div>
-              <ColorField
-                label="Color del botón Ver catálogo"
-                value={store.heroButtonColor}
-                change={(v) => update("heroButtonColor", v)}
-              />
               <button className="admin-primary save-cover" disabled={uploading}>
                 Guardar portada
               </button>
@@ -3149,30 +3163,6 @@ function AdminV2({
                     label="Color Ver catálogo"
                     value={store.heroButtonColor}
                     change={(v) => update("heroButtonColor", v)}
-                  />
-                </div>
-                <div>
-                  <ButtonStyleSelect
-                    label="Estilo Ver colores"
-                    value={store.secondaryButtonStyle}
-                    change={(v) => update("secondaryButtonStyle", v)}
-                  />
-                  <ColorField
-                    label="Color Ver colores"
-                    value={store.secondaryColor}
-                    change={(v) => update("secondaryColor", v)}
-                  />
-                </div>
-                <div>
-                  <ButtonStyleSelect
-                    label="Estilo WhatsApp"
-                    value={store.buttonStyle}
-                    change={(v) => update("buttonStyle", v)}
-                  />
-                  <ColorField
-                    label="Color WhatsApp"
-                    value={store.buttonColor}
-                    change={(v) => update("buttonColor", v)}
                   />
                 </div>
               </div>
@@ -3406,6 +3396,26 @@ function AdminV2({
                     <span></span>
                     <b>Vista del modelo</b>
                     <small>S/ 69</small>
+                    <div className="collection-preview-actions">
+                      <button
+                        type="button"
+                        style={{
+                          background: store.secondaryColor,
+                          color: contrastText(store.secondaryColor),
+                        }}
+                      >
+                        Ver colores
+                      </button>
+                      <button
+                        type="button"
+                        style={{
+                          background: store.buttonColor,
+                          color: contrastText(store.buttonColor),
+                        }}
+                      >
+                        Pedir por WhatsApp
+                      </button>
+                    </div>
                   </div>
                 </section>
                 <div className="collection-designer-fields">
@@ -3510,6 +3520,36 @@ function AdminV2({
                       />
                     </label>
                   )}
+                  <section className="design-button-editor">
+                    <div>
+                      <small>BOTONES DE LA VENTANA</small>
+                      <h3>Edita y revisa los botones en la vista previa</h3>
+                    </div>
+                    <div>
+                      <ButtonStyleSelect
+                        label="Estilo Ver colores"
+                        value={store.secondaryButtonStyle}
+                        change={(v) => update("secondaryButtonStyle", v)}
+                      />
+                      <ColorField
+                        label="Color Ver colores"
+                        value={store.secondaryColor}
+                        change={(v) => update("secondaryColor", v)}
+                      />
+                    </div>
+                    <div>
+                      <ButtonStyleSelect
+                        label="Estilo Pedir por WhatsApp"
+                        value={store.buttonStyle}
+                        change={(v) => update("buttonStyle", v)}
+                      />
+                      <ColorField
+                        label="Color Pedir por WhatsApp"
+                        value={store.buttonColor}
+                        change={(v) => update("buttonColor", v)}
+                      />
+                    </div>
+                  </section>
                 </div>
               </div>
             </section>
