@@ -1,0 +1,410 @@
+.generated-business-store {
+  --business-border: color-mix(in srgb, var(--accent), transparent 76%);
+  --business-glow: color-mix(in srgb, var(--accent), transparent 82%);
+  overflow-x: clip;
+  background:
+    radial-gradient(circle at 8% 5%, var(--business-glow), transparent 32rem),
+    radial-gradient(circle at 92% 45%, color-mix(in srgb, var(--secondary), transparent 88%), transparent 38rem),
+    var(--store-bg);
+}
+
+.generated-business-store .store-header {
+  width: min(1460px, calc(100% - 28px));
+  margin: 14px auto 0;
+  border: 1px solid var(--business-border);
+  border-radius: 24px !important;
+  background: color-mix(in srgb, var(--surface), transparent 9%);
+  box-shadow: 0 18px 45px #0005;
+}
+
+.business-header-trust {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  color: color-mix(in srgb, var(--store-text), transparent 25%);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .035em;
+}
+
+.business-header-trust span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.business-header-trust span::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 14px var(--accent);
+}
+
+.generated-business-store .store-hero,
+.generated-business-store .clothing-entry {
+  width: min(1460px, calc(100% - 28px));
+  min-height: clamp(560px, 72vh, 760px) !important;
+  margin: 18px auto 0 !important;
+  border: 1px solid var(--business-border) !important;
+  border-radius: clamp(28px, 4vw, 52px) !important;
+  box-shadow: 0 38px 90px #0008;
+}
+
+.generated-business-store .store-hero::before,
+.generated-business-store .clothing-entry::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, #02050be8 0%, #02050ba6 45%, #02050b18 78%),
+    linear-gradient(180deg, transparent 55%, #02050b70);
+}
+
+.generated-business-store .store-hero > *,
+.generated-business-store .clothing-entry > * {
+  position: relative;
+  z-index: 1;
+}
+
+.generated-business-store .hero-copy,
+.generated-business-store .clothing-entry-copy {
+  max-width: 720px;
+}
+
+.generated-business-store .hero-copy h1,
+.generated-business-store .clothing-entry-copy h1 {
+  max-width: 820px;
+  font-size: clamp(56px, 7.3vw, 112px);
+  line-height: .84;
+  text-wrap: balance;
+}
+
+.generated-business-store .generic-hero-highlight,
+.generated-business-store .clothing-entry-copy em {
+  display: block;
+  margin: 14px 0 8px;
+  color: var(--accent);
+  font-size: clamp(20px, 2vw, 34px);
+  font-style: normal;
+  font-weight: 900;
+  letter-spacing: -.03em;
+}
+
+.generated-business-store .hero-copy p,
+.generated-business-store .clothing-entry-copy p {
+  max-width: 560px;
+  color: #f4f7fccc;
+  font-size: clamp(14px, 1.2vw, 18px);
+}
+
+.generated-business-store .store-search {
+  align-self: end;
+  max-width: 430px;
+  border-color: #ffffff40;
+  background: #07101ade;
+  backdrop-filter: blur(18px);
+}
+
+.business-hero-dots {
+  position: absolute !important;
+  right: 28px;
+  bottom: 26px;
+  z-index: 3 !important;
+  display: flex;
+  gap: 8px;
+  padding: 9px 11px;
+  border: 1px solid #ffffff2c;
+  border-radius: 999px;
+  background: #05080da8;
+  backdrop-filter: blur(12px);
+}
+
+.business-hero-dots button {
+  width: 9px;
+  height: 9px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px !important;
+  background: #ffffff65;
+  transition: width .25s ease, background .25s ease;
+}
+
+.business-hero-dots button.active {
+  width: 30px;
+  background: var(--accent);
+  box-shadow: 0 0 16px var(--accent);
+}
+
+.business-value-bar {
+  width: min(1320px, calc(100% - 40px));
+  margin: -28px auto 26px;
+  position: relative;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--business-border);
+  border-radius: 26px;
+  background: var(--business-border);
+  box-shadow: 0 24px 65px #0006;
+}
+
+.business-value-bar > div {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 92px;
+  padding: 18px 22px;
+  background: color-mix(in srgb, var(--surface), #05070b 12%);
+}
+
+.business-value-bar b {
+  color: var(--accent);
+  font-size: 12px;
+  letter-spacing: .08em;
+}
+
+.business-value-bar span {
+  display: grid;
+  gap: 4px;
+  color: color-mix(in srgb, var(--store-text), transparent 35%);
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.business-value-bar strong {
+  color: var(--store-text);
+  font-family: var(--heading-font);
+  font-size: 15px;
+}
+
+.generated-business-store .category-tabs,
+.generated-business-store .clothing-category-panel {
+  width: min(1320px, calc(100% - 40px));
+  margin: 0 auto 22px !important;
+  border: 1px solid var(--business-border) !important;
+  border-radius: 22px !important;
+  box-shadow: 0 16px 45px #0003;
+}
+
+.generated-business-store .collection-stage {
+  width: min(1460px, calc(100% - 28px));
+  margin: 0 auto 22px !important;
+  border: 1px solid var(--business-border) !important;
+  border-radius: clamp(28px, 4vw, 48px) !important;
+  content-visibility: auto;
+  contain-intrinsic-size: 1000px;
+}
+
+.generated-business-store .model-count {
+  padding-top: 42px;
+}
+
+.generated-business-store .model-count b {
+  font-family: var(--heading-font);
+  font-size: clamp(23px, 2.3vw, 36px);
+  letter-spacing: -.035em;
+}
+
+.generated-business-store .product-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(14px, 1.7vw, 24px);
+}
+
+.generated-business-store .store-product {
+  border: 1px solid var(--business-border);
+  border-radius: 28px !important;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface), #fff 3%), var(--surface));
+  box-shadow: 0 18px 48px #0004;
+  transform: translateZ(0);
+}
+
+.generated-business-store .store-product:hover {
+  transform: translateY(-7px);
+  box-shadow: 0 28px 65px #0007, 0 0 32px var(--business-glow);
+}
+
+.generated-business-store .store-photo {
+  aspect-ratio: 1 / 1;
+  height: auto;
+  margin: 8px;
+  border-radius: 22px !important;
+  background: color-mix(in srgb, var(--surface), #fff 8%);
+}
+
+.generated-business-store .store-photo > img {
+  transition: transform .6s cubic-bezier(.2,.75,.2,1);
+}
+
+.generated-business-store .store-product:hover .store-photo > img {
+  transform: scale(1.035);
+}
+
+.generated-business-store .store-product-info {
+  padding: 18px 20px 20px;
+}
+
+.generated-business-store .store-product-info h2 {
+  min-height: 0;
+  margin-bottom: 11px;
+  font-size: clamp(20px, 1.7vw, 26px);
+}
+
+.generated-business-store .store-product-info p {
+  min-height: 66px;
+  line-height: 1.55;
+}
+
+.generated-business-store .store-price strong {
+  color: var(--accent);
+  font-family: var(--price-font);
+  font-size: 29px;
+}
+
+.generated-business-store .whatsapp-glow,
+.generated-business-store .configure-order {
+  min-height: 54px !important;
+  border-radius: 16px !important;
+}
+
+.generated-business-store .store-footer {
+  width: min(1460px, calc(100% - 28px));
+  margin: 0 auto 24px !important;
+  border: 1px solid var(--business-border) !important;
+  border-radius: 28px !important;
+}
+
+.business-mobile-order {
+  display: none;
+}
+
+.business-comida-rapida { --business-glow: #ff861b25; }
+.business-detalles-romanticos { --business-glow: #ff6caa2b; }
+.business-zapatos-mujer { --business-glow: #d9a09c27; }
+.business-perfumeria { --business-glow: #4da7ff27; }
+.business-postres { --business-glow: #ff96b62b; }
+
+@media (max-width: 1080px) {
+  .business-header-trust span:nth-child(2) { display: none; }
+  .generated-business-store .product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 760px) {
+  .generated-business-store { padding-bottom: 88px; }
+  .generated-business-store .store-header {
+    width: calc(100% - 16px);
+    height: 68px;
+    margin-top: 8px;
+    padding-inline: 14px;
+    border-radius: 20px !important;
+  }
+  .business-header-trust { display: none; }
+  .generated-business-store .store-logo b { font-size: 17px; }
+  .generated-business-store .store-header > button { padding: 9px 11px; font-size: 7px; }
+  .generated-business-store .store-hero,
+  .generated-business-store .clothing-entry {
+    width: calc(100% - 16px);
+    min-height: 600px !important;
+    margin-top: 10px !important;
+    padding: 42px 24px 88px;
+    border-radius: 30px !important;
+    background-position: 62% center !important;
+  }
+  .generated-business-store .store-hero::before,
+  .generated-business-store .clothing-entry::before {
+    background: linear-gradient(180deg, #02050b4a 0%, #02050ba8 45%, #02050bf5 100%);
+  }
+  .generated-business-store .hero-copy,
+  .generated-business-store .clothing-entry-copy { align-self: end; }
+  .generated-business-store .hero-copy h1,
+  .generated-business-store .clothing-entry-copy h1 { font-size: clamp(49px, 16vw, 72px); }
+  .generated-business-store .store-search {
+    position: absolute;
+    right: 20px;
+    bottom: 22px;
+    left: 20px;
+    width: auto;
+    height: 52px;
+  }
+  .business-hero-dots { right: 18px; bottom: 82px; }
+  .generated-business-store .clothing-entry .business-hero-dots { bottom: 20px; }
+  .business-value-bar {
+    width: calc(100% - 24px);
+    margin: -18px auto 18px;
+    grid-template-columns: 1fr;
+    border-radius: 22px;
+  }
+  .business-value-bar > div { min-height: 72px; padding: 14px 18px; }
+  .business-value-bar > div:nth-child(3) { display: none; }
+  .generated-business-store .category-tabs,
+  .generated-business-store .clothing-category-panel {
+    width: calc(100% - 20px);
+    margin-bottom: 14px !important;
+  }
+  .generated-business-store .collection-stage {
+    width: calc(100% - 12px);
+    border-radius: 28px !important;
+  }
+  .generated-business-store .model-count { padding: 28px 16px 22px; }
+  .generated-business-store .product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    padding: 0 10px 44px;
+  }
+  .generated-business-store .store-product { border-radius: 20px !important; }
+  .generated-business-store .store-photo { margin: 5px; border-radius: 16px !important; }
+  .generated-business-store .store-product-info { padding: 12px; }
+  .generated-business-store .store-product-info h2 { font-size: 17px; }
+  .generated-business-store .store-product-info p { min-height: 72px; font-size: 9px; }
+  .generated-business-store .store-price strong { font-size: 23px; }
+  .generated-business-store .store-footer { width: calc(100% - 16px); margin-bottom: 10px !important; }
+  .business-mobile-order {
+    position: fixed;
+    right: 10px;
+    bottom: 10px;
+    left: 10px;
+    z-index: 70;
+    display: grid;
+    grid-template-columns: 38px 1fr 28px;
+    align-items: center;
+    gap: 10px;
+    min-height: 66px;
+    padding: 10px 14px;
+    border: 1px solid #ffffff69;
+    border-radius: 22px;
+    background: linear-gradient(115deg, #087c3d, #20cf68);
+    color: #fff;
+    text-decoration: none;
+    box-shadow: 0 18px 45px #0009, 0 0 28px #20cf6865;
+    backdrop-filter: blur(15px);
+  }
+  .business-mobile-order img { width: 34px; height: 34px; object-fit: contain; }
+  .business-mobile-order span { display: grid; gap: 2px; }
+  .business-mobile-order small { color: #dfffea; font-size: 8px; }
+  .business-mobile-order b { font-size: 13px; letter-spacing: .015em; }
+  .business-mobile-order i { font-size: 22px; font-style: normal; }
+}
+
+@media (max-width: 390px) {
+  .generated-business-store .product-grid { grid-template-columns: 1fr; padding-inline: 12px; }
+  .generated-business-store .store-photo { aspect-ratio: 4 / 3; }
+  .generated-business-store .store-product-info p { min-height: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .generated-business-store *,
+  .generated-business-store *::before,
+  .generated-business-store *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
