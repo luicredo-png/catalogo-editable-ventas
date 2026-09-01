@@ -1448,14 +1448,6 @@ function Admin({
   const [uploading, setUploading] = useState(false);
   const update = (k: keyof Store, v: string | number) =>
     setStore({ ...store, [k]: v });
-  const syncCatalogPreview = () =>
-    catalogPreviewRef.current?.contentWindow?.postMessage(
-      { type: "catalog-live-preview", store },
-      location.origin,
-    );
-  useEffect(() => {
-    syncCatalogPreview();
-  }, [store]);
   const collectionVideo = isVideoMedia(store.collectionBackgroundImage);
   const backgroundPresets =
     template === "mujer" || template === "accesorios"
@@ -2652,6 +2644,14 @@ function AdminV2({
   );
   const update = (k: keyof Store, v: string | number) =>
     setStore({ ...store, [k]: v });
+  const syncCatalogPreview = () =>
+    catalogPreviewRef.current?.contentWindow?.postMessage(
+      { type: "catalog-live-preview", store },
+      location.origin,
+    );
+  useEffect(() => {
+    syncCatalogPreview();
+  }, [store]);
   const revealCatalogPart = (selector: string) => {
     requestAnimationFrame(() => {
       try {
