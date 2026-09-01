@@ -156,3 +156,28 @@ body main.storefront.clothing-store .clothing-entry::before{filter:none!importan
 .storefront.hero-button-silver :is(.hero-cta,.clothing-entry-copy>a),.storefront.secondary-button-silver :is(.photo-gallery-strip button,.colors button),.storefront.whatsapp-button-silver .whatsapp-glow{color:#343940!important}.storefront.hero-button-dark :is(.hero-cta,.clothing-entry-copy>a),.storefront.secondary-button-dark :is(.photo-gallery-strip button,.colors button),.storefront.whatsapp-button-dark .whatsapp-glow{color:#fff!important}
 .storefront .whatsapp-glow{min-height:52px!important;font-weight:950!important;letter-spacing:.025em!important;opacity:1!important}.storefront .whatsapp-glow span,.storefront .whatsapp-glow img{position:relative;z-index:2;opacity:1!important;filter:none!important}.storefront.whatsapp-button-gradient .whatsapp-glow{border:1px solid #ffffff6b!important;box-shadow:0 10px 24px color-mix(in srgb,var(--button),transparent 42%),0 0 22px color-mix(in srgb,var(--button),transparent 38%),inset 3px 3px 8px #ffffff55!important;text-shadow:0 1px 2px #0005}.storefront.whatsapp-button-gradient .whatsapp-glow:hover{transform:translateY(-2px) scale(1.015);box-shadow:0 14px 30px color-mix(in srgb,var(--button),transparent 30%),0 0 32px color-mix(in srgb,var(--button),transparent 22%),inset 3px 3px 9px #ffffff6b!important}
 
+/* Portada: la barra promocional se edita junto con el resto de sus textos. */
+.cover-promo-control{display:grid;gap:7px;padding:12px;border:1px solid #d9e3ee;border-radius:15px;background:#fbfdff;font-size:10px;font-weight:850}.cover-promo-control input{width:100%;border:1px solid #d4dde7;border-radius:12px;padding:12px;background:#fff}
+
+/* Categorías: color propio, color general y orden accesible en táctil y escritorio. */
+.catalog-type-grid article>.color-field,.catalog-type-grid article>.type-order-actions{grid-column:2}.type-order-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.type-order-actions button{min-height:36px;border:1px solid #bad2e8;border-radius:999px;background:#eef7ff;color:#1269b5;font-size:9px;font-weight:900;cursor:pointer}.type-order-actions button:disabled{opacity:.38;cursor:not-allowed}.category-background-preview{background-color:#05080d}.category-background-editor .color-field{max-width:440px}
+
+/* Los colores tipográficos pertenecen al bloque 4 del estudio. */
+.flyer-typography-colors{display:grid;grid-template-columns:1fr 1fr;gap:10px}.flyer-typography-colors>label{display:grid;gap:6px;font-size:9px;font-weight:850}
+
+/* En celular: primero carga, luego artículo, después preview y finalmente 4 y 5. */
+@media(max-width:620px){
+  .catalog-type-grid article>.color-field,.catalog-type-grid article>.type-order-actions{grid-column:1/-1}
+  .flyer-composer{display:grid;grid-template-columns:minmax(0,1fr)}
+  .flyer-layer-controls{display:contents}
+  .flyer-studio-heading{order:1;padding:16px;border:1px solid #dce5ef;border-radius:16px;background:#fff}
+  .flyer-background-block{order:2}
+  .flyer-product-block{order:3}
+  .flyer-preview-stage{order:4}
+  .flyer-text-block{order:5}
+  .flyer-finish-block{order:6}
+  .flyer-export-block{order:7}
+  .flyer-composer>.flyer-layer-controls>.upload-error{order:8}
+  .flyer-typography-colors{grid-template-columns:1fr}
+}
+

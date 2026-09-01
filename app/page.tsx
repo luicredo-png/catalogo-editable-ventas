@@ -420,9 +420,14 @@ export default function Home({
             className="clothing-category-panel"
             aria-label="Categorías de moda"
             style={
-              categoryBackground(store.categorySettings)
+              categoryBackground(store.categorySettings) ||
+              categoryBackgroundColor(store.categorySettings)
                 ? {
-                    backgroundImage: `linear-gradient(#05080dcc,#05080dcc),url(${categoryBackground(store.categorySettings)})`,
+                    backgroundColor:
+                      categoryBackgroundColor(store.categorySettings) || undefined,
+                    backgroundImage: categoryBackground(store.categorySettings)
+                      ? `linear-gradient(#05080d99,#05080d99),url(${categoryBackground(store.categorySettings)})`
+                      : undefined,
                     backgroundSize: "cover",
                     backgroundPosition: "center",
                   }
@@ -436,7 +441,7 @@ export default function Home({
                   onClick={() => setFilter(c.key)}
                   key={c.key}
                 >
-                  <span>
+                  <span style={{ backgroundColor: c.color || undefined }}>
                     {c.image ? <img src={c.image} alt="" /> : <i></i>}
                   </span>
                   <b>{c.label}</b>
@@ -936,7 +941,7 @@ function catalogPath(key: TemplateKey) {
             ? "/zapatos-mujer"
             : "/accesorios";
 }
-type CatalogType = { key: string; label: string; image: string };
+type CatalogType = { key: string; label: string; image: string; color?: string };
 function parseCategorySettings(value: string): CatalogType[] {
   try {
     const parsed = JSON.parse(value || "[]");
@@ -947,6 +952,7 @@ function parseCategorySettings(value: string): CatalogType[] {
             key: item.key,
             label: String(item.label || clothingCategoryLabel(item.key)),
             image: String(item.image || ""),
+            color: String(item.color || ""),
           }))
       : [];
   } catch {
@@ -967,20 +973,34 @@ function catalogTypes(products: Product[], store: Store, heroImage: string) {
       key,
       label: savedItem?.label || clothingCategoryLabel(key),
       image: savedItem?.image || fallback,
+      color: savedItem?.color || "",
     };
   });
 }
-function stringifyCategorySettings(items: CatalogType[], categoryBackgroundImage = "") {
+function stringifyCategorySettings(
+  items: CatalogType[],
+  categoryBackgroundImage = "",
+  categoryBackgroundColorValue = "",
+) {
   return JSON.stringify(
     items.filter((item) => item.key !== "__CATEGORY_BACKGROUND__").map((item) => ({
       key: item.key.trim().toUpperCase() || "NUEVO",
       label: item.label.trim() || clothingCategoryLabel(item.key),
       image: item.image.trim(),
-    })).concat(categoryBackgroundImage ? [{ key: "__CATEGORY_BACKGROUND__", label: "", image: categoryBackgroundImage }] : []),
+      color: item.color || "",
+    })).concat(categoryBackgroundImage || categoryBackgroundColorValue ? [{
+      key: "__CATEGORY_BACKGROUND__",
+      label: "",
+      image: categoryBackgroundImage,
+      color: categoryBackgroundColorValue,
+    }] : []),
   );
 }
 function categoryBackground(value: string) {
   return parseCategorySettings(value).find((item) => item.key === "__CATEGORY_BACKGROUND__")?.image || "";
+}
+function categoryBackgroundColor(value: string) {
+  return parseCategorySettings(value).find((item) => item.key === "__CATEGORY_BACKGROUND__")?.color || "";
 }
 
 function StoreProductCard({
@@ -1556,10 +1576,15 @@ function Admin({
     store.heroImage || products[0]?.image || "",
   );
   const categoryBackgroundImage = categoryBackground(store.categorySettings);
+  const categoryBackgroundColorValue = categoryBackgroundColor(store.categorySettings);
   const saveTypeItems = (items: CatalogType[]) =>
     setStore({
       ...store,
-      categorySettings: stringifyCategorySettings(items, categoryBackgroundImage),
+      categorySettings: stringifyCategorySettings(
+        items,
+        categoryBackgroundImage,
+        categoryBackgroundColorValue,
+      ),
     });
   const updateType = (index: number, patch: Partial<CatalogType>) =>
     saveTypeItems(
@@ -1610,6 +1635,13 @@ function Admin({
     ]);
   const removeType = (index: number) =>
     saveTypeItems(typeItems.filter((_, i) => i !== index));
+  const moveType = (index: number, direction: -1 | 1) => {
+    const target = index + direction;
+    if (target < 0 || target >= typeItems.length) return;
+    const next = [...typeItems];
+    [next[index], next[target]] = [next[target], next[index]];
+    saveTypeItems(next);
+  };
   return (
     <main className="admin-shell">
       {notice && <div className="toast">{notice}</div>}
@@ -2697,10 +2729,15 @@ function AdminV2({
     store.heroImage || products[0]?.image || "",
   );
   const categoryBackgroundImage = categoryBackground(store.categorySettings);
+  const categoryBackgroundColorValue = categoryBackgroundColor(store.categorySettings);
   const saveTypeItems = (items: CatalogType[]) =>
     setStore({
       ...store,
-      categorySettings: stringifyCategorySettings(items, categoryBackgroundImage),
+      categorySettings: stringifyCategorySettings(
+        items,
+        categoryBackgroundImage,
+        categoryBackgroundColorValue,
+      ),
     });
   const updateType = (index: number, patch: Partial<CatalogType>) =>
     saveTypeItems(
@@ -2713,6 +2750,13 @@ function AdminV2({
     ]);
   const removeType = (index: number) =>
     saveTypeItems(typeItems.filter((_, i) => i !== index));
+  const moveType = (index: number, direction: -1 | 1) => {
+    const target = index + direction;
+    if (target < 0 || target >= typeItems.length) return;
+    const next = [...typeItems];
+    [next[index], next[target]] = [next[target], next[index]];
+    saveTypeItems(next);
+  };
   const themes = [
     {
       name: "Editorial rosa",
@@ -2828,7 +2872,11 @@ function AdminV2({
       if (!result.url) return;
       setStore({
         ...store,
-        categorySettings: stringifyCategorySettings(typeItems, String(result.url)),
+        categorySettings: stringifyCategorySettings(
+          typeItems,
+          String(result.url),
+          categoryBackgroundColorValue,
+        ),
       });
     } finally {
       setUploading(false);
@@ -2837,7 +2885,21 @@ function AdminV2({
   function clearCategoryBackground() {
     setStore({
       ...store,
-      categorySettings: stringifyCategorySettings(typeItems),
+      categorySettings: stringifyCategorySettings(
+        typeItems,
+        "",
+        categoryBackgroundColorValue,
+      ),
+    });
+  }
+  function updateCategoryBackgroundColor(value: string) {
+    setStore({
+      ...store,
+      categorySettings: stringifyCategorySettings(
+        typeItems,
+        categoryBackgroundImage,
+        value,
+      ),
     });
   }
   function newProduct() {
@@ -3170,6 +3232,15 @@ function AdminV2({
                   change={(v) => update("heroCtaFont", v)}
                 />
               </div>
+              <label className="cover-promo-control">
+                Texto de la barra en movimiento
+                <input
+                  value={store.promoText}
+                  maxLength={180}
+                  onChange={(e) => update("promoText", e.target.value)}
+                  placeholder="Ejemplo: Oferta especial · Pide hoy por WhatsApp"
+                />
+              </label>
               <div className="cover-cta-editor">
                 <ButtonStyleSelect
                   label="Estilo del botón Ver catálogo"
@@ -3209,17 +3280,23 @@ function AdminV2({
               <div className="category-background-editor">
                 <div
                   className="category-background-preview"
-                  style={
-                    categoryBackgroundImage
-                      ? { backgroundImage: `url(${categoryBackgroundImage})` }
-                      : undefined
-                  }
+                  style={{
+                    backgroundColor: categoryBackgroundColorValue || "#05080d",
+                    backgroundImage: categoryBackgroundImage
+                      ? `url(${categoryBackgroundImage})`
+                      : undefined,
+                  }}
                 >
                   {!categoryBackgroundImage && <span>Fondo de categorías</span>}
                 </div>
                 <div>
                   <b>Fondo exclusivo de Categorías</b>
                   <small>No cambia la portada ni el fondo de los productos.</small>
+                  <ColorField
+                    label="Color del fondo de Categorías"
+                    value={categoryBackgroundColorValue || "#05080d"}
+                    change={updateCategoryBackgroundColor}
+                  />
                   <label className="type-photo-upload">
                     Elegir fondo
                     <input
@@ -3277,6 +3354,29 @@ function AdminV2({
                         }
                       />
                     </label>
+                    <ColorField
+                      label="Color del tipo"
+                      value={item.color || "#e9f0f8"}
+                      change={(color) => updateType(index, { color })}
+                    />
+                    <div className="type-order-actions">
+                      <button
+                        type="button"
+                        disabled={index === 0}
+                        onClick={() => moveType(index, -1)}
+                        aria-label={`Mover ${item.label} hacia arriba`}
+                      >
+                        ↑ Subir
+                      </button>
+                      <button
+                        type="button"
+                        disabled={index === typeItems.length - 1}
+                        onClick={() => moveType(index, 1)}
+                        aria-label={`Mover ${item.label} hacia abajo`}
+                      >
+                        ↓ Bajar
+                      </button>
+                    </div>
                     {item.key !== "TODOS" && (
                       <button
                         type="button"
@@ -3540,15 +3640,6 @@ function AdminV2({
                         <option value={1}>1 producto grande</option>
                         <option value={2}>2 productos compactos</option>
                       </select>
-                    </label>
-                    <label>
-                      Texto del anuncio en movimiento
-                      <input
-                        value={store.promoText}
-                        maxLength={180}
-                        onChange={(e) => update("promoText", e.target.value)}
-                        placeholder="Ejemplo: 20% de descuento solo por hoy"
-                      />
                     </label>
                   </div>
                   {store.collectionBackgroundImage && (
@@ -4285,6 +4376,18 @@ function FlyerStudio({
   const [productX, setProductX] = useState(0);
   const [productY, setProductY] = useState(0);
   const [scalePanelOpen, setScalePanelOpen] = useState(true);
+  const [scalePanelPosition, setScalePanelPosition] = useState({ x: 0, y: 0 });
+  const scalePanelDrag = useRef<{
+    pointerId: number;
+    startX: number;
+    startY: number;
+    originX: number;
+    originY: number;
+    minX: number;
+    maxX: number;
+    minY: number;
+    maxY: number;
+  } | null>(null);
   const [downloading, setDownloading] = useState(false);
   const [aiGenerating, setAiGenerating] = useState(false);
   const [cutoutStatus, setCutoutStatus] = useState("");
@@ -4535,13 +4638,13 @@ function FlyerStudio({
       <section className="admin-card flyer-layer-controls">
         <div className="flyer-studio-heading">
           <small>CREADOR DE FLYERS POR CAPAS</small>
-          <h2>Fondo + artículo PNG + marco + texto</h2>
+          <h2>Fondo + artículo PNG + texto</h2>
           <p>
             La IA solo prepara el artículo del catálogo como PNG. El diseño
             completo lo controlas tú.
           </p>
         </div>
-        <section className="flyer-control-block">
+        <section className="flyer-control-block flyer-background-block">
           <header>
             <b>1. Fondo del flyer</b>
             <span>Elige uno, usa los ya subidos o carga JPG/MP4.</span>
@@ -4670,22 +4773,10 @@ function FlyerStudio({
                   </label>
                 </div>
               )}
-              <div className="flyer-gradient-fields">
-                <ColorField
-                  label="Color del texto"
-                  value={textColor}
-                  change={setTextColor}
-                />
-                <ColorField
-                  label="Color destacado"
-                  value={accentColor}
-                  change={setAccentColor}
-                />
-              </div>
             </div>
           )}
         </section>
-        <section className="flyer-control-block">
+        <section className="flyer-control-block flyer-product-block">
           <header>
             <b>2. Artículo</b>
             <span>
@@ -4693,20 +4784,6 @@ function FlyerStudio({
               fondo.
             </span>
           </header>
-          <label>
-            Qué deseas promocionar
-            <select
-              value={scope}
-              onChange={(e) => {
-                setScope(e.target.value as "photo" | "model" | "category");
-                setProductLayer("");
-              }}
-            >
-              <option value="photo">Una foto específica</option>
-              <option value="model">Un modelo del catálogo</option>
-              <option value="category">Un tipo completo</option>
-            </select>
-          </label>
           {scope !== "category" && (
             <label>
               Modelo
@@ -4794,7 +4871,7 @@ function FlyerStudio({
             </button>
             <small>
               Gratis y privado: la foto se procesa en este navegador. El fondo,
-              marco y textos del flyer no cambian. La primera vez puede tardar
+              y los textos del flyer no cambian. La primera vez puede tardar
               mientras carga el recortador.
             </small>
             <div className="cutout-alternatives">
@@ -4823,42 +4900,7 @@ function FlyerStudio({
             </small>
           </div>
         </section>
-        <section className="flyer-control-block">
-          <header>
-            <b>3. Marco de la foto</b>
-            <span>Prueba estilos o sube un marco PNG transparente.</span>
-          </header>
-          <div className="flyer-frame-options">
-            {(
-              [
-                ["none", "Sin marco"],
-                ["polaroid", "Polaroid"],
-                ["dark", "Editorial oscuro"],
-                ["glass", "Vidrio"],
-              ] as [FlyerFrame, string][]
-            ).map(([id, name]) => (
-              <button
-                type="button"
-                className={frameStyle === id ? "active" : ""}
-                onClick={() => setFrameStyle(id)}
-                key={id}
-              >
-                <i className={`frame-sample ${id}`}></i>
-                <b>{name}</b>
-              </button>
-            ))}
-          </div>
-          <label className="upload-action">
-            <b>Subir marco propio</b>
-            <small>PNG transparente recomendado</small>
-            <input
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              onChange={(e) => uploadAsset("frame", e.target.files?.[0])}
-            />
-          </label>
-        </section>
-        <section className="flyer-control-block">
+        <section className="flyer-control-block flyer-text-block">
           <header>
             <b>4. Textos y tipografías</b>
             <span>Combina una fuente distinta para cada texto del flyer.</span>
@@ -4923,6 +4965,18 @@ function FlyerStudio({
               change={setExtraFont}
             />
           </div>
+          <div className="flyer-typography-colors">
+            <ColorField
+              label="Color de la tipografía"
+              value={textColor}
+              change={setTextColor}
+            />
+            <ColorField
+              label="Color del texto destacado"
+              value={accentColor}
+              change={setAccentColor}
+            />
+          </div>
           <div className="flyer-slider-grid">
             <label>
               Tamaño del texto <output>{textScale}%</output>
@@ -4956,7 +5010,7 @@ function FlyerStudio({
             </label>
           </div>
         </section>
-        <section className="flyer-control-block">
+        <section className="flyer-control-block flyer-finish-block">
           <header>
             <b>5. Precio, logo y detalles</b>
             <span>Mueve el logo entre las cuatro esquinas del flyer.</span>
@@ -5041,7 +5095,7 @@ function FlyerStudio({
             </label>
           </div>
         </section>
-        <div className="flyer-export-actions">
+        <div className="flyer-export-actions flyer-export-block">
           <button
             type="button"
             disabled={downloading || aiGenerating}
@@ -5063,7 +5117,7 @@ function FlyerStudio({
       </section>
       <section
         ref={flyerPreviewRef}
-        className={`flyer-layer-preview typography-${typography} frame-${frameStyle}`}
+        className={`flyer-layer-preview flyer-preview-stage typography-${typography} frame-${frameStyle}`}
         style={
           {
             "--flyer-text": textColor,
@@ -5076,7 +5130,61 @@ function FlyerStudio({
           } as React.CSSProperties
         }
       >
-        <div className={`flyer-product-scale ${scalePanelOpen ? "open" : "collapsed"}`}>
+        <div
+          className={`flyer-product-scale ${scalePanelOpen ? "open" : "collapsed"}`}
+          style={{
+            transform: `translate(${scalePanelPosition.x}px, ${scalePanelPosition.y}px)`,
+          }}
+        >
+          <div
+            className="flyer-panel-drag-handle"
+            onPointerDown={(event) => {
+              const panel = event.currentTarget.parentElement;
+              const preview = panel?.parentElement;
+              if (!panel || !preview) return;
+              const panelRect = panel.getBoundingClientRect();
+              const previewRect = preview.getBoundingClientRect();
+              event.currentTarget.setPointerCapture(event.pointerId);
+              scalePanelDrag.current = {
+                pointerId: event.pointerId,
+                startX: event.clientX,
+                startY: event.clientY,
+                originX: scalePanelPosition.x,
+                originY: scalePanelPosition.y,
+                minX: scalePanelPosition.x + previewRect.left - panelRect.left,
+                maxX: scalePanelPosition.x + previewRect.right - panelRect.right,
+                minY: scalePanelPosition.y + previewRect.top - panelRect.top,
+                maxY: scalePanelPosition.y + previewRect.bottom - panelRect.bottom,
+              };
+            }}
+            onPointerMove={(event) => {
+              const drag = scalePanelDrag.current;
+              if (!drag || drag.pointerId !== event.pointerId) return;
+              setScalePanelPosition({
+                x: Math.max(
+                  drag.minX,
+                  Math.min(drag.maxX, drag.originX + event.clientX - drag.startX),
+                ),
+                y: Math.max(
+                  drag.minY,
+                  Math.min(drag.maxY, drag.originY + event.clientY - drag.startY),
+                ),
+              });
+            }}
+            onPointerUp={(event) => {
+              if (scalePanelDrag.current?.pointerId === event.pointerId) {
+                scalePanelDrag.current = null;
+                event.currentTarget.releasePointerCapture(event.pointerId);
+              }
+            }}
+            onPointerCancel={() => {
+              scalePanelDrag.current = null;
+            }}
+            onDoubleClick={() => setScalePanelPosition({ x: 0, y: 0 })}
+            title="Arrastra para mover. Doble clic para regresar."
+          >
+            ↕ Mover panel
+          </div>
           <button className="flyer-scale-toggle" type="button" onClick={() => setScalePanelOpen((open) => !open)} aria-expanded={scalePanelOpen}>
             <span>Tamaño y posición</span><b>{scalePanelOpen ? "−" : "+"}</b>
           </button>
