@@ -4397,11 +4397,11 @@ function FlyerStudio({
     try {
       const canvas = document.createElement("canvas");
       canvas.width = 1080;
-      canvas.height = 1350;
+      canvas.height = 1920;
       const ctx = canvas.getContext("2d");
       if (!ctx) throw new Error("canvas");
       const assets = await prepareLayeredFlyerAssets(renderData);
-      drawLayeredFlyerFrame(ctx, assets, renderData, 1080, 1350);
+      drawLayeredFlyerFrame(ctx, assets, renderData, 1080, 1920);
       const blob = await new Promise<Blob | null>((resolve) =>
         canvas.toBlob(resolve, "image/jpeg", 0.95),
       );
@@ -4934,7 +4934,7 @@ function FlyerStudio({
             onClick={exportJpg}
           >
             {downloading ? "Preparando…" : "Exportar JPG"}
-            <small>1080 × 1350</small>
+            <small>1080 × 1920 · Estados</small>
           </button>
           <button
             type="button"
@@ -4942,7 +4942,7 @@ function FlyerStudio({
             onClick={exportMp4}
           >
             {downloading ? "Procesando…" : "Exportar MP4"}
-            <small>5 segundos · sin audio</small>
+            <small>720 × 1280 · Estados · 5 segundos</small>
           </button>
         </div>
         {error && <p className="upload-error">{error}</p>}
@@ -5303,7 +5303,8 @@ function drawLayeredFlyerFrame(
 ) {
   ctx.save();
   ctx.clearRect(0, 0, width, height);
-  ctx.scale(width / 1080, height / 1350);
+  const designHeight = 1920;
+  ctx.scale(width / 1080, height / designHeight);
   if (data.backgroundKind === "color") {
     if (data.colorMode === "solid") {
       ctx.fillStyle = data.solidColor;
@@ -5321,21 +5322,21 @@ function drawLayeredFlyerFrame(
       gradient.addColorStop(1, data.colorB);
       ctx.fillStyle = gradient;
     }
-    ctx.fillRect(0, 0, 1080, 1350);
+    ctx.fillRect(0, 0, 1080, designHeight);
   } else {
     const source = assets.backgroundVideo || assets.backgroundImage;
-    if (source) drawFlyerSourceCover(ctx, source, 0, 0, 1080, 1350);
+    if (source) drawFlyerSourceCover(ctx, source, 0, 0, 1080, designHeight);
     else {
       ctx.fillStyle = "#111";
-      ctx.fillRect(0, 0, 1080, 1350);
+      ctx.fillRect(0, 0, 1080, designHeight);
     }
   }
-  const shade = ctx.createLinearGradient(0, 0, 0, 1350);
+  const shade = ctx.createLinearGradient(0, 0, 0, designHeight);
   shade.addColorStop(0, "rgba(0,0,0,.46)");
   shade.addColorStop(0.48, "rgba(0,0,0,.03)");
   shade.addColorStop(1, "rgba(0,0,0,.78)");
   ctx.fillStyle = shade;
-  ctx.fillRect(0, 0, 1080, 1350);
+  ctx.fillRect(0, 0, 1080, designHeight);
   if (data.showDetail) {
     ctx.save();
     ctx.globalAlpha = 0.96;
@@ -5343,10 +5344,9 @@ function drawLayeredFlyerFrame(
     ctx.shadowBlur = 20;
     const left = data.logoPosition.endsWith("left"),
       bottom = data.logoPosition.startsWith("bottom"),
-      logoX = left ? 55 : 790,
-      logoY = bottom ? 1080 : 55;
+      logoY = bottom ? 1478 : 58;
     if (assets.logo)
-      drawFlyerSourceContain(ctx, assets.logo, logoX, logoY, 230, 210);
+      drawFlyerSourceContain(ctx, assets.logo, left ? 32 : 746, logoY, 302, 384);
     else {
       ctx.fillStyle = data.textColor;
       ctx.font = "900 54px Arial Black, Arial";
@@ -5354,12 +5354,12 @@ function drawLayeredFlyerFrame(
       ctx.fillText(
         data.store.name.toUpperCase(),
         left ? 65 : 1015,
-        bottom ? 1240 : 145,
+        bottom ? 1790 : 145,
       );
     }
     ctx.restore();
   }
-  const frame = { x: 172.8, y: 324, w: 734.4, h: 702 },
+  const frame = { x: 172.8, y: 460.8, w: 734.4, h: 998.4 },
     productScale = data.productScale / 100,
     productW = frame.w * productScale,
     productH = frame.h * productScale,
@@ -5388,11 +5388,11 @@ function drawLayeredFlyerFrame(
     roundedRect(ctx, frame.x, frame.y, frame.w, frame.h, 22); ctx.stroke();
   }
   if (assets.frame)
-    drawFlyerSourceContain(ctx, assets.frame, 0, 0, 1080, 1350);
-  drawFlyerOrnaments(ctx, data.ornament, data.accentColor);
+    drawFlyerSourceContain(ctx, assets.frame, 0, 0, 1080, designHeight);
+  drawFlyerOrnaments(ctx, data.ornament, data.accentColor, designHeight / 1350);
   const scale = data.textScale / 100,
     x = (1080 * data.textX) / 100,
-    y = (1350 * data.textY) / 100;
+    y = (designHeight * data.textY) / 100;
   ctx.textAlign = "left";
   ctx.shadowColor = "rgba(0,0,0,.7)";
   ctx.shadowBlur = 12;
@@ -5427,13 +5427,16 @@ function drawLayeredFlyerFrame(
       : data.textColor;
   ctx.font = `italic 700 ${Math.round((data.typography === "intentions" || data.typography === "signature" ? 54 : 34) * scale)}px ${flyerCanvasFont(data.extraFont)}`;
   ctx.fillText(data.extraText, x, y + 250 * scale);
+  ctx.save();
+  ctx.translate(0, 528);
   drawFlyerPriceAccent(ctx, data.priceAccent, data.accentColor);
+  ctx.restore();
   ctx.shadowBlur = 16;
   ctx.shadowColor = "rgba(0,0,0,.85)";
   ctx.textAlign = "right";
   ctx.fillStyle = data.textColor;
   ctx.font = "900 17px Arial";
-  ctx.fillText("PRECIO", 990, 1155);
+  ctx.fillText("PRECIO", 990, 1683);
   const priceSize = Math.round((82 * data.priceScale) / 100);
   ctx.font = `900 ${priceSize}px ${data.priceFont}`;
   if (data.priceTypography === "spray") {
@@ -5450,7 +5453,7 @@ function drawLayeredFlyerFrame(
     priceGradient.addColorStop(1, "#4a5360");
     ctx.fillStyle = priceGradient;
   }
-  ctx.fillText(`S/ ${data.price}`, 990, 1250);
+  ctx.fillText(`S/ ${data.price}`, 990, 1778);
   ctx.restore();
 }
 function drawFlyerPriceAccent(
@@ -5538,6 +5541,7 @@ function drawFlyerOrnaments(
   ctx: CanvasRenderingContext2D,
   type: FlyerOrnament,
   color: string,
+  verticalScale = 1,
 ) {
   if (type === "none") return;
   ctx.save();
@@ -5551,17 +5555,17 @@ function drawFlyerOrnaments(
   ctx.fillStyle = gradient;
   if (type === "orbit") {
     ctx.font = "120px Arial";
-    ctx.fillText("◌", 885, 500);
+    ctx.fillText("◌", 885, 500 * verticalScale);
     ctx.font = "58px Arial";
-    ctx.fillText("✦", 885, 500);
+    ctx.fillText("✦", 885, 500 * verticalScale);
   } else if (type === "shooting") {
     ctx.font = "110px Arial";
-    ctx.fillText("✦", 865, 565);
+    ctx.fillText("✦", 865, 565 * verticalScale);
     ctx.strokeStyle = color;
     ctx.lineWidth = 5;
     ctx.beginPath();
-    ctx.moveTo(830, 600);
-    ctx.lineTo(680, 735);
+    ctx.moveTo(830, 600 * verticalScale);
+    ctx.lineTo(680, 735 * verticalScale);
     ctx.stroke();
   } else {
     const points =
@@ -5579,7 +5583,7 @@ function drawFlyerOrnaments(
           ];
     for (const [px, py, size] of points) {
       ctx.font = `${size}px Arial`;
-      ctx.fillText("✦", px, py);
+      ctx.fillText("✦", px, py * verticalScale);
     }
   }
   ctx.restore();
@@ -5647,7 +5651,7 @@ async function exportLayeredFlyerMp4(data: LayeredFlyerData, name: string) {
     throw new Error("video_unsupported");
   const { Muxer, ArrayBufferTarget } = await import("mp4-muxer");
   const width = 720,
-    height = 900,
+    height = 1280,
     fps = 24,
     seconds = 5,
     total = fps * seconds;
