@@ -4353,10 +4353,18 @@ function FlyerStudio({
     setError("");
     setCutoutStatus("Cargando recortador gratuito…");
     try {
-      const png = await removePersonBackgroundLocally(
-        catalogImages[0],
-        setCutoutStatus,
-      );
+      let png = "";
+      try {
+        png = await Promise.race([
+          removePersonBackgroundLocally(catalogImages[0], setCutoutStatus),
+          new Promise<string>((_, reject) =>
+            window.setTimeout(() => reject(new Error("model_timeout")), 18000),
+          ),
+        ]);
+      } catch {
+        setCutoutStatus("Recortando directamente en tu navegador…");
+        png = await removeBackgroundByEdgesLocally(catalogImages[0]);
+      }
       setProductLayer(png);
       setCutoutStatus("PNG listo");
     } catch (cause) {
@@ -5188,6 +5196,68 @@ async function removePersonBackgroundLocally(source: string, report: (status: st
       }
     }
     frame.data[(y * canvas.width + x) * 4 + 3] = Math.round((neighbors / samples) * 255);
+  }
+  ctx.putImageData(frame, 0, 0);
+  return canvas.toDataURL("image/png");
+}
+async function removeBackgroundByEdgesLocally(source: string) {
+  const bitmap = await flyerBitmap(source), limit = 1400,
+    scale = Math.min(1, limit / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+  canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  if (!ctx) { bitmap.close(); throw new Error("canvas"); }
+  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+  const frame = ctx.getImageData(0, 0, canvas.width, canvas.height),
+    pixels = frame.data, width = canvas.width, height = canvas.height,
+    total = width * height, seen = new Uint8Array(total), queue = new Int32Array(total);
+  const samples: number[][] = [];
+  const edgeStep = Math.max(1, Math.floor(Math.min(width, height) / 28));
+  const addSample = (x: number, y: number) => {
+    const o = (y * width + x) * 4;
+    samples.push([pixels[o], pixels[o + 1], pixels[o + 2]]);
+  };
+  for (let x = 0; x < width; x += edgeStep) { addSample(x, 0); addSample(x, height - 1); }
+  for (let y = 0; y < height; y += edgeStep) { addSample(0, y); addSample(width - 1, y); }
+  const nearEdgeColor = (index: number) => {
+    const o = index * 4, r = pixels[o], g = pixels[o + 1], b = pixels[o + 2];
+    if (pixels[o + 3] < 12) return true;
+    let closest = 999;
+    for (const sample of samples) {
+      const distance = Math.hypot(r - sample[0], g - sample[1], b - sample[2]);
+      if (distance < closest) closest = distance;
+    }
+    const light = (r + g + b) / 3, chroma = Math.max(r, g, b) - Math.min(r, g, b);
+    return closest < 52 || (light > 226 && chroma < 30);
+  };
+  let head = 0, tail = 0;
+  const enqueue = (index: number) => {
+    if (index < 0 || index >= total || seen[index] || !nearEdgeColor(index)) return;
+    seen[index] = 1; queue[tail++] = index;
+  };
+  for (let x = 0; x < width; x++) { enqueue(x); enqueue((height - 1) * width + x); }
+  for (let y = 0; y < height; y++) { enqueue(y * width); enqueue(y * width + width - 1); }
+  while (head < tail) {
+    const index = queue[head++], x = index % width;
+    if (x > 0) enqueue(index - 1);
+    if (x < width - 1) enqueue(index + 1);
+    if (index >= width) enqueue(index - width);
+    if (index < total - width) enqueue(index + width);
+  }
+  if (tail / total < .015) throw new Error("background_not_found");
+  for (let index = 0; index < total; index++) {
+    if (seen[index]) pixels[index * 4 + 3] = 0;
+    else {
+      const x = index % width, y = Math.floor(index / width);
+      let edgeNeighbors = 0;
+      if (x > 0 && seen[index - 1]) edgeNeighbors++;
+      if (x < width - 1 && seen[index + 1]) edgeNeighbors++;
+      if (y > 0 && seen[index - width]) edgeNeighbors++;
+      if (y < height - 1 && seen[index + width]) edgeNeighbors++;
+      if (edgeNeighbors) pixels[index * 4 + 3] = 150;
+    }
   }
   ctx.putImageData(frame, 0, 0);
   return canvas.toDataURL("image/png");
