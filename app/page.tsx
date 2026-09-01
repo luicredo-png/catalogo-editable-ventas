@@ -1,5 +1,5 @@
 "use client";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { templates, type TemplateKey } from "@/lib/catalog-templates";
 
 type OptionGroup = { name: string; values: string[] };
@@ -4215,6 +4215,7 @@ function FlyerStudio({
   const [aiGenerating, setAiGenerating] = useState(false);
   const [cutoutStatus, setCutoutStatus] = useState("");
   const [error, setError] = useState("");
+  const flyerPreviewRef = useRef<HTMLElement>(null);
   useEffect(() => {
     try {
       const saved = JSON.parse(
@@ -4395,17 +4396,11 @@ function FlyerStudio({
     setDownloading(true);
     setError("");
     try {
-      const canvas = document.createElement("canvas");
-      canvas.width = 1080;
-      canvas.height = 1920;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) throw new Error("canvas");
-      const assets = await prepareLayeredFlyerAssets(renderData);
-      drawLayeredFlyerFrame(ctx, assets, renderData, 1080, 1920);
+      if (!flyerPreviewRef.current) throw new Error("preview");
+      const canvas = await captureFlyerPreview(flyerPreviewRef.current);
       const blob = await new Promise<Blob | null>((resolve) =>
         canvas.toBlob(resolve, "image/jpeg", 0.95),
       );
-      cleanupLayeredFlyerAssets(assets);
       if (!blob) throw new Error("export");
       downloadFlyerBlob(blob, `flyer-${flyerFileName(subject)}.jpg`);
     } catch {
@@ -4420,9 +4415,12 @@ function FlyerStudio({
     setDownloading(true);
     setError("");
     try {
+      if (!flyerPreviewRef.current) throw new Error("preview");
+      const previewCanvas = await captureFlyerPreview(flyerPreviewRef.current);
       await exportLayeredFlyerMp4(
         renderData,
         `flyer-${flyerFileName(subject)}.mp4`,
+        previewCanvas,
       );
     } catch (cause) {
       setError(
@@ -4948,6 +4946,7 @@ function FlyerStudio({
         {error && <p className="upload-error">{error}</p>}
       </section>
       <section
+        ref={flyerPreviewRef}
         className={`flyer-layer-preview typography-${typography} frame-${frameStyle}`}
         style={
           {
@@ -5642,7 +5641,26 @@ function downloadFlyerBlob(blob: Blob, name: string) {
   link.click();
   setTimeout(() => URL.revokeObjectURL(link.href), 1800);
 }
-async function exportLayeredFlyerMp4(data: LayeredFlyerData, name: string) {
+async function captureFlyerPreview(node: HTMLElement) {
+  await document.fonts.ready;
+  const { toCanvas } = await import("html-to-image");
+  return toCanvas(node, {
+    width: node.offsetWidth,
+    height: node.offsetHeight,
+    canvasWidth: 1080,
+    canvasHeight: 1920,
+    backgroundColor: "#10131c",
+    cacheBust: true,
+    filter: (child) =>
+      !(child instanceof HTMLElement) ||
+      !child.classList.contains("flyer-product-scale"),
+  });
+}
+async function exportLayeredFlyerMp4(
+  data: LayeredFlyerData,
+  name: string,
+  capturedPreview?: HTMLCanvasElement,
+) {
   const browserWindow = window as unknown as {
     VideoEncoder?: any;
     VideoFrame?: any;
@@ -5684,7 +5702,7 @@ async function exportLayeredFlyerMp4(data: LayeredFlyerData, name: string) {
   canvas.height = height;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("canvas");
-  const assets = await prepareLayeredFlyerAssets(data);
+  const assets = capturedPreview ? {} : await prepareLayeredFlyerAssets(data);
   try {
     if (assets.backgroundVideo) {
       assets.backgroundVideo.currentTime = 0;
@@ -5697,7 +5715,9 @@ async function exportLayeredFlyerMp4(data: LayeredFlyerData, name: string) {
           wait = targetTime - performance.now();
         if (wait > 1) await new Promise((resolve) => setTimeout(resolve, wait));
       }
-      drawLayeredFlyerFrame(ctx, assets, data, width, height);
+      if (capturedPreview)
+        ctx.drawImage(capturedPreview, 0, 0, width, height);
+      else drawLayeredFlyerFrame(ctx, assets, data, width, height);
       const frame = new browserWindow.VideoFrame(canvas, {
         timestamp: Math.round((i * 1_000_000) / fps),
         duration: Math.round(1_000_000 / fps),
