@@ -419,6 +419,15 @@ export default function Home({
           <section
             className="clothing-category-panel"
             aria-label="Categorías de moda"
+            style={
+              categoryBackground(store.categorySettings)
+                ? {
+                    backgroundImage: `linear-gradient(#05080dcc,#05080dcc),url(${categoryBackground(store.categorySettings)})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                  }
+                : undefined
+            }
           >
             <div className="clothing-categories">
               {catalogTypes(products, store, clothingHero).map((c) => (
@@ -961,14 +970,17 @@ function catalogTypes(products: Product[], store: Store, heroImage: string) {
     };
   });
 }
-function stringifyCategorySettings(items: CatalogType[]) {
+function stringifyCategorySettings(items: CatalogType[], categoryBackgroundImage = "") {
   return JSON.stringify(
-    items.map((item) => ({
+    items.filter((item) => item.key !== "__CATEGORY_BACKGROUND__").map((item) => ({
       key: item.key.trim().toUpperCase() || "NUEVO",
       label: item.label.trim() || clothingCategoryLabel(item.key),
       image: item.image.trim(),
-    })),
+    })).concat(categoryBackgroundImage ? [{ key: "__CATEGORY_BACKGROUND__", label: "", image: categoryBackgroundImage }] : []),
   );
+}
+function categoryBackground(value: string) {
+  return parseCategorySettings(value).find((item) => item.key === "__CATEGORY_BACKGROUND__")?.image || "";
 }
 
 function StoreProductCard({
@@ -1543,8 +1555,12 @@ function Admin({
     store,
     store.heroImage || products[0]?.image || "",
   );
+  const categoryBackgroundImage = categoryBackground(store.categorySettings);
   const saveTypeItems = (items: CatalogType[]) =>
-    setStore({ ...store, categorySettings: stringifyCategorySettings(items) });
+    setStore({
+      ...store,
+      categorySettings: stringifyCategorySettings(items, categoryBackgroundImage),
+    });
   const updateType = (index: number, patch: Partial<CatalogType>) =>
     saveTypeItems(
       typeItems.map((item, i) => (i === index ? { ...item, ...patch } : item)),
@@ -1562,6 +1578,30 @@ function Admin({
     } finally {
       setUploading(false);
     }
+  }
+  async function uploadCategoryBackground(file?: File) {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const response = await fetch("/api/upload", { method: "POST", body: form });
+      if (!response.ok) return alert("No se pudo subir el fondo de categorías.");
+      const result = await response.json() as { url?: string };
+      if (!result.url) return;
+      setStore({
+        ...store,
+        categorySettings: stringifyCategorySettings(typeItems, String(result.url)),
+      });
+    } finally {
+      setUploading(false);
+    }
+  }
+  function clearCategoryBackground() {
+    setStore({
+      ...store,
+      categorySettings: stringifyCategorySettings(typeItems),
+    });
   }
   const addType = () =>
     saveTypeItems([
@@ -2656,8 +2696,12 @@ function AdminV2({
     store,
     store.heroImage || products[0]?.image || "",
   );
+  const categoryBackgroundImage = categoryBackground(store.categorySettings);
   const saveTypeItems = (items: CatalogType[]) =>
-    setStore({ ...store, categorySettings: stringifyCategorySettings(items) });
+    setStore({
+      ...store,
+      categorySettings: stringifyCategorySettings(items, categoryBackgroundImage),
+    });
   const updateType = (index: number, patch: Partial<CatalogType>) =>
     saveTypeItems(
       typeItems.map((item, i) => (i === index ? { ...item, ...patch } : item)),
@@ -2771,6 +2815,30 @@ function AdminV2({
     } finally {
       setUploading(false);
     }
+  }
+  async function uploadCategoryBackground(file?: File) {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const response = await fetch("/api/upload", { method: "POST", body: form });
+      if (!response.ok) return alert("No se pudo subir el fondo de categorías.");
+      const result = await response.json() as { url?: string };
+      if (!result.url) return;
+      setStore({
+        ...store,
+        categorySettings: stringifyCategorySettings(typeItems, String(result.url)),
+      });
+    } finally {
+      setUploading(false);
+    }
+  }
+  function clearCategoryBackground() {
+    setStore({
+      ...store,
+      categorySettings: stringifyCategorySettings(typeItems),
+    });
   }
   function newProduct() {
     setEditing({
@@ -3102,52 +3170,22 @@ function AdminV2({
                   change={(v) => update("heroCtaFont", v)}
                 />
               </div>
-              <ColorField
-                label="Color del botón Ver catálogo"
-                value={store.heroButtonColor}
-                change={(v) => update("heroButtonColor", v)}
-              />
+              <div className="cover-cta-editor">
+                <ButtonStyleSelect
+                  label="Estilo del botón Ver catálogo"
+                  value={store.heroButtonStyle}
+                  change={(v) => update("heroButtonStyle", v)}
+                />
+                <ColorField
+                  label="Color del botón Ver catálogo"
+                  value={store.heroButtonColor}
+                  change={(v) => update("heroButtonColor", v)}
+                />
+              </div>
               <button className="admin-primary save-cover" disabled={uploading}>
                 Guardar portada
               </button>
             </div>
-            <section
-              className="admin-card button-style-panel"
-              onFocusCapture={(event) => {
-                const editor = (event.target as HTMLElement).closest(
-                  ".button-style-editor > div",
-                );
-                const index = editor
-                  ? Array.from(editor.parentElement?.children || []).indexOf(editor)
-                  : 0;
-                revealCatalogPart(
-                  index === 0
-                    ? ".hero-cta, .clothing-entry-copy a"
-                    : index === 1
-                      ? ".photo-gallery-strip, .colors"
-                      : ".whatsapp-glow",
-                );
-              }}
-            >
-              <div>
-                <small>ESTILOS DE BOTONES</small>
-                <h2>Elige el efecto y el color de cada botón</h2>
-              </div>
-              <div className="button-style-editor">
-                <div>
-                  <ButtonStyleSelect
-                    label="Estilo Ver catálogo"
-                    value={store.heroButtonStyle}
-                    change={(v) => update("heroButtonStyle", v)}
-                  />
-                  <ColorField
-                    label="Color Ver catálogo"
-                    value={store.heroButtonColor}
-                    change={(v) => update("heroButtonColor", v)}
-                  />
-                </div>
-              </div>
-            </section>
           </form>
         )}
 
@@ -3167,6 +3205,36 @@ function AdminV2({
                 <button type="button" onClick={addType}>
                   + Agregar tipo
                 </button>
+              </div>
+              <div className="category-background-editor">
+                <div
+                  className="category-background-preview"
+                  style={
+                    categoryBackgroundImage
+                      ? { backgroundImage: `url(${categoryBackgroundImage})` }
+                      : undefined
+                  }
+                >
+                  {!categoryBackgroundImage && <span>Fondo de categorías</span>}
+                </div>
+                <div>
+                  <b>Fondo exclusivo de Categorías</b>
+                  <small>No cambia la portada ni el fondo de los productos.</small>
+                  <label className="type-photo-upload">
+                    Elegir fondo
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/gif"
+                      disabled={uploading}
+                      onChange={(e) => uploadCategoryBackground(e.target.files?.[0])}
+                    />
+                  </label>
+                  {categoryBackgroundImage && (
+                    <button type="button" className="remove-type" onClick={clearCategoryBackground}>
+                      Quitar fondo
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="catalog-type-grid">
                 {typeItems.map((item, index) => (
@@ -3375,11 +3443,10 @@ function AdminV2({
                     }
                   >
                     <span></span>
-                    <b>Vista del modelo</b>
-                    <small>S/ 69</small>
                     <div className="collection-preview-actions">
                       <button
                         type="button"
+                        className={`preview-product-button preview-button-${store.secondaryButtonStyle}`}
                         style={{
                           background: store.secondaryColor,
                           color: contrastText(store.secondaryColor),
@@ -3387,8 +3454,13 @@ function AdminV2({
                       >
                         Ver colores
                       </button>
+                    </div>
+                    <b>Vista del modelo</b>
+                    <small>S/ 69</small>
+                    <div className="collection-preview-actions">
                       <button
                         type="button"
+                        className={`preview-product-button preview-button-${store.buttonStyle}`}
                         style={{
                           background: store.buttonColor,
                           color: contrastText(store.buttonColor),
@@ -4392,6 +4464,24 @@ function FlyerStudio({
       setAiGenerating(false);
     }
   }
+  async function generateSafePersonPng() {
+    if (!catalogImages[0]) return setError("Primero elige una foto del artículo.");
+    setAiGenerating(true);
+    setError("");
+    try {
+      const png = await removePersonBackgroundLocally(
+        catalogImages[0],
+        setCutoutStatus,
+      );
+      setProductLayer(png);
+      setCutoutStatus("PNG seguro listo");
+    } catch {
+      setError("No se detectó correctamente la persona. Puedes conservar la foto completa o subir un PNG.");
+      setCutoutStatus("");
+    } finally {
+      setAiGenerating(false);
+    }
+  }
   async function exportJpg() {
     if (!productImage)
       return setError("Primero selecciona o sube el artículo.");
@@ -4706,6 +4796,30 @@ function FlyerStudio({
               Gratis y privado: la foto se procesa en este navegador. El fondo,
               marco y textos del flyer no cambian. La primera vez puede tardar
               mientras carga el recortador.
+            </small>
+            <div className="cutout-alternatives">
+              <button
+                type="button"
+                disabled={aiGenerating || downloading}
+                onClick={generateSafePersonPng}
+              >
+                Recorte seguro: persona + prenda
+              </button>
+              <button
+                type="button"
+                disabled={aiGenerating || downloading}
+                onClick={() => {
+                  setProductLayer(catalogImages[0] || "");
+                  setCutoutStatus("Foto completa conservada");
+                  setError("");
+                }}
+              >
+                Usar foto completa
+              </button>
+            </div>
+            <small>
+              Si el recorte automático elimina demasiado, usa el recorte seguro,
+              conserva la foto completa o sube tu propio PNG desde “Subir artículo”.
             </small>
           </div>
         </section>
@@ -5265,7 +5379,9 @@ async function removeBackgroundByEdgesLocally(source: string) {
     if (index >= width) enqueue(index - width);
     if (index < total - width) enqueue(index + width);
   }
-  if (tail / total < .015) throw new Error("background_not_found");
+  const removedRatio = tail / total;
+  if (removedRatio < .015) throw new Error("background_not_found");
+  if (removedRatio > .82) throw new Error("unsafe_cutout");
   for (let index = 0; index < total; index++) {
     if (seen[index]) pixels[index * 4 + 3] = 0;
     else {
