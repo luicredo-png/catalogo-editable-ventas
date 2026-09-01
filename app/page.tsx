@@ -4360,7 +4360,7 @@ function FlyerStudio({
       );
       const reference = await flyerReferenceFile(catalogImages[0], 0);
       form.append("input_image_0", reference, reference.name);
-      const response = await fetch("/api/ai-flyer", {
+      const response = await fetch("https://catalogo-flyer-ai.luicredo.workers.dev/generate", {
         method: "POST",
         headers: { "x-flyer-code": aiCode.trim() },
         body: form,

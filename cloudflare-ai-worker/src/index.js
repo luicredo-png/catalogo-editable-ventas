@@ -3,13 +3,18 @@ const MODEL = "@cf/black-forest-labs/flux-2-klein-4b";
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (request.method === "OPTIONS") {
+      return new Response(null, { headers: corsHeaders() });
+    }
     if (request.method === "GET" && url.pathname === "/health") {
       return Response.json({ ok: true, model: "flux-2-klein-4b" });
     }
     if (request.method !== "POST" || url.pathname !== "/generate") {
       return Response.json({ error: "not_found" }, { status: 404 });
     }
-    if (!env.FLYER_SECRET || !sameSecret(request.headers.get("x-flyer-secret"), env.FLYER_SECRET)) {
+    const directCode = request.headers.get("x-flyer-code");
+    const authorizedDirect = sameSecret(directCode, env.FLYER_ACCESS_CODE || "MODA-4827");
+    if (!authorizedDirect && (!env.FLYER_SECRET || !sameSecret(request.headers.get("x-flyer-secret"), env.FLYER_SECRET))) {
       return Response.json({ error: "unauthorized" }, { status: 401 });
     }
 
@@ -49,13 +54,21 @@ export default {
       if (typeof image !== "string" || !image) {
         return Response.json({ error: "empty_generation" }, { status: 502 });
       }
-      return Response.json({ image: `data:image/png;base64,${image}` });
+      return Response.json({ image: `data:image/png;base64,${image}` }, { headers: corsHeaders() });
     } catch (error) {
       console.error("flyer_generation_failed", error);
       return Response.json({ error: "generation_failed" }, { status: 502 });
     }
   },
 };
+
+function corsHeaders() {
+  return {
+    "access-control-allow-origin": "https://catalogo-editable-ventas.luicredo.workers.dev",
+    "access-control-allow-methods": "POST,OPTIONS",
+    "access-control-allow-headers": "content-type,x-flyer-code",
+  };
+}
 
 function extensionFor(type) {
   return type === "image/jpeg" ? "jpg" : type.split("/")[1];
