@@ -691,7 +691,7 @@ function normalizeStore(s: Record<string, unknown>): Store {
     secondaryButtonStyle: String(
       s.secondary_button_style || s.secondaryButtonStyle || "glow",
     ),
-    heroButtonStyle: String(s.hero_button_style || s.heroButtonStyle || "glow"),
+    heroButtonStyle: String(s.hero_button_style || s.heroButtonStyle || "splash"),
     textColor: String(s.text_color || s.textColor || d.textColor),
     surfaceColor: String(s.surface_color || s.surfaceColor || d.surfaceColor),
     surfaceStyle: [
@@ -3899,6 +3899,7 @@ function ButtonStyleSelect({
     <label>
       {label}
       <select value={value} onChange={(e) => change(e.target.value)}>
+        <option value="splash">Splash 3D animado</option>
         <option value="glow">Neón brillante</option>
         <option value="silver">Plateado 3D</option>
         <option value="dark">Oscuro relieve</option>
@@ -4211,10 +4212,9 @@ function FlyerStudio({
   const [productY, setProductY] = useState(0);
   const [downloading, setDownloading] = useState(false);
   const [aiGenerating, setAiGenerating] = useState(false);
-  const [aiCode, setAiCode] = useState("MODA-4827");
+  const [cutoutStatus, setCutoutStatus] = useState("");
   const [error, setError] = useState("");
   useEffect(() => {
-    setAiCode(sessionStorage.getItem("flyer-ai-code") || "MODA-4827");
     try {
       const saved = JSON.parse(
         localStorage.getItem("flyer-background-library") || "[]",
@@ -4349,37 +4349,24 @@ function FlyerStudio({
   async function generateProductPng() {
     if (!catalogImages[0])
       return setError("Primero elige una foto del artículo.");
-    if (!aiCode.trim()) return setError("Ingresa el código de acceso a la IA.");
     setAiGenerating(true);
     setError("");
+    setCutoutStatus("Cargando recortador gratuito…");
     try {
-      const form = new FormData();
-      form.append(
-        "prompt",
-        `Isolate the complete catalog model and garment from the reference image. Keep the real person, clothing, colors, print, logo, seams, texture and proportions unchanged. Remove only the original environment. Place the complete subject centered on a perfectly uniform solid pure white #FFFFFF background with generous padding. Do not draw transparency grids, checkerboards, shadows, scenery, text, watermarks or invented details. Product: ${subject}.`,
+      const png = await removePersonBackgroundLocally(
+        catalogImages[0],
+        setCutoutStatus,
       );
-      const reference = await flyerReferenceFile(catalogImages[0], 0);
-      form.append("input_image_0", reference, reference.name);
-      const response = await fetch("https://catalogo-flyer-ai.luicredo.workers.dev/generate", {
-        method: "POST",
-        headers: { "x-flyer-code": aiCode.trim() },
-        body: form,
-      });
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok)
-        throw new Error(String(result.error || "generation_failed"));
-      if (typeof result.image !== "string") throw new Error("empty_generation");
-      sessionStorage.setItem("flyer-ai-code", aiCode.trim());
-      setProductLayer(await removeConnectedLightBackground(result.image));
+      setProductLayer(png);
+      setCutoutStatus("PNG listo");
     } catch (cause) {
       const code = cause instanceof Error ? cause.message : "";
       setError(
-        code === "invalid_access_code"
-          ? "El código de IA no es correcto. Usa MODA-4827."
-          : code === "service_not_configured"
-            ? "La IA todavía está conectándose."
-            : "No se pudo preparar el PNG ahora. Puedes subirlo manualmente.",
+        code === "no_person_detected"
+          ? "No detecté una persona completa en esta foto. Prueba otra toma del modelo o sube un PNG."
+          : "No se pudo cargar el recortador. Revisa tu conexión y vuelve a intentarlo.",
       );
+      setCutoutStatus("");
     } finally {
       setAiGenerating(false);
     }
@@ -4687,28 +4674,20 @@ function FlyerStudio({
               </button>
             )}
           </div>
-          <div className="flyer-ai-cutout">
-            <label>
-              Código IA
-              <input
-                type="password"
-                value={aiCode}
-                onChange={(e) => setAiCode(e.target.value)}
-                placeholder="Código de acceso"
-                autoComplete="off"
-              />
-            </label>
+          <div className="flyer-ai-cutout local-cutout">
             <button
               type="button"
               disabled={aiGenerating || downloading}
               onClick={generateProductPng}
             >
               {aiGenerating
-                ? "Preparando artículo…"
-                : "✦ Preparar artículo PNG con IA"}
+                ? cutoutStatus || "Quitando fondo…"
+                : "✦ Quitar fondo y convertir a PNG"}
             </button>
             <small>
-              La IA no crea el flyer: solo entrega el artículo recortado en PNG.
+              Gratis y privado: la foto se procesa en este navegador. El fondo,
+              marco y textos del flyer no cambian. La primera vez puede tardar
+              mientras carga el recortador.
             </small>
           </div>
         </section>
@@ -5142,78 +5121,73 @@ async function prepareLayeredFlyerAssets(
     assets.logo = await flyerBitmap(data.store.logoUrl);
   return assets;
 }
-async function removeConnectedLightBackground(source: string) {
-  const bitmap = await flyerBitmap(source),
-    limit = 1500,
+type PersonSegmentation = { data: Uint8Array | number[]; width: number; height: number };
+type PersonSegmenter = {
+  segmentPerson(input: HTMLCanvasElement, options: {
+    internalResolution: "medium"; segmentationThreshold: number;
+    maxDetections: number; scoreThreshold: number; nmsRadius: number;
+  }): Promise<PersonSegmentation>;
+};
+type BodyPixBrowser = {
+  load(options: { architecture: "MobileNetV1"; outputStride: 16; multiplier: 0.75; quantBytes: 2 }): Promise<PersonSegmenter>;
+};
+let bodyPixModelPromise: Promise<PersonSegmenter> | null = null;
+function loadBrowserScript(id: string, src: string) {
+  const existing = document.getElementById(id) as HTMLScriptElement | null;
+  if (existing?.dataset.ready === "true") return Promise.resolve();
+  return new Promise<void>((resolve, reject) => {
+    const script = existing || document.createElement("script");
+    const ready = () => { script.dataset.ready = "true"; resolve(); };
+    script.addEventListener("load", ready, { once: true });
+    script.addEventListener("error", () => reject(new Error("model_load")), { once: true });
+    if (!existing) {
+      script.id = id; script.src = src; script.crossOrigin = "anonymous";
+      document.head.appendChild(script);
+    }
+  });
+}
+async function loadBodyPixModel() {
+  if (bodyPixModelPromise) return bodyPixModelPromise;
+  bodyPixModelPromise = (async () => {
+    await loadBrowserScript("flyer-tensorflow", "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js");
+    await loadBrowserScript("flyer-body-pix", "https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix@2.2.1/dist/body-pix.min.js");
+    const browser = window as typeof window & { bodyPix?: BodyPixBrowser };
+    if (!browser.bodyPix) throw new Error("model_load");
+    return browser.bodyPix.load({ architecture: "MobileNetV1", outputStride: 16, multiplier: 0.75, quantBytes: 2 });
+  })().catch((error) => { bodyPixModelPromise = null; throw error; });
+  return bodyPixModelPromise;
+}
+async function removePersonBackgroundLocally(source: string, report: (status: string) => void) {
+  const model = await loadBodyPixModel();
+  report("Detectando persona y prenda…");
+  const bitmap = await flyerBitmap(source), limit = 1280,
     scale = Math.min(1, limit / Math.max(bitmap.width, bitmap.height));
   const canvas = document.createElement("canvas");
   canvas.width = Math.max(1, Math.round(bitmap.width * scale));
   canvas.height = Math.max(1, Math.round(bitmap.height * scale));
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
-  if (!ctx) {
-    bitmap.close();
-    return source;
-  }
+  if (!ctx) { bitmap.close(); throw new Error("canvas"); }
   ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
   bitmap.close();
-  const frame = ctx.getImageData(0, 0, canvas.width, canvas.height),
-    pixels = frame.data,
-    total = canvas.width * canvas.height,
-    seen = new Uint8Array(total),
-    queue = new Int32Array(total);
-  let head = 0,
-    tail = 0;
-  const corners = [
-    [0, 0],
-    [canvas.width - 1, 0],
-    [0, canvas.height - 1],
-    [canvas.width - 1, canvas.height - 1],
-  ];
-  let bgR = 0,
-    bgG = 0,
-    bgB = 0;
-  for (const [x, y] of corners) {
-    const offset = (y * canvas.width + x) * 4;
-    bgR += pixels[offset];
-    bgG += pixels[offset + 1];
-    bgB += pixels[offset + 2];
-  }
-  bgR /= 4;
-  bgG /= 4;
-  bgB /= 4;
-  const removable = (index: number) => {
-    const offset = index * 4,
-      r = pixels[offset],
-      g = pixels[offset + 1],
-      b = pixels[offset + 2],
-      distance = Math.hypot(r - bgR, g - bgG, b - bgB),
-      light = (r + g + b) / 3,
-      chroma = Math.max(r, g, b) - Math.min(r, g, b);
-    return (
-      pixels[offset + 3] < 12 || (distance < 92 && light > 178 && chroma < 36)
-    );
-  };
-  const enqueue = (index: number) => {
-    if (index < 0 || index >= total || seen[index] || !removable(index)) return;
-    seen[index] = 1;
-    queue[tail++] = index;
-  };
-  for (let x = 0; x < canvas.width; x++) {
-    enqueue(x);
-    enqueue((canvas.height - 1) * canvas.width + x);
-  }
-  for (let y = 0; y < canvas.height; y++) {
-    enqueue(y * canvas.width);
-    enqueue(y * canvas.width + canvas.width - 1);
-  }
-  while (head < tail) {
-    const index = queue[head++],
-      x = index % canvas.width;
-    pixels[index * 4 + 3] = 0;
-    if (x > 0) enqueue(index - 1);
-    if (x < canvas.width - 1) enqueue(index + 1);
-    if (index >= canvas.width) enqueue(index - canvas.width);
-    if (index < total - canvas.width) enqueue(index + canvas.width);
+  const segmentation = await model.segmentPerson(canvas, {
+    internalResolution: "medium", segmentationThreshold: 0.62,
+    maxDetections: 1, scoreThreshold: 0.25, nmsRadius: 20,
+  });
+  report("Creando PNG transparente…");
+  const frame = ctx.getImageData(0, 0, canvas.width, canvas.height), mask = segmentation.data;
+  let foreground = 0;
+  for (let index = 0; index < mask.length; index++) foreground += mask[index];
+  if (foreground / mask.length < 0.02) throw new Error("no_person_detected");
+  for (let y = 0; y < canvas.height; y++) for (let x = 0; x < canvas.width; x++) {
+    let neighbors = 0, samples = 0;
+    for (let dy = -1; dy <= 1; dy++) {
+      const py = y + dy; if (py < 0 || py >= canvas.height) continue;
+      for (let dx = -1; dx <= 1; dx++) {
+        const px = x + dx; if (px < 0 || px >= canvas.width) continue;
+        neighbors += mask[py * canvas.width + px]; samples++;
+      }
+    }
+    frame.data[(y * canvas.width + x) * 4 + 3] = Math.round((neighbors / samples) * 255);
   }
   ctx.putImageData(frame, 0, 0);
   return canvas.toDataURL("image/png");
@@ -6688,3 +6662,4 @@ function NeoToggle({
     </label>
   );
 }
+
