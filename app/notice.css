@@ -225,3 +225,6 @@ body main.storefront.clothing-store .clothing-entry::before{filter:none!importan
 /* El logo cargado permanece visible al ocultar la portada. */
 body main.storefront.clothing-store.home-hide-hero .store-header{justify-content:space-between!important}body main.storefront.clothing-store.home-hide-hero .store-header .store-logo{opacity:1!important;pointer-events:auto!important}body main.storefront.clothing-store.home-hide-hero .store-header .store-logo img{display:block!important;max-height:62px!important}.admin-mark .admin-brand-logo{grid-column:1/-1;width:100%;height:72px;object-fit:contain;border-radius:0!important}.admin-mark .admin-brand-logo+small{grid-column:1/-1;text-align:center;margin-top:7px}
 
+/* Iconos limpios y editor basado únicamente en nombres de color. */
+.admin-shell .admin-nav-icon{filter:none!important;box-shadow:none!important;clip-path:inset(6% round 24%);mix-blend-mode:screen}.variant-color-meta{grid-template-columns:1fr!important}.variant-color-meta input{width:100%!important}
+
