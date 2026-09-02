@@ -6874,11 +6874,17 @@ function ProductEditor({
 }) {
   const [d, setD] = useState({
     ...p,
-    options: p.options || [],
+    options: [{
+      name: "Color",
+      values: (() => {
+        const values = (p.options || [])
+          .filter((group) => group.name.toLowerCase().includes("color"))
+          .flatMap((group) => group.values);
+        return values.length ? values : [colorValue("Color 1", "#8d96a5")];
+      })(),
+    }],
     whatsappMessage: p.whatsappMessage || "",
   });
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState("");
   const f = (k: keyof Product, v: string | number | boolean | OptionGroup[]) =>
     setD((x) => ({ ...x, [k]: v }));
   const updateGroupName = (i: number, value: string) =>
@@ -6898,27 +6904,17 @@ function ProductEditor({
       "options",
       (d.options || []).filter((_, n) => n !== i),
     );
-  async function uploadImage(file?: File) {
-    if (!file) return;
-    setUploading(true);
-    setUploadError("");
-    const form = new FormData();
-    form.append("file", file);
-    const r = await fetch("/api/upload", { method: "POST", body: form });
-    if (r.ok) {
-      const result = await r.json();
-      f("image", result.url);
-    } else
-      setUploadError("No se pudo cargar. Usa JPG, PNG o WebP de hasta 5 MB.");
-    setUploading(false);
-  }
   return (
     <div className="modal-bg">
       <form
         className="product-editor"
         onSubmit={(e) => {
           e.preventDefault();
-          save(d);
+          const firstPhoto = d.options
+            .flatMap((group) => group.values)
+            .map(parseOptionValue)
+            .find((value) => value.image)?.image;
+          save({ ...d, image: firstPhoto || d.image });
         }}
       >
         <div className="editor-head">
@@ -6979,58 +6975,8 @@ function ProductEditor({
             />
           </label>
         </div>
-        <section className="product-image-uploader">
-          <div>
-            {d.image ? (
-              <img src={d.image} alt="Vista previa del producto" />
-            ) : (
-              <span>Sin imagen</span>
-            )}
-          </div>
-          <label>
-            Foto principal del modelo
-            <input
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              onChange={(e) => uploadImage(e.target.files?.[0])}
-            />
-            <small>
-              {uploading
-                ? "Subiendo imagen..."
-                : "JPG, PNG o WebP · máximo 5 MB"}
-            </small>
-          </label>
-        </section>
-        {uploadError && <p className="upload-error">{uploadError}</p>}
-        <label>
-          O pegar URL de imagen
-          <input
-            required
-            value={d.image}
-            onChange={(e) => f("image", e.target.value)}
-            placeholder="https://..."
-          />
-        </label>
         <section className="options-editor">
-          <div>
-            <b>Colores, fotos, tallas y opciones</b>
-            <span className="option-group-actions">
-              <button type="button" onClick={() => addGroup("Color")}>
-                + Agregar colores y fotos
-              </button>
-              <button type="button" onClick={() => addGroup("Talla")}>
-                + Talla
-              </button>
-              <button type="button" onClick={() => addGroup("Nueva opción")}>
-                + Otra opción
-              </button>
-            </span>
-          </div>
-          <p>
-            Para cada color puedes subir varias fotos (ángulos o modelos distintos).
-            También puedes agregar otros colores; todas las fotos aparecerán en el carrusel.
-          </p>
-          {(d.options || []).map((group, i) => (
+          {d.options.slice(0, 1).map((group, i) => (
             <OptionGroupEditor
               key={i}
               group={group}
@@ -7067,7 +7013,7 @@ function ProductEditor({
           <button type="button" onClick={close}>
             Cancelar
           </button>
-          <button disabled={uploading}>Guardar producto</button>
+          <button>Guardar producto</button>
         </div>
       </form>
     </div>
@@ -7088,6 +7034,9 @@ function OptionGroupEditor({
   const [draft, setDraft] = useState("");
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
   const [photoError, setPhotoError] = useState("");
+  const [openColor, setOpenColor] = useState(
+    optionLabel(group.values[0] || "Color 1"),
+  );
   const isColor = group.name.toLowerCase().includes("color");
   const addValue = () => {
     const label = draft.trim();
@@ -7146,15 +7095,34 @@ function OptionGroupEditor({
     const parsed=parseOptionValue(group.values[index]);
     const uploaded:string[]=[];
     for(const file of Array.from(files)){const form=new FormData();form.append("file",file);const response=await fetch("/api/upload",{method:"POST",body:form});if(response.ok){const result=await response.json();uploaded.push(String(result.url))}}
-    if(uploaded.length){const base=group.values.map((value,i)=>i===index?colorValue(parsed.label,parsed.color||colorSwatch(value),uploaded[0]):value);const extras=uploaded.slice(1).map(url=>colorValue(parsed.label,parsed.color||colorSwatch(group.values[index]),url));updateValues([...base,...extras])}else setPhotoError("No se pudieron subir las fotos.");
+    if(uploaded.length){const replacePlaceholder=!parsed.image;const base=group.values.map((value,i)=>i===index&&replacePlaceholder?colorValue(parsed.label,parsed.color||colorSwatch(value),uploaded[0]):value);const extras=(replacePlaceholder?uploaded.slice(1):uploaded).map(url=>colorValue(parsed.label,parsed.color||colorSwatch(group.values[index]),url));updateValues([...base,...extras])}else setPhotoError("No se pudieron subir las fotos.");
     setUploadingIndex(null);
   }
   if (isColor) {
-    const addColorSlot = () =>
+    const colorNames = Array.from(
+      new Set(group.values.map((value) => optionLabel(value))),
+    );
+    const activeColor = colorNames.includes(openColor) ? openColor : colorNames[0];
+    const activePhotos = group.values
+      .map((value, index) => ({ value, index, parsed: parseOptionValue(value) }))
+      .filter((item) => item.parsed.label === activeColor);
+    const addColorSlot = () => {
+      const name = `Color ${colorNames.length + 1}`;
       updateValues([
         ...group.values,
-        colorValue(`Color ${new Set(group.values.map((value) => parseOptionValue(value).label)).size + 1}`, "#8d96a5"),
+        colorValue(name, "#8d96a5"),
       ]);
+      setOpenColor(name);
+    };
+    const renameColor = (nextName: string) => {
+      updateValues(group.values.map((value) => {
+        const parsed = parseOptionValue(value);
+        return parsed.label === activeColor
+          ? colorValue(nextName, parsed.color || "#8d96a5", parsed.image)
+          : value;
+      }));
+      setOpenColor(nextName);
+    };
     return (
       <article className="option-editor-card gallery-editor">
         <div className="option-editor-head">
@@ -7164,50 +7132,20 @@ function OptionGroupEditor({
               Escribe el color y sube una o varias fotos. Usa “Subir más” para añadir otros ángulos del mismo color.
             </small>
           </div>
-          <button
-            type="button"
-            className="remove-option-group"
-            onClick={remove}
-          >
-            Quitar colores y fotos
-          </button>
         </div>
-        <div className="variant-photo-grid">
-          {group.values.map((value, index) => {
-            const parsed = parseOptionValue(value);
+        <div className="color-folder-list">
+          {colorNames.map((name) => {
+            const first = group.values.map(parseOptionValue).find((item) => item.label === name && item.image);
             return (
-              <div className="variant-photo-card" key={index}>
-                <div className="variant-color-meta">
-                  <input
-                    value={parsed.label}
-                    aria-label="Nombre del color"
-                    placeholder="Ejemplo: Azul marino"
-                    onChange={(event) => changeValue(index, event.target.value)}
-                  />
-                </div>
-                {parsed.image ? (
-                  <img src={parsed.image} alt={`${parsed.label}, foto ${index + 1}`} />
-                ) : (
-                  <span>Foto {index + 2}</span>
-                )}
-                <label>
-                  {uploadingIndex === index
-                    ? "Subiendo…"
-                    : parsed.image
-                      ? "+ Subir más fotos de este color"
-                      : "Subir fotos de este color"}
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/png,image/jpeg,image/webp"
-                    disabled={uploadingIndex !== null}
-                    onChange={(e) => uploadColorAngles(index,e.target.files)}
-                  />
-                </label>
+              <div className={`color-folder${activeColor === name ? " active" : ""}`} key={name}>
+                <button type="button" onClick={() => setOpenColor(name)}>
+                  {first?.image ? <img src={first.image} alt="" /> : <span>Sin foto</span>}
+                  <b>{name}</b>
+                </button>
                 <button
                   type="button"
-                  onClick={() => removeValue(index)}
-                  aria-label={`Eliminar foto ${index + 2}`}
+                  onClick={() => updateValues(group.values.filter((value) => optionLabel(value) !== name))}
+                  aria-label={`Eliminar ${name}`}
                 >
                   ×
                 </button>
@@ -7215,6 +7153,23 @@ function OptionGroupEditor({
             );
           })}
         </div>
+        {activeColor && (
+          <section className="active-color-editor">
+            <label>Nombre del color<input value={activeColor} onChange={(event) => renameColor(event.target.value)} /></label>
+            <div className="variant-photo-grid active-color-photos">
+              {activePhotos.map(({ index, parsed }) => (
+                <div className="variant-photo-card" key={`${parsed.image}-${index}`}>
+                  {parsed.image ? <img src={parsed.image} alt={`${activeColor}, foto ${index + 1}`} /> : <span>Sin fotos</span>}
+                  {parsed.image && <button type="button" onClick={() => activePhotos.length === 1 ? changeValue(index, activeColor, parsed.color, "") : removeValue(index)} aria-label="Borrar foto">×</button>}
+                </div>
+              ))}
+              <label className="add-color-photos">
+                {uploadingIndex !== null ? "Subiendo…" : "+ Agregar fotos a este color"}
+                <input type="file" multiple accept="image/png,image/jpeg,image/webp" disabled={uploadingIndex !== null} onChange={(event) => uploadColorAngles(activePhotos[0].index, event.target.files)} />
+              </label>
+            </div>
+          </section>
+        )}
         {photoError && <p className="upload-error">{photoError}</p>}
         <button
           type="button"
