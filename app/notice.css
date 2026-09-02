@@ -202,7 +202,7 @@ body main.storefront.clothing-store .clothing-entry::before{filter:none!importan
 }
 
 /* Botones del administrador: relieve premium inspirado en Uiverse/lenfear23. */
-.admin-shell button{
+.admin-sidebar nav button,.admin-sidebar .view-store,.admin-shell .admin-save-button{
   display:inline-flex;
   align-items:center;
   justify-content:center;
@@ -222,19 +222,15 @@ body main.storefront.clothing-store .clothing-entry::before{filter:none!importan
   color:#606060;
   text-shadow:0 1px #fff;
 }
-.admin-shell button:hover{
+.admin-sidebar nav button:hover,.admin-sidebar .view-store:hover,.admin-shell .admin-save-button:hover{
   transform:translateY(-1px);
   box-shadow:0 4px 3px 1px #fcfcfc,0 6px 8px #d6d7d9,0 -4px 4px #cecfd1,0 -6px 4px #fefefe,inset 0 0 3px 3px #cecfd1;
 }
-.admin-shell button:active,.admin-shell button:focus-visible{
+.admin-sidebar nav button:active,.admin-sidebar nav button:focus-visible,.admin-sidebar .view-store:active,.admin-sidebar .view-store:focus-visible,.admin-shell .admin-save-button:active,.admin-shell .admin-save-button:focus-visible{
   transform:translateY(1px);
   box-shadow:0 4px 3px 1px #fcfcfc,0 6px 8px #d6d7d9,0 -4px 4px #cecfd1,0 -6px 4px #fefefe,inset 0 0 5px 3px #999,inset 0 0 30px #aaa;
 }
-.admin-shell button:disabled{cursor:not-allowed;opacity:.55;transform:none}
-.admin-sidebar nav button,.admin-shell .admin-primary,.admin-shell .view-store{width:100%}
-.admin-shell :is(.editor-head,.modal-head) button,.admin-shell .variant-photo-card>button,.admin-shell .flyer-panel-toggle,.admin-shell .preview-device-switch button{
-  width:auto;
-  min-width:0;
-}
-@media(max-width:520px){.admin-shell button{min-width:0;max-width:100%}}
+.admin-shell .admin-save-button:disabled{cursor:not-allowed;opacity:.55;transform:none}
+.admin-sidebar nav button,.admin-sidebar .view-store,.admin-shell .admin-save-button{width:100%}
+@media(max-width:520px){.admin-sidebar nav button,.admin-sidebar .view-store,.admin-shell .admin-save-button{min-width:0;max-width:100%}}
 
