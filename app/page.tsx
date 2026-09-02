@@ -352,7 +352,7 @@ export default function Home({
     appearanceOverride || store.storeAppearance || "dark";
   return (
     <main
-      className={`storefront appearance-${activeAppearance} ${isFood ? "food-store" : ""} ${isClothing ? "clothing-store" : ""} ${isGeneratedBusiness ? `generated-business-store business-${activeTemplate}` : ""} mobile-cols-${store.mobileColumns} surface-${store.surfaceStyle} whatsapp-button-${store.buttonStyle} secondary-button-${store.secondaryButtonStyle} hero-button-${store.heroButtonStyle}`}
+      className={`storefront appearance-${activeAppearance} ${isFood ? "food-store" : ""} ${isClothing ? "clothing-store" : ""} mobile-cols-${store.mobileColumns} surface-${store.surfaceStyle} whatsapp-button-${store.buttonStyle} secondary-button-${store.secondaryButtonStyle} hero-button-${store.heroButtonStyle}`}
       style={style}
     >
       {notice && <div className="toast">{notice}</div>}
@@ -370,25 +370,17 @@ export default function Home({
             </>
           )}
         </a>
-        {isGeneratedBusiness ? (
-          <div className="business-header-trust" aria-label="Beneficios de compra">
-            <span>Atención directa</span>
-            <span>Pago coordinado</span>
-            <span>Pedido por WhatsApp</span>
-          </div>
-        ) : (
-          <div className="template-links">
-            <a href="/restaurantes">Restaurante</a>
-            <a href="/comida-rapida">Fast food</a>
-            <a href="/detalles-romanticos">Detalles</a>
-            <a href="/ropa">Ropa</a>
-            <a href="/mujer">Mujer</a>
-            <a href="/zapatos-mujer">Zapatos</a>
-            <a href="/perfumeria">Perfumería</a>
-            <a href="/postres">Postres</a>
-            <a href="/accesorios">Accesorios</a>
-          </div>
-        )}
+        <div className="template-links">
+          <a href="/restaurantes">Restaurante</a>
+          <a href="/comida-rapida">Fast food</a>
+          <a href="/detalles-romanticos">Detalles</a>
+          <a href="/ropa">Ropa</a>
+          <a href="/mujer">Mujer</a>
+          <a href="/zapatos-mujer">Zapatos</a>
+          <a href="/perfumeria">Perfumería</a>
+          <a href="/postres">Postres</a>
+          <a href="/accesorios">Accesorios</a>
+        </div>
         <button
           onClick={() => (location.href = `/admin?catalogo=${activeTemplate}`)}
         >
@@ -431,19 +423,6 @@ export default function Home({
                 <b>por WhatsApp</b>
               </span>
             </div>
-            {isGeneratedBusiness && heroSlides.length > 1 && (
-              <div className="business-hero-dots" aria-label="Contenido destacado">
-                {heroSlides.map((slide, index) => (
-                  <button
-                    type="button"
-                    className={index === heroSlideIndex ? "active" : ""}
-                    onClick={() => setHeroSlideIndex(index)}
-                    aria-label={`Mostrar destacado ${index + 1}`}
-                    key={`${slide}-${index}`}
-                  />
-                ))}
-              </div>
-            )}
           </section>
           <section
             className="clothing-category-panel"
@@ -557,19 +536,6 @@ export default function Home({
                 placeholder={isFood ? "Buscar plato..." : "Buscar modelo..."}
               />
             </label>
-            {isGeneratedBusiness && heroSlides.length > 1 && (
-              <div className="business-hero-dots" aria-label="Contenido destacado">
-                {heroSlides.map((slide, index) => (
-                  <button
-                    type="button"
-                    className={index === heroSlideIndex ? "active" : ""}
-                    onClick={() => setHeroSlideIndex(index)}
-                    aria-label={`Mostrar destacado ${index + 1}`}
-                    key={`${slide}-${index}`}
-                  />
-                ))}
-              </div>
-            )}
           </section>
           <nav className="category-tabs">
             {categories.map((c) => (
@@ -583,13 +549,6 @@ export default function Home({
             ))}
           </nav>
         </>
-      )}
-      {isGeneratedBusiness && (
-        <section className="business-value-bar" aria-label="Ventajas de comprar aquí">
-          <div><b>01</b><span><strong>Compra sencilla</strong>Elige y pide sin formularios.</span></div>
-          <div><b>02</b><span><strong>Atención personal</strong>Coordina directo con la tienda.</span></div>
-          <div><b>03</b><span><strong>Catálogo actualizado</strong>Precios y opciones en un solo lugar.</span></div>
-        </section>
       )}
       {isClothing && store.promoText && <PromoTicker text={store.promoText} />}
       <section
@@ -676,18 +635,6 @@ export default function Home({
           />
         </div>
       </footer>
-      {isGeneratedBusiness && (
-        <a
-          className="business-mobile-order"
-          href={`https://wa.me/${store.whatsapp}?text=${encodeURIComponent(`Hola, quiero conocer los productos de ${store.name}.`)}`}
-          target="_blank"
-          rel="noreferrer"
-        >
-          <img src="/whatsapp.png" alt="" />
-          <span><small>Respuesta directa</small><b>Pedir por WhatsApp</b></span>
-          <i>→</i>
-        </a>
-      )}
       {selected && (
         <ProductOrderModal
           product={selected}
