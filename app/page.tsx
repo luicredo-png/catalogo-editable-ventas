@@ -1830,7 +1830,8 @@ function Admin({
             className={section === "cover" ? "active" : ""}
             onClick={() => setSection("cover")}
           >
-            ▣ Portada
+            <span className="admin-nav-icon nav-home">⌂</span>
+            <span>Portada</span>
           </button>
           <button
             className={section === "flyers" ? "active" : ""}
@@ -3187,31 +3188,36 @@ function AdminV2({
             className={section === "products" ? "active" : ""}
             onClick={() => setSection("products")}
           >
-            ▦ Categorías y productos
+            <span className="admin-nav-icon nav-products">▣</span>
+            <span>Categorías y productos</span>
           </button>
           <button
             className={section === "layout" ? "active" : ""}
             onClick={() => setSection("layout")}
           >
-            ◫ Personalizar
+            <span className="admin-nav-icon nav-customize">✎</span>
+            <span>Personalizar</span>
           </button>
           <button
             className={section === "design" ? "active" : ""}
             onClick={() => setSection("design")}
           >
-            ◈ Diseño
+            <span className="admin-nav-icon nav-design">▥</span>
+            <span>Diseño</span>
           </button>
           <button
             className={section === "flyers" ? "active" : ""}
             onClick={() => setSection("flyers")}
           >
-            ✦ Crear flyers
+            <span className="admin-nav-icon nav-flyers">▤</span>
+            <span>Crear flyers</span>
           </button>
           <button
             className={section === "whatsapp" ? "active" : ""}
             onClick={() => setSection("whatsapp")}
           >
-            ◎ Redes
+            <span className="admin-nav-icon nav-social">↗</span>
+            <span>Redes</span>
           </button>
         </nav>
         <button className="view-store" onClick={close}>
