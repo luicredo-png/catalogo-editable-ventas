@@ -1801,8 +1801,11 @@ function Admin({
       {notice && <div className="toast">{notice}</div>}
       <aside className="admin-sidebar">
         <div className="admin-mark">
-          <i></i>
-          <b>{store.name}</b>
+          {store.logoUrl ? (
+            <img className="admin-brand-logo" src={store.logoUrl} alt={store.name} />
+          ) : (
+            <><i></i><b>{store.name}</b></>
+          )}
           <small>PANEL ADMIN</small>
         </div>
         <label className="catalog-switcher">
@@ -2387,20 +2390,6 @@ function Admin({
                   placeholder="https://..."
                 />
               </label>
-              <div className="cover-text-control">
-                <label>
-                  Nombre de la tienda
-                  <input
-                    value={store.name}
-                    onChange={(e) => update("name", e.target.value)}
-                  />
-                </label>
-                <FontSelect
-                  label="Tipografía del nombre"
-                  value={store.storeNameFont}
-                  change={(v) => update("storeNameFont", v)}
-                />
-              </div>
               <section className="cover-image-uploader">
                 <div>
                   {store.heroImage ? (
@@ -3166,8 +3155,11 @@ function AdminV2({
       {notice && <div className="toast">{notice}</div>}
       <aside className="admin-sidebar">
         <div className="admin-mark">
-          <i></i>
-          <b>{store.name}</b>
+          {store.logoUrl ? (
+            <img className="admin-brand-logo" src={store.logoUrl} alt={store.name} />
+          ) : (
+            <><i></i><b>{store.name}</b></>
+          )}
           <small>PANEL ADMIN</small>
         </div>
         <label className="catalog-switcher">
@@ -3375,20 +3367,6 @@ function AdminV2({
                 <small>TEXTOS Y FUENTES</small>
                 <h2>Edita lo que aparece en la portada</h2>
                 <p>Cada cambio se refleja directamente en la vista previa.</p>
-              </div>
-              <div className="cover-text-control">
-                <label>
-                  Nombre de la tienda
-                  <input
-                    value={store.name}
-                    onChange={(e) => update("name", e.target.value)}
-                  />
-                </label>
-                <FontSelect
-                  label="Tipografía del nombre"
-                  value={store.storeNameFont}
-                  change={(v) => update("storeNameFont", v)}
-                />
               </div>
               <div className="cover-text-control">
                 <label>
