@@ -73,6 +73,7 @@ type AdminSection =
   | "products"
   | "design"
   | "cover"
+  | "layout"
   | "flyers"
   | "whatsapp"
   | "appearance"
@@ -119,6 +120,7 @@ export default function Home({
       requested === "products" ||
       requested === "design" ||
       requested === "cover" ||
+      requested === "layout" ||
       requested === "flyers" ||
       requested === "whatsapp"
     )
@@ -2881,11 +2883,6 @@ function AdminV2({
   const categoryBackgroundImage = categoryBackground(store.categorySettings);
   const categoryBackgroundColorValue = categoryBackgroundColor(store.categorySettings);
   const homeLayout = homeLayoutSettings(store.categorySettings);
-  const updateHomeLayout = (patch: Partial<HomeLayoutSettings>) =>
-    update(
-      "categorySettings",
-      setHomeLayoutSettings(store.categorySettings, { ...homeLayout, ...patch }),
-    );
   const homeSectionOptions = [
     ["header", "Encabezado"],
     ["hero", "Portada"],
@@ -2894,6 +2891,24 @@ function AdminV2({
     ["products", "Productos"],
     ["footer", "Pie de página"],
   ] as const;
+  const applyHomeLayoutPreview = (settings: HomeLayoutSettings) => {
+    requestAnimationFrame(() => {
+      const main = catalogPreviewRef.current?.contentDocument?.querySelector(
+        "main.storefront",
+      );
+      if (!main) return;
+      main.classList.remove("hero-size-compact", "hero-size-normal", "hero-size-large");
+      main.classList.add(`hero-size-${settings.heroSize}`);
+      for (const [key] of homeSectionOptions) {
+        main.classList.toggle(`home-hide-${key}`, settings.hidden.includes(key));
+      }
+    });
+  };
+  const updateHomeLayout = (patch: Partial<HomeLayoutSettings>) => {
+    const next = { ...homeLayout, ...patch };
+    update("categorySettings", setHomeLayoutSettings(store.categorySettings, next));
+    applyHomeLayoutPreview(next);
+  };
   const saveTypeItems = (items: CatalogType[]) =>
     setStore({
       ...store,
@@ -3130,6 +3145,8 @@ function AdminV2({
         ? "Diseño del catálogo"
         : section === "cover"
           ? "Portada del catálogo"
+          : section === "layout"
+            ? "Personalizar secciones"
           : section === "flyers"
             ? "Estudio de flyers"
             : "Redes y enlaces";
@@ -3171,6 +3188,12 @@ function AdminV2({
             onClick={() => setSection("products")}
           >
             ▦ Categorías y productos
+          </button>
+          <button
+            className={section === "layout" ? "active" : ""}
+            onClick={() => setSection("layout")}
+          >
+            ◫ Personalizar
           </button>
           <button
             className={section === "design" ? "active" : ""}
@@ -3328,49 +3351,6 @@ function AdminV2({
                 </span>
               </section>
             </div>
-            <section className="admin-card home-layout-editor">
-              <div>
-                <small>PERSONALIZACIÓN DE LA PORTADA</small>
-                <h2>Tamaño y secciones visibles</h2>
-                <p>Disponible para todos los catálogos, incluida Ropa.</p>
-              </div>
-              <label>
-                Tamaño de portada
-                <select
-                  value={homeLayout.heroSize}
-                  onChange={(event) =>
-                    updateHomeLayout({
-                      heroSize: event.target.value as HomeLayoutSettings["heroSize"],
-                    })
-                  }
-                >
-                  <option value="compact">Compacta</option>
-                  <option value="normal">Normal</option>
-                  <option value="large">Grande</option>
-                </select>
-              </label>
-              <div className="home-section-toggles">
-                {homeSectionOptions.map(([key, label]) => {
-                  const visible = !homeLayout.hidden.includes(key);
-                  return (
-                    <label key={key}>
-                      <span>{label}</span>
-                      <input
-                        type="checkbox"
-                        checked={visible}
-                        onChange={(event) =>
-                          updateHomeLayout({
-                            hidden: event.target.checked
-                              ? homeLayout.hidden.filter((item) => item !== key)
-                              : [...homeLayout.hidden, key],
-                          })
-                        }
-                      />
-                    </label>
-                  );
-                })}
-              </div>
-            </section>
             <div
               className="admin-card cover-fields cover-text-editor"
               onFocusCapture={() => revealCatalogPart(".store-hero, .clothing-entry")}
@@ -3495,6 +3475,90 @@ function AdminV2({
                 Guardar portada
               </button>
             </div>
+          </form>
+        )}
+
+        {section === "layout" && (
+          <form className={`layout-customizer preview-${previewDevice}`} onSubmit={saveSettings}>
+            <section className="admin-card layout-preview-card">
+              <div className="admin-card-title">
+                <div>
+                  <b>Vista previa en vivo</b>
+                  <span>Activa o desactiva elementos y mira el cambio al instante.</span>
+                </div>
+                <div className="preview-device-switch">
+                  <button
+                    type="button"
+                    className={previewDevice === "mobile" ? "active" : ""}
+                    onClick={() => setPreviewDevice("mobile")}
+                  >
+                    ▯ Celular
+                  </button>
+                  <button
+                    type="button"
+                    className={previewDevice === "desktop" ? "active" : ""}
+                    onClick={() => setPreviewDevice("desktop")}
+                  >
+                    ▱ Escritorio
+                  </button>
+                </div>
+              </div>
+              <div className="real-store-preview">
+                <div className="real-store-screen">
+                  <iframe
+                    ref={catalogPreviewRef}
+                    src={catalogPath(template)}
+                    onLoad={() => applyHomeLayoutPreview(homeLayout)}
+                    title={`Vista previa de ${templates[template].label}`}
+                  />
+                </div>
+              </div>
+            </section>
+
+            <section className="admin-card home-layout-editor">
+              <div>
+                <small>PERSONALIZAR SECCIONES</small>
+                <h2>Elementos visibles</h2>
+                <p>Si desactivas una opción, desaparece inmediatamente de la vista previa.</p>
+              </div>
+              <label>
+                Tamaño de portada
+                <select
+                  value={homeLayout.heroSize}
+                  onChange={(event) =>
+                    updateHomeLayout({
+                      heroSize: event.target.value as HomeLayoutSettings["heroSize"],
+                    })
+                  }
+                >
+                  <option value="compact">Compacta</option>
+                  <option value="normal">Normal</option>
+                  <option value="large">Grande</option>
+                </select>
+              </label>
+              <div className="home-section-toggles">
+                {homeSectionOptions.map(([key, label]) => {
+                  const visible = !homeLayout.hidden.includes(key);
+                  return (
+                    <label key={key}>
+                      <span>{label}</span>
+                      <input
+                        type="checkbox"
+                        checked={visible}
+                        onChange={(event) =>
+                          updateHomeLayout({
+                            hidden: event.target.checked
+                              ? homeLayout.hidden.filter((item) => item !== key)
+                              : [...homeLayout.hidden, key],
+                          })
+                        }
+                      />
+                    </label>
+                  );
+                })}
+              </div>
+              <button className="admin-primary">Guardar personalización</button>
+            </section>
           </form>
         )}
 
