@@ -2509,7 +2509,7 @@ function Admin({
                   change={(v) => update("heroCtaFont", v)}
                 />
               </div>
-              <button className="admin-primary save-cover" disabled={uploading}>
+              <button className="admin-primary save-cover admin-save-button" disabled={uploading}>
                 Guardar portada
               </button>
             </div>
@@ -3471,7 +3471,7 @@ function AdminV2({
                   change={(v) => update("heroButtonColor", v)}
                 />
               </div>
-              <button className="admin-primary save-cover" disabled={uploading}>
+              <button className="admin-primary save-cover admin-save-button" disabled={uploading}>
                 Guardar portada
               </button>
             </div>
@@ -3557,7 +3557,7 @@ function AdminV2({
                   );
                 })}
               </div>
-              <button className="admin-primary">Guardar personalización</button>
+              <button className="admin-primary admin-save-button">Guardar personalización</button>
             </section>
           </form>
         )}
@@ -3691,7 +3691,7 @@ function AdminV2({
                   </article>
                 ))}
               </div>
-              <button className="admin-primary save-types" disabled={uploading}>
+              <button className="admin-primary save-types admin-save-button" disabled={uploading}>
                 Guardar tipos
               </button>
             </form>
@@ -4152,7 +4152,7 @@ function AdminV2({
               </div>
             </section>
             <button
-              className="admin-primary save-design-v2"
+              className="admin-primary save-design-v2 admin-save-button"
               disabled={uploading}
             >
               Guardar diseño completo
@@ -4246,7 +4246,7 @@ function AdminV2({
                 <figcaption>QR del catálogo</figcaption>
               </figure>
             </section>
-            <button className="admin-primary" disabled={uploading}>
+            <button className="admin-primary admin-save-button" disabled={uploading}>
               Guardar redes
             </button>
           </form>
@@ -7062,7 +7062,7 @@ function ProductEditor({
           <button type="button" onClick={close}>
             Cancelar
           </button>
-          <button disabled={uploading}>Guardar producto</button>
+          <button className="admin-save-button" disabled={uploading}>Guardar producto</button>
         </div>
       </form>
     </div>
