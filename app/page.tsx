@@ -3642,25 +3642,18 @@ function AdminV2({
                       )}
                     </div>
                     <label>
-                      Texto visible
+                      Categoría
                       <input
                         value={item.label}
-                        onChange={(e) =>
-                          updateType(index, { label: e.target.value })
-                        }
-                      />
-                    </label>
-                    <label>
-                      Categoría que filtra
-                      <input
-                        value={item.key}
-                        onChange={(e) =>
+                        onChange={(e) => {
+                          const label = e.target.value;
                           updateType(index, {
-                            key: e.target.value.toUpperCase(),
-                          })
-                        }
+                            label,
+                            key: item.key === "TODOS" ? "TODOS" : label.trim().toUpperCase(),
+                          });
+                        }}
                       />
-                      <small>Ejemplo: TODOS, POLOS, PANTALONES.</small>
+                      <small>Esta categoría aparecerá al editar los productos.</small>
                     </label>
                     <label className="type-photo-upload">
                       Elegir foto
@@ -4253,6 +4246,9 @@ function AdminV2({
       {editing && (
         <ProductEditor
           p={editing}
+          categories={typeItems
+            .filter((item) => item.key !== "TODOS")
+            .map((item) => ({ key: item.key, label: item.label }))}
           close={() => setEditing(null)}
           save={saveProduct}
         />
@@ -6867,10 +6863,12 @@ function drawFlyerText(
 
 function ProductEditor({
   p,
+  categories = [],
   close,
   save,
 }: {
   p: Product;
+  categories?: { key: string; label: string }[];
   close: () => void;
   save: (p: Product) => void;
 }) {
@@ -6941,11 +6939,20 @@ function ProductEditor({
           />
         </label>
         <label>
-          Marca o categoría
-          <input
+          Categoría
+          <select
+            required
             value={d.category}
             onChange={(e) => f("category", e.target.value)}
-          />
+          >
+            {!categories.some((category) => category.key === d.category) && d.category && (
+              <option value={d.category}>{d.category}</option>
+            )}
+            <option value="" disabled>Selecciona una categoría</option>
+            {categories.map((category) => (
+              <option key={category.key} value={category.key}>{category.label}</option>
+            ))}
+          </select>
         </label>
         <label>
           Descripción
