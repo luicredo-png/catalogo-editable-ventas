@@ -7006,10 +7006,10 @@ function ProductEditor({
         </label>
         <section className="options-editor">
           <div>
-            <b>Galería, tallas y opciones</b>
+            <b>Colores, fotos, tallas y opciones</b>
             <span className="option-group-actions">
               <button type="button" onClick={() => addGroup("Color")}>
-                + Galería de fotos
+                + Agregar colores y fotos
               </button>
               <button type="button" onClick={() => addGroup("Talla")}>
                 + Talla
@@ -7020,8 +7020,8 @@ function ProductEditor({
             </span>
           </div>
           <p>
-            Sube otras fotos del mismo modelo para crear un carrusel. No se
-            mostrarán nombres ni puntos de color al cliente.
+            Para cada color puedes subir varias fotos (ángulos o modelos distintos).
+            También puedes agregar otros colores; todas las fotos aparecerán en el carrusel.
           </p>
           {(d.options || []).map((group, i) => (
             <OptionGroupEditor
@@ -7143,18 +7143,18 @@ function OptionGroupEditor({
     setUploadingIndex(null);
   }
   if (isColor) {
-    const addPhotoSlot = () =>
+    const addColorSlot = () =>
       updateValues([
         ...group.values,
-        colorValue(`Foto ${group.values.length + 2}`, "#8d96a5"),
+        colorValue(`Color ${new Set(group.values.map((value) => parseOptionValue(value).label)).size + 1}`, "#8d96a5"),
       ]);
     return (
       <article className="option-editor-card gallery-editor">
         <div className="option-editor-head">
           <div>
-            <b>Fotos adicionales del modelo</b>
+            <b>Colores y fotos del producto</b>
             <small>
-              Se mostrarán como carrusel en el administrador y en el catálogo.
+              Escribe el color y sube una o varias fotos. Usa “Subir más” para añadir otros ángulos del mismo color.
             </small>
           </div>
           <button
@@ -7162,7 +7162,7 @@ function OptionGroupEditor({
             className="remove-option-group"
             onClick={remove}
           >
-            Quitar galería
+            Quitar colores y fotos
           </button>
         </div>
         <div className="variant-photo-grid">
@@ -7170,8 +7170,22 @@ function OptionGroupEditor({
             const parsed = parseOptionValue(value);
             return (
               <div className="variant-photo-card" key={index}>
+                <div className="variant-color-meta">
+                  <input
+                    value={parsed.label}
+                    aria-label="Nombre del color"
+                    placeholder="Ejemplo: Azul marino"
+                    onChange={(event) => changeValue(index, event.target.value)}
+                  />
+                  <input
+                    type="color"
+                    aria-label={`Color ${parsed.label}`}
+                    value={parsed.color || colorSwatch(value)}
+                    onChange={(event) => changeValue(index, parsed.label, event.target.value)}
+                  />
+                </div>
                 {parsed.image ? (
-                  <img src={parsed.image} alt={`Foto adicional ${index + 1}`} />
+                  <img src={parsed.image} alt={`${parsed.label}, foto ${index + 1}`} />
                 ) : (
                   <span>Foto {index + 2}</span>
                 )}
@@ -7179,8 +7193,8 @@ function OptionGroupEditor({
                   {uploadingIndex === index
                     ? "Subiendo…"
                     : parsed.image
-                      ? "Cambiar foto"
-                      : "Subir foto"}
+                      ? "+ Subir más fotos de este color"
+                      : "Subir fotos de este color"}
                   <input
                     type="file"
                     multiple
@@ -7204,9 +7218,9 @@ function OptionGroupEditor({
         <button
           type="button"
           className="add-gallery-photo"
-          onClick={addPhotoSlot}
+          onClick={addColorSlot}
         >
-          + Agregar otra foto
+          + Agregar otro color
         </button>
       </article>
     );
