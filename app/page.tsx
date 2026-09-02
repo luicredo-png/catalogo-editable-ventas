@@ -1830,7 +1830,7 @@ function Admin({
             className={section === "cover" ? "active" : ""}
             onClick={() => setSection("cover")}
           >
-            <span className="admin-nav-icon nav-home">⌂</span>
+            <span className="admin-nav-icon nav-home" aria-hidden="true"></span>
             <span>Portada</span>
           </button>
           <button
@@ -3188,35 +3188,35 @@ function AdminV2({
             className={section === "products" ? "active" : ""}
             onClick={() => setSection("products")}
           >
-            <span className="admin-nav-icon nav-products">▣</span>
+            <span className="admin-nav-icon nav-products" aria-hidden="true"></span>
             <span>Categorías y productos</span>
           </button>
           <button
             className={section === "layout" ? "active" : ""}
             onClick={() => setSection("layout")}
           >
-            <span className="admin-nav-icon nav-customize">✎</span>
+            <span className="admin-nav-icon nav-customize" aria-hidden="true"></span>
             <span>Personalizar</span>
           </button>
           <button
             className={section === "design" ? "active" : ""}
             onClick={() => setSection("design")}
           >
-            <span className="admin-nav-icon nav-design">▥</span>
+            <span className="admin-nav-icon nav-design" aria-hidden="true"></span>
             <span>Diseño</span>
           </button>
           <button
             className={section === "flyers" ? "active" : ""}
             onClick={() => setSection("flyers")}
           >
-            <span className="admin-nav-icon nav-flyers">▤</span>
+            <span className="admin-nav-icon nav-flyers" aria-hidden="true"></span>
             <span>Crear flyers</span>
           </button>
           <button
             className={section === "whatsapp" ? "active" : ""}
             onClick={() => setSection("whatsapp")}
           >
-            <span className="admin-nav-icon nav-social">↗</span>
+            <span className="admin-nav-icon nav-social" aria-hidden="true"></span>
             <span>Redes</span>
           </button>
         </nav>
