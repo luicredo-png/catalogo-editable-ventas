@@ -1137,7 +1137,9 @@ function StoreProductCard({
   optimized: boolean;
   open: () => void;
 }) {
-  const gallery = productGallery(product);
+  const gallery = template === "ropa"
+    ? [{ label: "Foto principal", image: product.image }]
+    : productGallery(product);
   const [preview, setPreview] = useState(product.image);
   useEffect(() => {
     if (gallery.length < 2) return;
@@ -1337,22 +1339,37 @@ function ProductOrderModal({
   );
   const [galleryPreview, setGalleryPreview] = useState(product.image);
   const selectedColor = colorGroup ? choices[colorGroup.name] : "";
+  const selectedColorLabel = optionLabel(selectedColor || "");
+  const uniqueColorValues = colorGroup
+    ? Array.from(
+        new Map(colorGroup.values.map((value) => [optionLabel(value), value])).values(),
+      )
+    : [];
   const displayImage =
     template === "ropa"
       ? galleryPreview
       : parseOptionValue(selectedColor || "").image || product.image;
-  const colorPhotos =
-    colorGroup?.values.filter((value) => parseOptionValue(value).image) || [];
+  const colorPhotos = colorGroup?.values.filter(
+    (value) =>
+      parseOptionValue(value).image && optionLabel(value) === selectedColorLabel,
+  ) || [];
   const visibleGallery =
     template === "ropa"
-      ? productGallery(product)
+      ? colorPhotos.map((value) => {
+          const parsed = parseOptionValue(value);
+          return { label: parsed.label, image: parsed.image, value };
+        })
       : colorPhotos.map((value) => {
           const parsed = parseOptionValue(value);
           return { label: parsed.label, image: parsed.image, value };
         });
   const visibleGroups =
     template === "ropa"
-      ? groups.filter((group) => !group.name.toLowerCase().includes("color"))
+      ? groups.map((group) =>
+          group.name.toLowerCase().includes("color")
+            ? { ...group, values: uniqueColorValues }
+            : group,
+        )
       : groups;
   const details = visibleGroups
     .map((g) => `${g.name}: ${optionLabel(choices[g.name] || "Sin selección")}`)
@@ -1421,9 +1438,15 @@ function ProductOrderModal({
               title={group.name}
               values={group.values}
               selected={choices[group.name]}
-              choose={(value) =>
-                setChoices((current) => ({ ...current, [group.name]: value }))
-              }
+              choose={(value) => {
+                setChoices((current) => ({ ...current, [group.name]: value }));
+                if (template === "ropa" && group.name.toLowerCase().includes("color")) {
+                  const firstPhoto = colorGroup?.values.find(
+                    (photo) => optionLabel(photo) === optionLabel(value) && parseOptionValue(photo).image,
+                  );
+                  setGalleryPreview(parseOptionValue(firstPhoto || "").image || product.image);
+                }
+              }}
             />
           ))}
           <div className="order-total">
@@ -1465,7 +1488,6 @@ function OptionGroup({
             className={selected === v ? "active" : ""}
             onClick={() => choose(v)}
           >
-            {color && <i style={{ background: colorSwatch(v) }}></i>}
             {selected === v ? "✓ " : ""}
             {optionLabel(v)}
           </button>
@@ -7154,12 +7176,6 @@ function OptionGroupEditor({
                     aria-label="Nombre del color"
                     placeholder="Ejemplo: Azul marino"
                     onChange={(event) => changeValue(index, event.target.value)}
-                  />
-                  <input
-                    type="color"
-                    aria-label={`Color ${parsed.label}`}
-                    value={parsed.color || colorSwatch(value)}
-                    onChange={(event) => changeValue(index, parsed.label, event.target.value)}
                   />
                 </div>
                 {parsed.image ? (
