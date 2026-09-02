@@ -93,6 +93,7 @@ body .admin-shell{position:relative;background:radial-gradient(circle at 15% 8%,
 body main.storefront .store-header,body main.storefront .category-tabs{backdrop-filter:none!important;filter:none!important}
 
 /* Todas las categorías conservan la misma lectura visual: foto circular arriba y nombre debajo. */
+body main.storefront :is(.store-hero,.clothing-entry){margin-inline:0!important;border:0!important;border-radius:0!important}
 body main.storefront .visual-category-tabs{align-items:flex-start;justify-content:center;gap:clamp(12px,2vw,24px);padding:17px 5vw 19px;overflow-x:auto}
 body main.storefront .visual-category-tabs button{flex:0 0 86px;min-width:86px;display:grid;justify-items:center;gap:9px;padding:2px 4px;border:0!important;background:transparent!important;color:var(--store-text)!important;box-shadow:none!important}
 body main.storefront .visual-category-tabs button>span{width:74px;height:74px;display:block;overflow:hidden;border:3px solid color-mix(in srgb,var(--store-text),transparent 75%);border-radius:50%;background:color-mix(in srgb,var(--surface),#fff 8%);box-shadow:0 9px 24px #0003;transition:transform .2s,border-color .2s,box-shadow .2s}
