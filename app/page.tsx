@@ -349,9 +349,10 @@ export default function Home({
     );
   const activeAppearance =
     appearanceOverride || store.storeAppearance || "dark";
+  const homeLayout = homeLayoutSettings(store.categorySettings);
   return (
     <main
-      className={`storefront appearance-${activeAppearance} ${isFood ? "food-store" : ""} ${isClothing ? "clothing-store" : ""} mobile-cols-${store.mobileColumns} surface-${store.surfaceStyle} whatsapp-button-${store.buttonStyle} secondary-button-${store.secondaryButtonStyle} hero-button-${store.heroButtonStyle}`}
+      className={`storefront appearance-${activeAppearance} hero-size-${homeLayout.heroSize} ${homeLayout.hidden.map((item) => `home-hide-${item}`).join(" ")} ${isFood ? "food-store" : ""} ${isClothing ? "clothing-store" : ""} mobile-cols-${store.mobileColumns} surface-${store.surfaceStyle} whatsapp-button-${store.buttonStyle} secondary-button-${store.secondaryButtonStyle} hero-button-${store.heroButtonStyle}`}
       style={style}
     >
       {notice && <div className="toast">{notice}</div>}
@@ -1017,6 +1018,41 @@ async function horizontalHeroFiles(files: File[]) {
 const horizontalHeroMessage =
   "El carrusel solo admite imágenes o videos horizontales. Los archivos verticales o cuadrados no se agregaron.";
 type CatalogType = { key: string; label: string; image: string; color?: string };
+type HomeLayoutSettings = {
+  heroSize: "compact" | "normal" | "large";
+  hidden: string[];
+};
+function homeLayoutSettings(value: string): HomeLayoutSettings {
+  const item = parseCategorySettings(value).find(
+    (entry) => entry.key === "__HOME_LAYOUT__",
+  );
+  const heroSize = ["compact", "normal", "large"].includes(item?.label || "")
+    ? (item!.label as HomeLayoutSettings["heroSize"])
+    : "normal";
+  return {
+    heroSize,
+    hidden: String(item?.image || "").split(",").filter(Boolean),
+  };
+}
+function setHomeLayoutSettings(
+  value: string,
+  settings: HomeLayoutSettings,
+) {
+  let items: CatalogType[] = [];
+  try {
+    const parsed = JSON.parse(value || "[]");
+    if (Array.isArray(parsed)) items = parsed;
+  } catch {}
+  return JSON.stringify([
+    ...items.filter((item) => item?.key !== "__HOME_LAYOUT__"),
+    {
+      key: "__HOME_LAYOUT__",
+      label: settings.heroSize,
+      image: settings.hidden.join(","),
+      color: "",
+    },
+  ]);
+}
 function parseCategorySettings(value: string): CatalogType[] {
   try {
     const parsed = JSON.parse(value || "[]");
@@ -1058,7 +1094,11 @@ function stringifyCategorySettings(
   items: CatalogType[],
   categoryBackgroundImage = "",
   categoryBackgroundColorValue = "",
+  previousValue = "",
 ) {
+  const layout = parseCategorySettings(previousValue).find(
+    (item) => item.key === "__HOME_LAYOUT__",
+  );
   return JSON.stringify(
     items.filter((item) => item.key !== "__CATEGORY_BACKGROUND__").map((item) => ({
       key: item.key.trim().toUpperCase() || "NUEVO",
@@ -1070,7 +1110,7 @@ function stringifyCategorySettings(
       label: "",
       image: categoryBackgroundImage,
       color: categoryBackgroundColorValue,
-    }] : []),
+    }] : []).concat(layout ? [layout] : []),
   );
 }
 function categoryBackground(value: string) {
@@ -1672,6 +1712,20 @@ function Admin({
   );
   const categoryBackgroundImage = categoryBackground(store.categorySettings);
   const categoryBackgroundColorValue = categoryBackgroundColor(store.categorySettings);
+  const homeLayout = homeLayoutSettings(store.categorySettings);
+  const updateHomeLayout = (patch: Partial<HomeLayoutSettings>) =>
+    update(
+      "categorySettings",
+      setHomeLayoutSettings(store.categorySettings, { ...homeLayout, ...patch }),
+    );
+  const homeSectionOptions = [
+    ["header", "Encabezado"],
+    ["hero", "Portada"],
+    ["promo", "Barra de anuncio"],
+    ["categories", "Categorías"],
+    ["products", "Productos"],
+    ["footer", "Pie de página"],
+  ] as const;
   const saveTypeItems = (items: CatalogType[]) =>
     setStore({
       ...store,
@@ -1679,6 +1733,7 @@ function Admin({
         items,
         categoryBackgroundImage,
         categoryBackgroundColorValue,
+        store.categorySettings,
       ),
     });
   const updateType = (index: number, patch: Partial<CatalogType>) =>
@@ -1711,7 +1766,7 @@ function Admin({
       if (!result.url) return;
       setStore({
         ...store,
-        categorySettings: stringifyCategorySettings(typeItems, String(result.url)),
+        categorySettings: stringifyCategorySettings(typeItems, String(result.url), "", store.categorySettings),
       });
     } finally {
       setUploading(false);
@@ -1720,7 +1775,7 @@ function Admin({
   function clearCategoryBackground() {
     setStore({
       ...store,
-      categorySettings: stringifyCategorySettings(typeItems),
+      categorySettings: stringifyCategorySettings(typeItems, "", "", store.categorySettings),
     });
   }
   const addType = () =>
@@ -2825,6 +2880,20 @@ function AdminV2({
   );
   const categoryBackgroundImage = categoryBackground(store.categorySettings);
   const categoryBackgroundColorValue = categoryBackgroundColor(store.categorySettings);
+  const homeLayout = homeLayoutSettings(store.categorySettings);
+  const updateHomeLayout = (patch: Partial<HomeLayoutSettings>) =>
+    update(
+      "categorySettings",
+      setHomeLayoutSettings(store.categorySettings, { ...homeLayout, ...patch }),
+    );
+  const homeSectionOptions = [
+    ["header", "Encabezado"],
+    ["hero", "Portada"],
+    ["promo", "Barra de anuncio"],
+    ["categories", "Categorías"],
+    ["products", "Productos"],
+    ["footer", "Pie de página"],
+  ] as const;
   const saveTypeItems = (items: CatalogType[]) =>
     setStore({
       ...store,
@@ -2832,6 +2901,7 @@ function AdminV2({
         items,
         categoryBackgroundImage,
         categoryBackgroundColorValue,
+        store.categorySettings,
       ),
     });
   const updateType = (index: number, patch: Partial<CatalogType>) =>
@@ -2998,6 +3068,7 @@ function AdminV2({
           typeItems,
           String(result.url),
           categoryBackgroundColorValue,
+          store.categorySettings,
         ),
       });
     } finally {
@@ -3011,6 +3082,7 @@ function AdminV2({
         typeItems,
         "",
         categoryBackgroundColorValue,
+        store.categorySettings,
       ),
     });
   }
@@ -3021,6 +3093,7 @@ function AdminV2({
         typeItems,
         categoryBackgroundImage,
         value,
+        store.categorySettings,
       ),
     });
   }
@@ -3255,6 +3328,49 @@ function AdminV2({
                 </span>
               </section>
             </div>
+            <section className="admin-card home-layout-editor">
+              <div>
+                <small>PERSONALIZACIÓN DE LA PORTADA</small>
+                <h2>Tamaño y secciones visibles</h2>
+                <p>Disponible para todos los catálogos, incluida Ropa.</p>
+              </div>
+              <label>
+                Tamaño de portada
+                <select
+                  value={homeLayout.heroSize}
+                  onChange={(event) =>
+                    updateHomeLayout({
+                      heroSize: event.target.value as HomeLayoutSettings["heroSize"],
+                    })
+                  }
+                >
+                  <option value="compact">Compacta</option>
+                  <option value="normal">Normal</option>
+                  <option value="large">Grande</option>
+                </select>
+              </label>
+              <div className="home-section-toggles">
+                {homeSectionOptions.map(([key, label]) => {
+                  const visible = !homeLayout.hidden.includes(key);
+                  return (
+                    <label key={key}>
+                      <span>{label}</span>
+                      <input
+                        type="checkbox"
+                        checked={visible}
+                        onChange={(event) =>
+                          updateHomeLayout({
+                            hidden: event.target.checked
+                              ? homeLayout.hidden.filter((item) => item !== key)
+                              : [...homeLayout.hidden, key],
+                          })
+                        }
+                      />
+                    </label>
+                  );
+                })}
+              </div>
+            </section>
             <div
               className="admin-card cover-fields cover-text-editor"
               onFocusCapture={() => revealCatalogPart(".store-hero, .clothing-entry")}
