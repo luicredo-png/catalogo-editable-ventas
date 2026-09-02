@@ -352,6 +352,7 @@ export default function Home({
   const activeAppearance =
     appearanceOverride || store.storeAppearance || "dark";
   const homeLayout = homeLayoutSettings(store.categorySettings);
+  const promoAppearance = promoSettings(store.categorySettings);
   return (
     <main
       className={`storefront appearance-${activeAppearance} hero-size-${homeLayout.heroSize} ${homeLayout.hidden.map((item) => `home-hide-${item}`).join(" ")} ${isFood ? "food-store" : ""} ${isClothing ? "clothing-store" : ""} mobile-cols-${store.mobileColumns} surface-${store.surfaceStyle} whatsapp-button-${store.buttonStyle} secondary-button-${store.secondaryButtonStyle} hero-button-${store.heroButtonStyle}`}
@@ -555,7 +556,9 @@ export default function Home({
           </nav>
         </>
       )}
-      {isClothing && store.promoText && <PromoTicker text={store.promoText} />}
+      {isClothing && store.promoText && (
+        <PromoTicker text={store.promoText} settings={promoAppearance} store={store} />
+      )}
       <section
         className={`collection-stage collection-motion-${store.collectionMotion} ${collectionVideo ? "has-collection-video" : ""}`}
       >
@@ -973,15 +976,29 @@ function isVideoMedia(url: string) {
     (url.includes("/api/media/") && url.toLowerCase().includes(".mp4"))
   );
 }
-function PromoTicker({ text }: { text: string }) {
+function PromoTicker({ text, settings, store }: { text: string; settings: PromoSettings; store: Store }) {
+  const href = settings.network === "facebook"
+    ? store.facebook
+    : settings.network === "whatsapp"
+      ? `https://wa.me/${store.whatsapp}`
+      : store.instagram;
   return (
-    <aside className="promo-ticker" aria-label="Promoción">
+    <aside
+      className="promo-ticker"
+      aria-label="Promoción"
+      style={{ "--promo-bg": settings.background, "--promo-font": settings.font } as React.CSSProperties}
+    >
       <div>
         <span>{text}</span>
         <i>✦</i>
         <span aria-hidden="true">{text}</span>
         <i aria-hidden="true">✦</i>
       </div>
+      {settings.buttonEnabled && href && (
+        <a className="promo-social-button" href={href} target="_blank" rel="noreferrer">
+          {settings.buttonLabel}
+        </a>
+      )}
     </aside>
   );
 }
@@ -1024,6 +1041,38 @@ type HomeLayoutSettings = {
   heroSize: "compact" | "normal" | "large";
   hidden: string[];
 };
+type PromoSettings = {
+  font: string;
+  background: string;
+  buttonEnabled: boolean;
+  buttonLabel: string;
+  network: "instagram" | "facebook" | "whatsapp";
+};
+function promoSettings(value: string): PromoSettings {
+  const item = parseCategorySettings(value).find((entry) => entry.key === "__PROMO_SETTINGS__");
+  try {
+    const saved = JSON.parse(item?.image || "{}");
+    return {
+      font: String(saved.font || "Outfit"),
+      background: String(saved.background || "#050505"),
+      buttonEnabled: Boolean(saved.buttonEnabled),
+      buttonLabel: String(saved.buttonLabel || "Ver red social"),
+      network: ["instagram", "facebook", "whatsapp"].includes(saved.network)
+        ? saved.network
+        : "instagram",
+    };
+  } catch {
+    return { font: "Outfit", background: "#050505", buttonEnabled: false, buttonLabel: "Ver red social", network: "instagram" };
+  }
+}
+function setPromoSettings(value: string, settings: PromoSettings) {
+  let items: CatalogType[] = [];
+  try { const parsed = JSON.parse(value || "[]"); if (Array.isArray(parsed)) items = parsed; } catch {}
+  return JSON.stringify([
+    ...items.filter((item) => item?.key !== "__PROMO_SETTINGS__"),
+    { key: "__PROMO_SETTINGS__", label: "", image: JSON.stringify(settings), color: "" },
+  ]);
+}
 function homeLayoutSettings(value: string): HomeLayoutSettings {
   const item = parseCategorySettings(value).find(
     (entry) => entry.key === "__HOME_LAYOUT__",
@@ -1103,6 +1152,9 @@ function stringifyCategorySettings(
   const layout = parseCategorySettings(previousValue).find(
     (item) => item.key === "__HOME_LAYOUT__",
   );
+  const promo = parseCategorySettings(previousValue).find(
+    (item) => item.key === "__PROMO_SETTINGS__",
+  );
   return JSON.stringify(
     items.filter((item) => item.key !== "__CATEGORY_BACKGROUND__").map((item) => ({
       key: item.key.trim().toUpperCase() || "NUEVO",
@@ -1114,7 +1166,7 @@ function stringifyCategorySettings(
       label: "",
       image: categoryBackgroundImage,
       color: categoryBackgroundColorValue,
-    }] : []).concat(layout ? [layout] : []),
+    }] : []).concat(layout ? [layout] : []).concat(promo ? [promo] : []),
   );
 }
 function categoryBackground(value: string) {
@@ -2897,6 +2949,62 @@ function AdminV2({
   const categoryBackgroundImage = categoryBackground(store.categorySettings);
   const categoryBackgroundColorValue = categoryBackgroundColor(store.categorySettings);
   const homeLayout = homeLayoutSettings(store.categorySettings);
+  const promoAppearance = promoSettings(store.categorySettings);
+  const updatePromoAppearance = (patch: Partial<PromoSettings>) =>
+    update(
+      "categorySettings",
+      setPromoSettings(store.categorySettings, { ...promoAppearance, ...patch }),
+    );
+  const downloadQr = async (themed: boolean) => {
+    const response = await fetch(qrUrl);
+    if (!response.ok) return;
+    const bitmap = await createImageBitmap(await response.blob());
+    const canvas = document.createElement("canvas");
+    const size = themed ? 1080 : 360;
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    if (themed) {
+      const background = store.backgroundColor || "#08152a";
+      const accent = store.accent || "#168cff";
+      const gradient = ctx.createLinearGradient(0, 0, size, size);
+      gradient.addColorStop(0, background);
+      gradient.addColorStop(1, accent);
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, size, size);
+      ctx.globalAlpha = 0.14;
+      ctx.fillStyle = contrastText(background);
+      for (let index = 0; index < 18; index += 1) {
+        ctx.beginPath();
+        ctx.arc((index * 179) % size, (index * 263) % size, 34 + (index % 4) * 18, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = contrastText(background);
+      ctx.textAlign = "center";
+      ctx.font = "900 58px Arial";
+      ctx.fillText(store.name || "Mi catálogo", 540, 110);
+      ctx.font = "700 28px Arial";
+      ctx.fillText("ESCANEA Y DESCUBRE EL CATÁLOGO", 540, 165);
+      ctx.fillStyle = "#ffffff";
+      roundedRect(ctx, 150, 205, 780, 770, 56);
+      ctx.fill();
+      ctx.drawImage(bitmap, 220, 270, 640, 640);
+      ctx.fillStyle = contrastText(background);
+      ctx.font = "800 28px Arial";
+      ctx.fillText("Compra fácil · Atención directa", 540, 1030);
+    } else {
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, size, size);
+      ctx.drawImage(bitmap, 0, 0, size, size);
+    }
+    bitmap.close();
+    const anchor = document.createElement("a");
+    anchor.download = themed ? `qr-${template}-con-diseno.png` : `qr-${template}.png`;
+    anchor.href = canvas.toDataURL("image/png");
+    anchor.click();
+  };
   const homeSectionOptions = [
     ["hero", "Portada"],
     ["promo", "Barra de anuncio"],
@@ -3284,7 +3392,7 @@ function AdminV2({
                   aria-pressed={previewDevice === "mobile"}
                   onClick={() => setPreviewDevice("mobile")}
                 >
-                  <span>▯</span> Celular
+                  <span className="preview-device-icon device-mobile" aria-hidden="true" /> Celular
                 </button>
                 <button
                   type="button"
@@ -3292,7 +3400,7 @@ function AdminV2({
                   aria-pressed={previewDevice === "desktop"}
                   onClick={() => setPreviewDevice("desktop")}
                 >
-                  <span>▱</span> Escritorio
+                  <span className="preview-device-icon device-desktop" aria-hidden="true" /> Escritorio
                 </button>
               </div>
             </div>
@@ -3475,6 +3583,42 @@ function AdminV2({
                   placeholder="Ejemplo: Oferta especial · Pide hoy por WhatsApp"
                 />
               </label>
+              <section className="promo-appearance-editor">
+                <FontSelect
+                  label="Tipografía de la barra"
+                  value={promoAppearance.font}
+                  change={(font) => updatePromoAppearance({ font })}
+                />
+                <ColorField
+                  label="Color de fondo de la barra"
+                  value={promoAppearance.background}
+                  change={(background) => updatePromoAppearance({ background })}
+                />
+                <label className="promo-button-toggle">
+                  <input
+                    type="checkbox"
+                    checked={promoAppearance.buttonEnabled}
+                    onChange={(event) => updatePromoAppearance({ buttonEnabled: event.target.checked })}
+                  />
+                  Agregar botón hacia una red social
+                </label>
+                {promoAppearance.buttonEnabled && (
+                  <>
+                    <label>
+                      Red social
+                      <select value={promoAppearance.network} onChange={(event) => updatePromoAppearance({ network: event.target.value as PromoSettings["network"] })}>
+                        <option value="instagram">Instagram</option>
+                        <option value="facebook">Facebook</option>
+                        <option value="whatsapp">WhatsApp</option>
+                      </select>
+                    </label>
+                    <label>
+                      Texto del botón
+                      <input value={promoAppearance.buttonLabel} onChange={(event) => updatePromoAppearance({ buttonLabel: event.target.value })} />
+                    </label>
+                  </>
+                )}
+              </section>
               <div className="cover-cta-editor">
                 <ButtonStyleSelect
                   label="Estilo del botón Ver catálogo"
@@ -3508,14 +3652,14 @@ function AdminV2({
                     className={previewDevice === "mobile" ? "active" : ""}
                     onClick={() => setPreviewDevice("mobile")}
                   >
-                    ▯ Celular
+                    <span className="preview-device-icon device-mobile" aria-hidden="true" /> Celular
                   </button>
                   <button
                     type="button"
                     className={previewDevice === "desktop" ? "active" : ""}
                     onClick={() => setPreviewDevice("desktop")}
                   >
-                    ▱ Escritorio
+                    <span className="preview-device-icon device-desktop" aria-hidden="true" /> Escritorio
                   </button>
                 </div>
               </div>
@@ -3741,7 +3885,7 @@ function AdminV2({
                   aria-pressed={previewDevice === "mobile"}
                   onClick={() => setPreviewDevice("mobile")}
                 >
-                  <span>▯</span> Celular
+                  <span className="preview-device-icon device-mobile" aria-hidden="true" /> Celular
                 </button>
                 <button
                   type="button"
@@ -3749,7 +3893,7 @@ function AdminV2({
                   aria-pressed={previewDevice === "desktop"}
                   onClick={() => setPreviewDevice("desktop")}
                 >
-                  <span>▱</span> Escritorio
+                  <span className="preview-device-icon device-desktop" aria-hidden="true" /> Escritorio
                 </button>
               </div>
             </div>
@@ -4235,6 +4379,14 @@ function AdminV2({
               <figure>
                 <img src={qrUrl} alt="Código QR del catálogo" />
                 <figcaption>QR del catálogo</figcaption>
+                <div className="qr-download-actions">
+                  <button type="button" onClick={() => void downloadQr(false)}>
+                    Descargar solo QR
+                  </button>
+                  <button type="button" onClick={() => void downloadQr(true)}>
+                    Descargar con diseño
+                  </button>
+                </div>
               </figure>
             </section>
             <button className="admin-primary" disabled={uploading}>
