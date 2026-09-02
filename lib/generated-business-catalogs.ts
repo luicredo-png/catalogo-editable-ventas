@@ -194,35 +194,35 @@ export const generatedBusinessHeroDefaults: Record<
   }
 > = {
   "comida-rapida": {
-    heroImage: "/api/media/asset-public-aa76dd70-009a-40f0-a309-6cfce437fc8d.webp|||/api/media/asset-public-f2d47cc7-2d7a-45f4-b959-7069c704260c.webp|||/api/media/asset-public-96765299-8090-4c3f-b271-b781442ecbc4.webp|||/api/media/asset-public-74f9249f-6fb2-42fe-9b61-5544f1ebcc4a.webp|||/api/media/asset-public-c057888d-962f-4623-997e-306d4d0568c9.mp4",
+    heroImage: "/api/media/asset-public-4d23b9e2-26b8-44df-b41d-59f8fc64b4ce.webp|||/api/media/asset-public-00860cb4-5f32-467f-a730-5536b1ca2ae3.webp|||/api/media/asset-public-45be8de7-3a57-4e44-be1a-3bc170cae628.webp|||/api/media/asset-public-be793a0c-7683-4583-8f0d-c2ef5486e387.webp",
     heroEyebrow: "ANTOJO DEL DÍA",
     heroDescription: "Combos irresistibles, listos para pedir sin esperar.",
     heroHighlight: "RÁPIDO Y DELICIOSO",
     heroCtaLabel: "Ver el menú",
   },
   "detalles-romanticos": {
-    heroImage: "/api/media/asset-public-a9999ed5-7af7-4e42-8932-7edaef40a893.webp|||/api/media/asset-public-752b985f-8209-4d93-8768-8f0938139ff8.webp|||/api/media/asset-public-2ec0d48c-a4dc-44ae-9cdf-52381ef11e2f.webp|||/api/media/asset-public-62e0a3d0-1935-4d93-b121-de7ea5920d6c.webp|||/api/media/asset-public-9a0e8689-d19e-4220-9b33-fb7b78757ced.mp4",
+    heroImage: "/api/media/asset-public-91c9a7c3-f2d6-4b91-8f35-9b17847de9be.webp|||/api/media/asset-public-16677170-ee40-4110-b654-a5d384c085a0.webp|||/api/media/asset-public-63d6ba4b-9e4c-43f3-aac6-e603625a50c1.webp|||/api/media/asset-public-45128ea5-9021-4be4-acba-e623d2a75f1d.webp",
     heroEyebrow: "SORPRESAS CON AMOR",
     heroDescription: "Regalos preparados para celebrar momentos inolvidables.",
     heroHighlight: "HECHO PARA EMOCIONAR",
     heroCtaLabel: "Ver detalles",
   },
   "zapatos-mujer": {
-    heroImage: "/api/media/asset-public-259ecf77-64cd-4fe2-bb21-d175334d86f5.webp|||/api/media/asset-public-7b654ad7-6df1-4c60-88de-bd631ac3032c.webp|||/api/media/asset-public-c2af5e04-2315-4e70-bbb0-37a59eef7848.webp|||/api/media/asset-public-4f236331-fc37-406d-81ce-bc4a9fcbd626.webp|||/api/media/asset-public-c1460bc4-0371-4306-bcaf-b6f1efa6366f.mp4",
+    heroImage: "/api/media/asset-public-b868425a-4245-4f5c-9b7f-817246267e9e.webp|||/api/media/asset-public-f7df2929-8547-4a64-8c19-3fd90b2f3a51.webp|||/api/media/asset-public-21274d4f-6de4-4869-9ffe-601719590a07.webp|||/api/media/asset-public-df6069bb-a84f-461f-8a2f-c178275b44c1.webp",
     heroEyebrow: "NUEVA COLECCIÓN",
     heroDescription: "Tacones, zapatillas, botines y sandalias para cada estilo.",
     heroHighlight: "CAMINA CON ESTILO",
     heroCtaLabel: "Ver zapatos",
   },
   perfumeria: {
-    heroImage: "/api/media/asset-public-4d4d06e6-9962-43dd-8a2d-24fd2497905a.webp|||/api/media/asset-public-9cd7ed8e-54b9-479f-96de-2d39fdac5e98.webp|||/api/media/asset-public-82ae076f-56d6-4539-bec0-6eb5d00878a5.webp|||/api/media/asset-public-b22bf6ed-e3f5-42ed-a33b-34a588904eb4.webp|||/api/media/asset-public-1a2d1bac-917b-4412-99aa-76df664acc9a.mp4",
+    heroImage: "/api/media/asset-public-67f10c21-c917-4801-833d-7ef3477a46da.webp|||/api/media/asset-public-5a02b0aa-9e85-42ee-af1e-fbf12d8c175e.webp|||/api/media/asset-public-d354f37c-9d6e-458f-922c-d576244c477f.webp|||/api/media/asset-public-e5b0da40-fb51-4ed4-8a77-c7a46e1f67c3.webp",
     heroEyebrow: "AROMAS INOLVIDABLES",
     heroDescription: "Encuentra la fragancia que expresa tu personalidad.",
     heroHighlight: "TU ESENCIA, TU FIRMA",
     heroCtaLabel: "Descubrir fragancias",
   },
   postres: {
-    heroImage: "/api/media/asset-public-aa1a4afa-4985-46a3-b1d9-1b9412800844.webp|||/api/media/asset-public-17762621-4326-47ac-9119-f2f4054b4c05.webp|||/api/media/asset-public-fc765e96-06db-46b4-b67f-62a9cfec5ce2.webp|||/api/media/asset-public-0bb783f6-b0fe-4310-b44d-b16fd0634406.webp|||/api/media/asset-public-47b75864-2b70-4509-be07-8a398c60a050.mp4",
+    heroImage: "/api/media/asset-public-8e7c85e6-7178-4ab7-ade0-c8ad26664100.webp|||/api/media/asset-public-8f590b11-b3ba-4a7e-8554-95ab4b4b8a36.webp|||/api/media/asset-public-deffbba3-9cb5-4648-92aa-b129a2b7beee.webp|||/api/media/asset-public-89522b56-c29e-4e27-9b90-18225104f6cb.webp",
     heroEyebrow: "RECIÉN PREPARADOS",
     heroDescription: "Postres artesanales para compartir, regalar y celebrar.",
     heroHighlight: "UN MOMENTO MÁS DULCE",
@@ -235,3 +235,4 @@ export function isGeneratedBusinessKey(
 ): key is GeneratedBusinessKey {
   return key in generatedBusinessTemplates;
 }
+

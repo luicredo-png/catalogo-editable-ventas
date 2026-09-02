@@ -196,7 +196,6 @@ export default function Home({
     }, 0);
     return () => clearTimeout(timer);
   }, [startAdmin, activeTemplate, catalogLoading]);
-  const categories = ["TODOS", ...new Set(products.map((p) => p.category))];
   const visible = useMemo(
     () =>
       products.filter(
@@ -537,14 +536,17 @@ export default function Home({
               />
             </label>
           </section>
-          <nav className="category-tabs">
-            {categories.map((c) => (
+          <nav className="category-tabs visual-category-tabs" aria-label="Categorías">
+            {catalogTypes(products, store, currentHero).map((c) => (
               <button
-                className={filter === c ? "active" : ""}
-                onClick={() => setFilter(c)}
-                key={c}
+                className={filter === c.key ? "active" : ""}
+                onClick={() => setFilter(c.key)}
+                key={c.key}
               >
-                {c}
+                <span style={{ backgroundColor: c.color || undefined }}>
+                  {c.image ? <img src={c.image} alt="" loading="lazy" decoding="async" /> : <i />}
+                </span>
+                <b>{c.label}</b>
               </button>
             ))}
           </nav>
@@ -983,6 +985,37 @@ function PromoTicker({ text }: { text: string }) {
 function catalogPath(key: TemplateKey) {
   return `/${key}`;
 }
+async function isHorizontalHeroFile(file: File) {
+  const source = URL.createObjectURL(file);
+  try {
+    if (file.type.startsWith("video/")) {
+      return await new Promise<boolean>((resolve) => {
+        const video = document.createElement("video");
+        video.preload = "metadata";
+        video.onloadedmetadata = () => resolve(video.videoWidth > video.videoHeight);
+        video.onerror = () => resolve(false);
+        video.src = source;
+      });
+    }
+    return await new Promise<boolean>((resolve) => {
+      const image = new Image();
+      image.onload = () => resolve(image.naturalWidth > image.naturalHeight);
+      image.onerror = () => resolve(false);
+      image.src = source;
+    });
+  } finally {
+    URL.revokeObjectURL(source);
+  }
+}
+async function horizontalHeroFiles(files: File[]) {
+  const accepted: File[] = [];
+  for (const file of files) {
+    if (await isHorizontalHeroFile(file)) accepted.push(file);
+  }
+  return accepted;
+}
+const horizontalHeroMessage =
+  "El carrusel solo admite imágenes o videos horizontales. Los archivos verticales o cuadrados no se agregaron.";
 type CatalogType = { key: string; label: string; image: string; color?: string };
 function parseCategorySettings(value: string): CatalogType[] {
   try {
@@ -1009,7 +1042,9 @@ function catalogTypes(products: Product[], store: Store, heroImage: string) {
     const savedItem = saved.find((item) => item.key === key);
     const fallback =
       key === "TODOS"
-        ? heroImage
+        ? isVideoMedia(heroImage)
+          ? products.find((p) => p.active && p.image)?.image || ""
+          : heroImage
         : products.find((p) => p.category === key && p.active)?.image || "";
     return {
       key,
@@ -1591,6 +1626,10 @@ function Admin({
     file?: File,
   ) {
     if (!file) return;
+    if (field === "heroImage" && !(await isHorizontalHeroFile(file))) {
+      alert(horizontalHeroMessage);
+      return;
+    }
     setUploading(true);
     try {
       const form = new FormData();
@@ -1617,8 +1656,13 @@ function Admin({
     }
   }
   async function uploadHeroMedia(files:FileList|null){
-    if(!files?.length)return;setUploading(true);
-    try{const urls:string[]=[];for(const file of Array.from(files)){const form=new FormData();form.append("file",file);const response=await fetch("/api/upload",{method:"POST",body:form});if(response.ok){const result=await response.json();urls.push(String(result.url))}}if(urls.length)setStore({...store,heroImage:urls.join("|||")});else alert("No se pudo subir la portada.")}
+    if(!files?.length)return;
+    const selected=Array.from(files);
+    const horizontal=await horizontalHeroFiles(selected);
+    if(horizontal.length!==selected.length)alert(horizontalHeroMessage);
+    if(!horizontal.length)return;
+    setUploading(true);
+    try{const urls:string[]=[];for(const file of horizontal){const form=new FormData();form.append("file",file);const response=await fetch("/api/upload",{method:"POST",body:form});if(response.ok){const result=await response.json();urls.push(String(result.url))}}if(urls.length)setStore({...store,heroImage:urls.join("|||")});else alert("No se pudo subir la portada.")}
     finally{setUploading(false)}
   }
   const typeItems = catalogTypes(
@@ -2869,6 +2913,10 @@ function AdminV2({
     file?: File,
   ) {
     if (!file) return;
+    if (field === "heroImage" && !(await isHorizontalHeroFile(file))) {
+      alert(horizontalHeroMessage);
+      return;
+    }
     setUploading(true);
     try {
       const form = new FormData();
@@ -2907,6 +2955,29 @@ function AdminV2({
       if (!response.ok) return alert("No se pudo subir la foto del tipo.");
       const result = await response.json();
       updateType(index, { image: String(result.url) });
+    } finally {
+      setUploading(false);
+    }
+  }
+  async function uploadHeroMedia(files: FileList | null) {
+    if (!files?.length) return;
+    const selected = Array.from(files);
+    const horizontal = await horizontalHeroFiles(selected);
+    if (horizontal.length !== selected.length) alert(horizontalHeroMessage);
+    if (!horizontal.length) return;
+    setUploading(true);
+    try {
+      const urls: string[] = [];
+      for (const file of horizontal) {
+        const form = new FormData();
+        form.append("file", file);
+        const response = await fetch("/api/upload", { method: "POST", body: form });
+        if (!response.ok) continue;
+        const result = await response.json() as { url?: string };
+        if (result.url) urls.push(String(result.url));
+      }
+      if (urls.length) setStore({ ...store, heroImage: urls.join("|||") });
+      else alert("No se pudo subir la portada.");
     } finally {
       setUploading(false);
     }
@@ -3132,7 +3203,7 @@ function AdminV2({
                   disabled={uploading}
                   change={(file) => uploadStoreImage("heroImage", file)}
                 />
-                <label className="upload-action cover-carousel-upload"><b>Cargar carrusel</b><small>Varias imágenes o videos</small><input type="file" multiple accept="image/png,image/jpeg,image/webp,video/mp4" disabled={uploading} onChange={e=>uploadHeroMedia(e.target.files)}/></label>
+                <label className="upload-action cover-carousel-upload"><b>Cargar carrusel</b><small>Solo horizontales · varias imágenes o videos</small><input type="file" multiple accept="image/png,image/jpeg,image/webp,video/mp4" disabled={uploading} onChange={e=>uploadHeroMedia(e.target.files)}/></label>
               </div>
             </section>
             <div className="admin-card cover-preview-card">
@@ -7051,3 +7122,4 @@ function NeoToggle({
     </label>
   );
 }
+
