@@ -1033,7 +1033,9 @@ function homeLayoutSettings(value: string): HomeLayoutSettings {
     : "normal";
   return {
     heroSize,
-    hidden: String(item?.image || "").split(",").filter(Boolean),
+    hidden: String(item?.image || "")
+      .split(",")
+      .filter((key) => ["hero", "promo", "categories", "footer"].includes(key)),
   };
 }
 function setHomeLayoutSettings(
@@ -2885,14 +2887,12 @@ function AdminV2({
   const categoryBackgroundColorValue = categoryBackgroundColor(store.categorySettings);
   const homeLayout = homeLayoutSettings(store.categorySettings);
   const homeSectionOptions = [
-    ["header", "Encabezado"],
     ["hero", "Portada"],
     ["promo", "Barra de anuncio"],
     ["categories", "Categorías"],
-    ["products", "Productos"],
     ["footer", "Pie de página"],
   ] as const;
-  const applyHomeLayoutPreview = (settings: HomeLayoutSettings) => {
+  const applyHomeLayoutPreview = (settings: HomeLayoutSettings, focusKey?: string) => {
     requestAnimationFrame(() => {
       const main = catalogPreviewRef.current?.contentDocument?.querySelector(
         "main.storefront",
@@ -2903,12 +2903,21 @@ function AdminV2({
       for (const [key] of homeSectionOptions) {
         main.classList.toggle(`home-hide-${key}`, settings.hidden.includes(key));
       }
+      if (focusKey) requestAnimationFrame(() => {
+        const targets: Record<string, string> = {
+          hero: settings.hidden.includes("hero") ? ".store-header" : ".store-hero,.clothing-entry",
+          promo: ".promo-ticker",
+          categories: ".category-tabs,.clothing-category-panel",
+          footer: "footer",
+        };
+        main.querySelector(targets[focusKey])?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
     });
   };
-  const updateHomeLayout = (patch: Partial<HomeLayoutSettings>) => {
+  const updateHomeLayout = (patch: Partial<HomeLayoutSettings>, focusKey?: string) => {
     const next = { ...homeLayout, ...patch };
     update("categorySettings", setHomeLayoutSettings(store.categorySettings, next));
-    applyHomeLayoutPreview(next);
+    applyHomeLayoutPreview(next, focusKey);
   };
   const saveTypeItems = (items: CatalogType[]) =>
     setStore({
@@ -3182,7 +3191,8 @@ function AdminV2({
             className={section === "cover" ? "active" : ""}
             onClick={() => setSection("cover")}
           >
-            ▣ Portada
+            <span className="admin-nav-icon nav-home" aria-hidden="true"></span>
+            <span>Portada</span>
           </button>
           <button
             className={section === "products" ? "active" : ""}
@@ -3192,18 +3202,18 @@ function AdminV2({
             <span>Categorías y productos</span>
           </button>
           <button
-            className={section === "layout" ? "active" : ""}
-            onClick={() => setSection("layout")}
-          >
-            <span className="admin-nav-icon nav-customize" aria-hidden="true"></span>
-            <span>Personalizar</span>
-          </button>
-          <button
             className={section === "design" ? "active" : ""}
             onClick={() => setSection("design")}
           >
             <span className="admin-nav-icon nav-design" aria-hidden="true"></span>
             <span>Diseño</span>
+          </button>
+          <button
+            className={section === "layout" ? "active" : ""}
+            onClick={() => setSection("layout")}
+          >
+            <span className="admin-nav-icon nav-customize" aria-hidden="true"></span>
+            <span>Personalizar</span>
           </button>
           <button
             className={section === "flyers" ? "active" : ""}
@@ -3534,7 +3544,7 @@ function AdminV2({
                   onChange={(event) =>
                     updateHomeLayout({
                       heroSize: event.target.value as HomeLayoutSettings["heroSize"],
-                    })
+                    }, "hero")
                   }
                 >
                   <option value="compact">Compacta</option>
@@ -3556,7 +3566,7 @@ function AdminV2({
                             hidden: event.target.checked
                               ? homeLayout.hidden.filter((item) => item !== key)
                               : [...homeLayout.hidden, key],
-                          })
+                          }, key)
                         }
                       />
                     </label>
@@ -3667,24 +3677,6 @@ function AdminV2({
                       value={item.color || "#e9f0f8"}
                       change={(color) => updateType(index, { color })}
                     />
-                    <div className="type-order-actions">
-                      <button
-                        type="button"
-                        disabled={index === 0}
-                        onClick={() => moveType(index, -1)}
-                        aria-label={`Mover ${item.label} hacia arriba`}
-                      >
-                        ↑ Subir
-                      </button>
-                      <button
-                        type="button"
-                        disabled={index === typeItems.length - 1}
-                        onClick={() => moveType(index, 1)}
-                        aria-label={`Mover ${item.label} hacia abajo`}
-                      >
-                        ↓ Bajar
-                      </button>
-                    </div>
                     {item.key !== "TODOS" && (
                       <button
                         type="button"
