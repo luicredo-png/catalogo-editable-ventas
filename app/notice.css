@@ -201,36 +201,3 @@ body main.storefront.clothing-store .clothing-entry::before{filter:none!importan
   .flyer-typography-colors{grid-template-columns:1fr}
 }
 
-/* Botones del administrador: relieve premium inspirado en Uiverse/lenfear23. */
-.admin-sidebar nav button,.admin-sidebar .view-store,.admin-shell .admin-save-button{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  min-width:150px;
-  min-height:50px;
-  padding:0 22px;
-  outline:none;
-  cursor:pointer;
-  background-image:linear-gradient(to top,#d8d9db 0%,#fff 80%,#fdfdfd 100%);
-  background-color:#fdfdfd;
-  border:1px solid #8f9092;
-  border-radius:30px;
-  transition:box-shadow .2s ease,transform .2s ease;
-  font-family:"Source Sans Pro",sans-serif;
-  font-size:14px;
-  font-weight:600;
-  color:#606060;
-  text-shadow:0 1px #fff;
-}
-.admin-sidebar nav button:hover,.admin-sidebar .view-store:hover,.admin-shell .admin-save-button:hover{
-  transform:translateY(-1px);
-  box-shadow:0 4px 3px 1px #fcfcfc,0 6px 8px #d6d7d9,0 -4px 4px #cecfd1,0 -6px 4px #fefefe,inset 0 0 3px 3px #cecfd1;
-}
-.admin-sidebar nav button:active,.admin-sidebar nav button:focus-visible,.admin-sidebar .view-store:active,.admin-sidebar .view-store:focus-visible,.admin-shell .admin-save-button:active,.admin-shell .admin-save-button:focus-visible{
-  transform:translateY(1px);
-  box-shadow:0 4px 3px 1px #fcfcfc,0 6px 8px #d6d7d9,0 -4px 4px #cecfd1,0 -6px 4px #fefefe,inset 0 0 5px 3px #999,inset 0 0 30px #aaa;
-}
-.admin-shell .admin-save-button:disabled{cursor:not-allowed;opacity:.55;transform:none}
-.admin-sidebar nav button,.admin-sidebar .view-store,.admin-shell .admin-save-button{width:100%}
-@media(max-width:520px){.admin-sidebar nav button,.admin-sidebar .view-store,.admin-shell .admin-save-button{min-width:0;max-width:100%}}
-
