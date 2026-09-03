@@ -948,20 +948,10 @@ function socialUrl(value: string, network: "instagram" | "facebook") {
     : `https://facebook.com/${handle}`;
 }
 function InstagramIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="3" y="3" width="18" height="18" rx="5" />
-      <circle cx="12" cy="12" r="4.2" />
-      <circle cx="17.4" cy="6.7" r="1" className="social-icon-dot" />
-    </svg>
-  );
+  return <img src="/social/instagram.png" alt="" aria-hidden="true" />;
 }
 function FacebookIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M14.4 21v-8h2.8l.4-3.1h-3.2V8c0-.9.3-1.6 1.7-1.6H18V3.6c-.6-.1-1.4-.2-2.5-.2-2.5 0-4.2 1.5-4.2 4.3v2.2H8.5V13h2.8v8h3.1z" />
-    </svg>
-  );
+  return <img src="/social/facebook.png" alt="" aria-hidden="true" />;
 }
 function WhatsAppIcon() {
   return (
@@ -1017,7 +1007,7 @@ function PromoTicker({ text, settings, store }: { text: string; settings: PromoS
     <aside
       className="promo-ticker"
       aria-label="Promoción"
-      style={{ "--promo-bg": settings.background, "--promo-font": settings.font, "--promo-weight": settings.weight } as React.CSSProperties}
+      style={{ "--promo-bg": settings.background, "--promo-font": settings.font, "--promo-weight": settings.weight, "--promo-height": `${settings.height}px` } as React.CSSProperties}
     >
       <div>
         <span>{text}</span>
@@ -1076,6 +1066,7 @@ type HomeLayoutSettings = {
 type PromoSettings = {
   font: string;
   weight: number;
+  height: number;
   background: string;
   buttonEnabled: boolean;
   buttonLabel: string;
@@ -1088,6 +1079,7 @@ function promoSettings(value: string): PromoSettings {
     return {
       font: String(saved.font || "Outfit"),
       weight: Number(saved.weight || 800),
+      height: Number(saved.height || 38),
       background: String(saved.background || "#050505"),
       buttonEnabled: Boolean(saved.buttonEnabled),
       buttonLabel: String(saved.buttonLabel || "Ver red social"),
@@ -1096,7 +1088,7 @@ function promoSettings(value: string): PromoSettings {
         : "instagram",
     };
   } catch {
-    return { font: "Outfit", weight: 800, background: "#050505", buttonEnabled: false, buttonLabel: "Ver red social", network: "instagram" };
+    return { font: "Outfit", weight: 800, height: 38, background: "#050505", buttonEnabled: false, buttonLabel: "Ver red social", network: "instagram" };
   }
 }
 function setPromoSettings(value: string, settings: PromoSettings) {
@@ -2988,6 +2980,7 @@ function AdminV2({
       ticker.style.setProperty("--promo-bg", settings.background);
       ticker.style.setProperty("--promo-font", settings.font);
       ticker.style.setProperty("--promo-weight", String(settings.weight));
+      ticker.style.setProperty("--promo-height", `${settings.height}px`);
       ticker.querySelectorAll("div > span").forEach((item) => { item.textContent = text; });
       ticker.querySelector(".promo-social-button")?.remove();
       const href = settings.network === "facebook"
@@ -3001,7 +2994,8 @@ function AdminV2({
         button.href = href;
         button.target = "_blank";
         button.rel = "noreferrer";
-        button.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><text x="12" y="16" text-anchor="middle">${settings.network === "facebook" ? "f" : settings.network === "whatsapp" ? "☎" : "◎"}</text></svg><span>${settings.buttonLabel}</span>`;
+        const icon = settings.network === "facebook" ? "/social/facebook.png" : settings.network === "instagram" ? "/social/instagram.png" : "";
+        button.innerHTML = icon ? `<img src="${icon}" alt=""><span>${settings.buttonLabel}</span>` : `<span>☎</span><span>${settings.buttonLabel}</span>`;
         ticker.appendChild(button);
       }
     });
@@ -3656,6 +3650,15 @@ function AdminV2({
                     <option value={700}>Negrita</option>
                     <option value={800}>Extra negrita</option>
                     <option value={900}>Máximo</option>
+                  </select>
+                </label>
+                <label>
+                  Grosor / alto de la barra
+                  <select value={promoAppearance.height} onChange={(event) => updatePromoAppearance({ height: Number(event.target.value) })}>
+                    <option value={30}>Delgada</option>
+                    <option value={38}>Normal</option>
+                    <option value={48}>Gruesa</option>
+                    <option value={58}>Muy gruesa</option>
                   </select>
                 </label>
                 <ColorField
