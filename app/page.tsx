@@ -6,6 +6,26 @@ import {
   isGeneratedBusinessKey,
 } from "@/lib/generated-business-catalogs";
 
+const catalogMenuItems: { key: TemplateKey; label: string }[] = [
+  { key: "restaurantes", label: "Restaurante" },
+  { key: "comida-rapida", label: "Fast food" },
+  { key: "detalles-romanticos", label: "Detalles" },
+  { key: "ropa", label: "Ropa" },
+  { key: "mujer", label: "Mujer" },
+  { key: "zapatos-mujer", label: "Zapatos" },
+  { key: "perfumeria", label: "Perfumería" },
+  { key: "postres", label: "Postres" },
+  { key: "accesorios", label: "Accesorios" },
+];
+
+function customerSubdomain(hostname: string) {
+  const host = hostname.toLowerCase().replace(/:\d+$/, "");
+  const base = "micatalago.shop";
+  if (!host.endsWith(`.${base}`)) return "";
+  const subdomain = host.slice(0, -(base.length + 1));
+  return subdomain && subdomain !== "www" ? subdomain : "";
+}
+
 type OptionGroup = { name: string; values: string[] };
 type Product = {
   id: number;
@@ -102,6 +122,7 @@ export default function Home({
     [query, setQuery] = useState(""),
     [filter, setFilter] = useState("TODOS"),
     [catalogLoading, setCatalogLoading] = useState(!startAdmin),
+    [singleCatalog, setSingleCatalog] = useState(false),
     [adminLoading, setAdminLoading] = useState(startAdmin),
     [adminError, setAdminError] = useState(""),
     [adminKey, setAdminKey] = useState(""),
@@ -130,7 +151,12 @@ export default function Home({
     if (startAdmin) return;
     let mounted = true;
     setCatalogLoading(true);
-    const slug = new URLSearchParams(location.search).get("tienda") || template;
+    const tenantSlug = customerSubdomain(location.hostname);
+    setSingleCatalog(Boolean(tenantSlug));
+    const slug =
+      tenantSlug ||
+      new URLSearchParams(location.search).get("tienda") ||
+      template;
     fetch(`/api/catalog?slug=${encodeURIComponent(slug)}`)
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((d) => {
@@ -373,22 +399,20 @@ export default function Home({
             </>
           )}
         </a>
-        <div className="template-links">
-          <a href="/restaurantes">Restaurante</a>
-          <a href="/comida-rapida">Fast food</a>
-          <a href="/detalles-romanticos">Detalles</a>
-          <a href="/ropa">Ropa</a>
-          <a href="/mujer">Mujer</a>
-          <a href="/zapatos-mujer">Zapatos</a>
-          <a href="/perfumeria">Perfumería</a>
-          <a href="/postres">Postres</a>
-          <a href="/accesorios">Accesorios</a>
-        </div>
-        <button
-          onClick={() => (location.href = `/admin?catalogo=${activeTemplate}`)}
-        >
-          ADMINISTRAR
-        </button>
+        {!singleCatalog && (
+          <>
+            <div className="template-links">
+              {catalogMenuItems.map((item) => (
+                <a href={`/${item.key}`} key={item.key}>{item.label}</a>
+              ))}
+            </div>
+            <button
+              onClick={() => (location.href = `/admin?catalogo=${activeTemplate}`)}
+            >
+              ADMINISTRAR
+            </button>
+          </>
+        )}
       </header>
       {isClothing ? (
         <>
@@ -939,6 +963,13 @@ function FacebookIcon() {
     </svg>
   );
 }
+function WhatsAppIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 2a9.5 9.5 0 0 0-8.2 14.3L2.5 21.5l5.3-1.3A9.5 9.5 0 1 0 12 2Zm0 17.2a7.7 7.7 0 0 1-3.9-1.1l-.4-.2-3.1.8.8-3-.2-.4A7.7 7.7 0 1 1 12 19.2Zm4.2-5.8c-.2-.1-1.4-.7-1.6-.8-.2-.1-.4-.1-.5.1l-.7.9c-.1.2-.3.2-.5.1-1.4-.7-2.4-1.3-3.3-2.9-.2-.3.2-.4.6-1 .1-.2.1-.4 0-.5l-.7-1.7c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.8.9-1.1 2-.3 3.8 1.5 3.5 4.3 4.8 6.9 5.5.7.2 1.4.2 1.9.1.6-.1 1.4-.6 1.6-1.2.2-.6.2-1.1.1-1.2-.2-.2-.4-.3-.7-.4Z" />
+    </svg>
+  );
+}
 function SocialLinks({ store }: { store: Store }) {
   const instagram = socialUrl(store.instagram, "instagram"),
     facebook = socialUrl(store.facebook, "facebook");
@@ -986,7 +1017,7 @@ function PromoTicker({ text, settings, store }: { text: string; settings: PromoS
     <aside
       className="promo-ticker"
       aria-label="Promoción"
-      style={{ "--promo-bg": settings.background, "--promo-font": settings.font } as React.CSSProperties}
+      style={{ "--promo-bg": settings.background, "--promo-font": settings.font, "--promo-weight": settings.weight } as React.CSSProperties}
     >
       <div>
         <span>{text}</span>
@@ -996,6 +1027,7 @@ function PromoTicker({ text, settings, store }: { text: string; settings: PromoS
       </div>
       {settings.buttonEnabled && href && (
         <a className="promo-social-button" href={href} target="_blank" rel="noreferrer">
+          {settings.network === "facebook" ? <FacebookIcon /> : settings.network === "whatsapp" ? <WhatsAppIcon /> : <InstagramIcon />}
           {settings.buttonLabel}
         </a>
       )}
@@ -1043,6 +1075,7 @@ type HomeLayoutSettings = {
 };
 type PromoSettings = {
   font: string;
+  weight: number;
   background: string;
   buttonEnabled: boolean;
   buttonLabel: string;
@@ -1054,6 +1087,7 @@ function promoSettings(value: string): PromoSettings {
     const saved = JSON.parse(item?.image || "{}");
     return {
       font: String(saved.font || "Outfit"),
+      weight: Number(saved.weight || 800),
       background: String(saved.background || "#050505"),
       buttonEnabled: Boolean(saved.buttonEnabled),
       buttonLabel: String(saved.buttonLabel || "Ver red social"),
@@ -1062,7 +1096,7 @@ function promoSettings(value: string): PromoSettings {
         : "instagram",
     };
   } catch {
-    return { font: "Outfit", background: "#050505", buttonEnabled: false, buttonLabel: "Ver red social", network: "instagram" };
+    return { font: "Outfit", weight: 800, background: "#050505", buttonEnabled: false, buttonLabel: "Ver red social", network: "instagram" };
   }
 }
 function setPromoSettings(value: string, settings: PromoSettings) {
@@ -1890,12 +1924,9 @@ function Admin({
               (location.href = `/admin?catalogo=${e.target.value}`)
             }
           >
-            <option value="restaurantes">Restaurante</option>
-            <option value="comida-rapida">Comida rápida</option>
-            <option value="ropa">Ropa</option>
-            <option value="mujer">Moda mujer</option>
-            <option value="zapatos-mujer">Zapatos mujer</option>
-            <option value="accesorios">Accesorios</option>
+            {catalogMenuItems.map((item) => (
+              <option value={item.key} key={item.key}>{item.label}</option>
+            ))}
           </select>
         </label>
         <nav>
@@ -2950,11 +2981,39 @@ function AdminV2({
   const categoryBackgroundColorValue = categoryBackgroundColor(store.categorySettings);
   const homeLayout = homeLayoutSettings(store.categorySettings);
   const promoAppearance = promoSettings(store.categorySettings);
-  const updatePromoAppearance = (patch: Partial<PromoSettings>) =>
+  const applyPromoPreview = (settings: PromoSettings, text = store.promoText) => {
+    requestAnimationFrame(() => {
+      const ticker = catalogPreviewRef.current?.contentDocument?.querySelector(".promo-ticker") as HTMLElement | null;
+      if (!ticker) return;
+      ticker.style.setProperty("--promo-bg", settings.background);
+      ticker.style.setProperty("--promo-font", settings.font);
+      ticker.style.setProperty("--promo-weight", String(settings.weight));
+      ticker.querySelectorAll("div > span").forEach((item) => { item.textContent = text; });
+      ticker.querySelector(".promo-social-button")?.remove();
+      const href = settings.network === "facebook"
+        ? socialUrl(store.facebook, "facebook")
+        : settings.network === "whatsapp"
+          ? (store.whatsapp ? `https://wa.me/${store.whatsapp.replace(/\D/g, "")}` : "")
+          : socialUrl(store.instagram, "instagram");
+      if (settings.buttonEnabled && href) {
+        const button = ticker.ownerDocument.createElement("a");
+        button.className = `promo-social-button promo-network-${settings.network}`;
+        button.href = href;
+        button.target = "_blank";
+        button.rel = "noreferrer";
+        button.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><text x="12" y="16" text-anchor="middle">${settings.network === "facebook" ? "f" : settings.network === "whatsapp" ? "☎" : "◎"}</text></svg><span>${settings.buttonLabel}</span>`;
+        ticker.appendChild(button);
+      }
+    });
+  };
+  const updatePromoAppearance = (patch: Partial<PromoSettings>) => {
+    const next = { ...promoAppearance, ...patch };
     update(
       "categorySettings",
-      setPromoSettings(store.categorySettings, { ...promoAppearance, ...patch }),
+      setPromoSettings(store.categorySettings, next),
     );
+    applyPromoPreview(next);
+  };
   const downloadQr = async (themed: boolean) => {
     const response = await fetch(qrUrl);
     if (!response.ok) return;
@@ -3300,12 +3359,9 @@ function AdminV2({
               (location.href = `/admin?catalogo=${e.target.value}`)
             }
           >
-            <option value="restaurantes">Restaurante</option>
-            <option value="comida-rapida">Comida rápida</option>
-            <option value="ropa">Ropa</option>
-            <option value="mujer">Moda mujer</option>
-            <option value="zapatos-mujer">Zapatos mujer</option>
-            <option value="accesorios">Accesorios</option>
+            {catalogMenuItems.map((item) => (
+              <option value={item.key} key={item.key}>{item.label}</option>
+            ))}
           </select>
         </label>
         <nav>
@@ -3579,7 +3635,10 @@ function AdminV2({
                 <input
                   value={store.promoText}
                   maxLength={180}
-                  onChange={(e) => update("promoText", e.target.value)}
+                  onChange={(e) => {
+                    update("promoText", e.target.value);
+                    applyPromoPreview(promoAppearance, e.target.value);
+                  }}
                   placeholder="Ejemplo: Oferta especial · Pide hoy por WhatsApp"
                 />
               </label>
@@ -3589,6 +3648,16 @@ function AdminV2({
                   value={promoAppearance.font}
                   change={(font) => updatePromoAppearance({ font })}
                 />
+                <label>
+                  Grosor del texto
+                  <select value={promoAppearance.weight} onChange={(event) => updatePromoAppearance({ weight: Number(event.target.value) })}>
+                    <option value={400}>Normal</option>
+                    <option value={600}>Seminegrita</option>
+                    <option value={700}>Negrita</option>
+                    <option value={800}>Extra negrita</option>
+                    <option value={900}>Máximo</option>
+                  </select>
+                </label>
                 <ColorField
                   label="Color de fondo de la barra"
                   value={promoAppearance.background}
@@ -3604,14 +3673,14 @@ function AdminV2({
                 </label>
                 {promoAppearance.buttonEnabled && (
                   <>
-                    <label>
-                      Red social
-                      <select value={promoAppearance.network} onChange={(event) => updatePromoAppearance({ network: event.target.value as PromoSettings["network"] })}>
-                        <option value="instagram">Instagram</option>
-                        <option value="facebook">Facebook</option>
-                        <option value="whatsapp">WhatsApp</option>
-                      </select>
-                    </label>
+                    <div className="promo-network-field">
+                      <b>Red social del botón</b>
+                      <div className="promo-network-options">
+                        <button type="button" className={promoAppearance.network === "instagram" ? "selected instagram" : "instagram"} onClick={() => updatePromoAppearance({ network: "instagram" })}><InstagramIcon /><span>Instagram</span></button>
+                        <button type="button" className={promoAppearance.network === "facebook" ? "selected facebook" : "facebook"} onClick={() => updatePromoAppearance({ network: "facebook" })}><FacebookIcon /><span>Facebook</span></button>
+                        <button type="button" className={promoAppearance.network === "whatsapp" ? "selected whatsapp" : "whatsapp"} onClick={() => updatePromoAppearance({ network: "whatsapp" })}><WhatsAppIcon /><span>WhatsApp</span></button>
+                      </div>
+                    </div>
                     <label>
                       Texto del botón
                       <input value={promoAppearance.buttonLabel} onChange={(event) => updatePromoAppearance({ buttonLabel: event.target.value })} />
@@ -3668,7 +3737,10 @@ function AdminV2({
                   <iframe
                     ref={catalogPreviewRef}
                     src={catalogPath(template)}
-                    onLoad={() => applyHomeLayoutPreview(homeLayout)}
+                    onLoad={() => {
+                      applyHomeLayoutPreview(homeLayout);
+                      applyPromoPreview(promoAppearance);
+                    }}
                     title={`Vista previa de ${templates[template].label}`}
                   />
                 </div>
@@ -7422,4 +7494,3 @@ function NeoToggle({
     </label>
   );
 }
-
