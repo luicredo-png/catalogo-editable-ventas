@@ -293,6 +293,11 @@ body main.storefront .collection-stage.collection-motion-zoom{animation:none!imp
 body main.storefront{background-attachment:scroll!important;background-repeat:no-repeat!important;background-position:center top!important}
 /* Flyers en formato historia vertical 9:16, igual en editor y exportación */
 .flyer-layer-preview{aspect-ratio:9/16!important;min-height:0!important;height:auto!important}
+/* En móvil conservar siempre el fondo elegido y la foto del producto dentro del lienzo */
+.flyer-layer-preview .flyer-background-media{z-index:0!important;display:block!important;visibility:visible!important;opacity:1!important}
+.flyer-layer-preview .flyer-color-background{z-index:0!important}
+.flyer-layer-preview .flyer-preview-shade{z-index:1!important}
+.flyer-layer-preview .flyer-product-layer{z-index:3!important;display:grid!important;visibility:visible!important;opacity:1!important}
 /* Colección y pie alineados al ancho total de la portada, sin marcos */
 body main.storefront .collection-stage,body main.storefront footer{width:100%!important;margin-inline:0!important;border:0!important;border-radius:0!important;outline:0!important}
 body main.storefront .collection-stage img.collection-background,body main.storefront .collection-stage .collection-background img{width:100%!important;height:auto!important;max-height:none!important;object-fit:contain!important;object-position:center top!important}
