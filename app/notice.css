@@ -252,3 +252,6 @@ body main.storefront.clothing-store.home-hide-hero .store-header{justify-content
 /* Menú admin: ver catálogo visible bajo Redes e iconos completos */
 .admin-sidebar .view-store{display:flex!important;visibility:visible!important;opacity:1!important;margin:18px 0 0!important;width:100%!important;justify-content:center!important;align-items:center!important;min-height:52px!important}
 .admin-sidebar .admin-nav-icon{clip-path:none!important;overflow:visible!important;background-color:transparent!important}
+
+/* Icono de categorías y productos */
+.admin-sidebar .admin-nav-icon.nav-products{background-image:url("https://raw.githubusercontent.com/luicredo-png/catalogo-editable-ventas/main/public/codex-clipboard-d6fe0e8c-2ecc-44d1-bf96-1d491d870071.png")!important;background-repeat:no-repeat!important;background-position:center!important;background-size:contain!important}
