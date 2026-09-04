@@ -20,10 +20,10 @@ const catalogMenuItems: { key: TemplateKey; label: string }[] = [
 
 function customerSubdomain(hostname: string) {
   const host = hostname.toLowerCase().replace(/:\d+$/, "");
-  const base = "micatalago.shop";
+  const base = host.endsWith(".micatalogo.shop") ? "micatalogo.shop" : "micatalago.shop";
   if (!host.endsWith(`.${base}`)) return "";
   const subdomain = host.slice(0, -(base.length + 1));
-  return subdomain && subdomain !== "www" ? subdomain : "";
+  return subdomain && subdomain !== "www" && subdomain !== "creador" ? subdomain : "";
 }
 
 type OptionGroup = { name: string; values: string[] };
@@ -153,6 +153,10 @@ export default function Home({
   }, [startAdmin]);
   useEffect(() => {
     if (startAdmin) return;
+    if (location.hostname.toLowerCase().startsWith("creador.")) {
+      location.href = "/admin";
+      return;
+    }
     let mounted = true;
     setCatalogLoading(true);
     const tenantSlug = customerSubdomain(location.hostname);
@@ -282,6 +286,7 @@ export default function Home({
   const isClothing =
     activeTemplate === "ropa" || activeTemplate === "zapatos-mujer";
   const isGeneratedBusiness = isGeneratedBusinessKey(activeTemplate);
+  const isDemoHost = typeof window !== "undefined" && ["micatalago.shop", "www.micatalago.shop", "micatalogo.shop", "www.micatalogo.shop"].includes(location.hostname.toLowerCase());
   const heroSlides = store.heroImage.split("|||").filter(Boolean);
   const currentHero = heroSlides[heroSlideIndex % Math.max(1, heroSlides.length)] || "";
   useEffect(() => {
@@ -423,11 +428,11 @@ export default function Home({
                 <a href={`/${item.key}`} key={item.key}>{item.label}</a>
               ))}
             </div>
-            <button
+            {!isDemoHost && <button
               onClick={() => (location.href = `/admin?catalogo=${activeTemplate}`)}
             >
               ADMINISTRAR
-            </button>
+            </button>}
           </>
         )}
       </header>
@@ -3794,11 +3799,11 @@ function AdminV2({
               <small>PANEL MAESTRO</small><h2>Crear catálogo para un cliente</h2>
               <p>Cada cliente tendrá un subdominio, un solo rubro y un administrador independiente.</p>
               <label>Nombre del negocio<input required value={clientDraft.name} onChange={(e) => setClientDraft({...clientDraft,name:e.target.value})} /></label>
-              <label>Subdominio<div className="tenant-slug"><input required minLength={3} placeholder="cliente" value={clientDraft.slug} onChange={(e) => setClientDraft({...clientDraft,slug:e.target.value.toLowerCase().replace(/[^a-z0-9-]/g,"")})} /><b>.micatalago.shop</b></div></label>
+              <label>Subdominio<div className="tenant-slug"><input required minLength={3} placeholder="cliente" value={clientDraft.slug} onChange={(e) => setClientDraft({...clientDraft,slug:e.target.value.toLowerCase().replace(/[^a-z0-9-]/g,"")})} /><b>.micatalogo.shop</b></div></label>
               <label>Rubro<select value={clientDraft.templateKey} onChange={(e) => setClientDraft({...clientDraft,templateKey:e.target.value})}>{catalogMenuItems.map((item) => <option value={item.key} key={item.key}>{item.label}</option>)}</select></label>
               <button className="admin-primary">Crear cliente y subdominio</button>
             </form>
-            <section className="admin-card tenant-list"><h2>Clientes creados</h2>{clients.map((client) => <article key={client.id}><div><b>{client.name}</b><span>{client.slug}.micatalago.shop · {templates[client.templateKey as TemplateKey]?.label || client.templateKey}</span></div><a href={`https://${client.slug}.micatalago.shop`} target="_blank">Ver catálogo</a><a href={`https://${client.slug}.micatalago.shop/admin?llave=${client.adminKey}`} target="_blank">Abrir administrador</a></article>)}</section>
+            <section className="admin-card tenant-list"><h2>Clientes creados</h2>{clients.map((client) => <article key={client.id}><div><b>{client.name}</b><span>{client.slug}.micatalogo.shop · {templates[client.templateKey as TemplateKey]?.label || client.templateKey}</span></div><a href={`https://${client.slug}.micatalogo.shop`} target="_blank">Ver catálogo</a><a href={`https://${client.slug}.micatalogo.shop/admin?llave=${client.adminKey}`} target="_blank">Abrir administrador</a></article>)}</section>
           </section>
         )}
 
