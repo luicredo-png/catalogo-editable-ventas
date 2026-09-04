@@ -3480,7 +3480,7 @@ function AdminV2({
             <span className="admin-nav-icon nav-social" aria-hidden="true"></span>
             <span>Redes</span>
           </button>
-          {!tenantMode && <button className={section === "clients" ? "active" : ""} onClick={() => setSection("clients")}>
+          {typeof window !== "undefined" && location.hostname.startsWith("creador.") && <button className={section === "clients" ? "active" : ""} onClick={() => setSection("clients")}>
             <span className="admin-nav-icon nav-products" aria-hidden="true"></span>
             <span>Clientes y subdominios</span>
           </button>}
