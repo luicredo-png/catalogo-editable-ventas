@@ -263,3 +263,9 @@ body main.storefront.clothing-store.home-hide-hero .store-header{justify-content
 
 /* Redes: luz, color y relieve */
 .promo-network-options button,.promo-social-button{border:1px solid #ffffff66!important;box-shadow:inset 0 2px 2px #ffffff80,inset 0 -3px 5px #0003,0 6px 14px #0004!important;transition:transform .2s ease,filter .2s ease}.promo-network-options button:hover,.promo-social-button:hover{transform:translateY(-2px);filter:brightness(1.12)}.promo-network-options .facebook,.promo-network-options .facebook.selected{color:#fff!important;background:linear-gradient(145deg,#4b9dff,#1264d9)!important}.promo-network-options .instagram,.promo-network-options .instagram.selected{color:#fff!important;background:linear-gradient(145deg,#ffb13b,#f06a22 48%,#d83c14)!important}.promo-network-options .whatsapp,.promo-network-options .whatsapp.selected{color:#fff!important;background:linear-gradient(145deg,#49e58a,#13a957)!important}
+
+/* Facebook e Instagram: botones solo con logo; conservar aria-label y enlaces. */
+.store-social-links a[aria-label="Facebook"]>span,.store-social-links a[aria-label="Instagram"]>span{display:none!important}
+.store-social-links a[aria-label="Facebook"],.store-social-links a[aria-label="Instagram"]{min-width:44px!important;width:44px!important;height:44px!important;padding:10px!important;gap:0!important;justify-content:center!important;box-sizing:border-box}
+.promo-social-button:has(img[src*="facebook"]),.promo-social-button:has(img[src*="instagram"]){font-size:0!important;gap:0!important;min-width:44px!important;justify-content:center!important}
+.promo-social-button:has(img[src*="facebook"])>span,.promo-social-button:has(img[src*="instagram"])>span{display:none!important}
