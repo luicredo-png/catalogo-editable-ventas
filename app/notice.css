@@ -255,3 +255,5 @@ body main.storefront.clothing-store.home-hide-hero .store-header{justify-content
 
 /* Icono de categorías y productos */
 .admin-sidebar .admin-nav-icon.nav-products{background-image:url("https://raw.githubusercontent.com/luicredo-png/catalogo-editable-ventas/main/public/codex-clipboard-d6fe0e8c-2ecc-44d1-bf96-1d491d870071.png")!important;background-repeat:no-repeat!important;background-position:center!important;background-size:contain!important}
+
+.admin-sidebar .admin-nav-icon.nav-products{border:0!important;outline:0!important;box-shadow:none!important;background-color:transparent!important}
