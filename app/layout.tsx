@@ -30,7 +30,7 @@ const lobster = Lobster({variable:'--font-lobster',subsets:['latin'],weight:'400
 const pacifico = Pacifico({variable:'--font-pacifico',subsets:['latin'],weight:'400'});
 
 export const metadata: Metadata = {
-  title: 'Mío Catálogo | Tu tienda digital',
+  title: 'Mi Catálogo | Tu tienda digital',
   description: 'Crea, edita y comparte tu catálogo. Recibe pedidos directamente en WhatsApp.',
 };
 
