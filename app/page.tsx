@@ -97,7 +97,9 @@ type AdminSection =
   | "flyers"
   | "whatsapp"
   | "appearance"
-  | "business";
+  | "business"
+  | "clients";
+type CartItem = { product: Product; quantity: number };
 export default function Home({
   template = "ropa",
   startAdmin = false,
@@ -129,6 +131,8 @@ export default function Home({
     [section, setSection] = useState<AdminSection>("products"),
     [editing, setEditing] = useState<Product | null>(null),
     [selected, setSelected] = useState<Product | null>(null),
+    [cart, setCart] = useState<CartItem[]>([]),
+    [cartOpen, setCartOpen] = useState(false),
     [notice, setNotice] = useState(""),
     [appearanceOverride, setAppearanceOverride] = useState<
       "dark" | "light" | null
@@ -184,8 +188,10 @@ export default function Home({
     if (!startAdmin) return;
     let mounted = true;
     const shared = new URLSearchParams(location.search).get("llave") || "";
+    const tenant = customerSubdomain(location.hostname) || new URLSearchParams(location.search).get("tienda") || "";
+    setSingleCatalog(Boolean(tenant));
     fetch(
-      `/api/me?template=${template}${shared ? `&llave=${encodeURIComponent(shared)}` : ""}`,
+      `/api/me?template=${template}${tenant ? `&slug=${encodeURIComponent(tenant)}` : ""}${shared ? `&llave=${encodeURIComponent(shared)}&clave=${encodeURIComponent(shared)}` : ""}`,
     )
       .then((r) =>
         r.ok ? r.json() : Promise.reject(new Error("admin_unavailable")),
@@ -236,10 +242,11 @@ export default function Home({
   );
   async function saveProduct(p: Product) {
     const isNew = p.id === 0;
-    const r = await fetch(isNew ? "/api/products" : `/api/products/${p.id}`, {
+    const auth = adminKey ? `?clave=${encodeURIComponent(adminKey)}` : "";
+    const r = await fetch(isNew ? `/api/products${auth}` : `/api/products/${p.id}${auth}`, {
       method: isNew ? "POST" : "PUT",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ ...p, storeId: store.id }),
+      body: JSON.stringify({ ...p, storeId: store.id, adminKey }),
     });
     if (!r.ok) return toast("No se pudo guardar");
     const d = await r.json();
@@ -251,7 +258,7 @@ export default function Home({
   }
   async function removeProduct(p: Product) {
     if (!confirm(`¿Eliminar ${p.name}?`)) return;
-    const r = await fetch(`/api/products/${p.id}`, { method: "DELETE" });
+    const r = await fetch(`/api/products/${p.id}${adminKey ? `?clave=${encodeURIComponent(adminKey)}` : ""}`, { method: "DELETE" });
     if (r.ok) {
       setProducts((x) => x.filter((v) => v.id !== p.id));
       toast("Producto eliminado");
@@ -262,7 +269,7 @@ export default function Home({
     const r = await fetch("/api/settings", {
       method: "PUT",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify(store),
+      body: JSON.stringify({ ...store, adminKey }),
     });
     toast(r.ok ? "Diseño guardado" : "No se pudo guardar");
   }
@@ -379,6 +386,16 @@ export default function Home({
     appearanceOverride || store.storeAppearance || "dark";
   const homeLayout = homeLayoutSettings(store.categorySettings);
   const promoAppearance = promoSettings(store.categorySettings);
+  const cartEnabled = cartSettings(store.categorySettings).enabled;
+  const addToCart = (product: Product) => {
+    setCart((current) => {
+      const found = current.find((item) => item.product.id === product.id);
+      return found
+        ? current.map((item) => item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item)
+        : [...current, { product, quantity: 1 }];
+    });
+    toast("Agregado al carrito");
+  };
   return (
     <main
       className={`storefront appearance-${activeAppearance} hero-size-${homeLayout.heroSize} ${homeLayout.hidden.map((item) => `home-hide-${item}`).join(" ")} ${isFood ? "food-store" : ""} ${isClothing ? "clothing-store" : ""} mobile-cols-${store.mobileColumns} surface-${store.surfaceStyle} whatsapp-button-${store.buttonStyle} secondary-button-${store.secondaryButtonStyle} hero-button-${store.heroButtonStyle}`}
@@ -580,7 +597,7 @@ export default function Home({
           </nav>
         </>
       )}
-      {isClothing && store.promoText && (
+      {store.promoText && (
         <PromoTicker text={store.promoText} settings={promoAppearance} store={store} />
       )}
       <section
@@ -638,6 +655,8 @@ export default function Home({
               template={activeTemplate}
               optimized={isGeneratedBusiness}
               open={() => setSelected(p)}
+              cartEnabled={cartEnabled}
+              addToCart={() => addToCart(p)}
             />
           ))}
         </section>
@@ -675,6 +694,12 @@ export default function Home({
           close={() => setSelected(null)}
         />
       )}
+      {cartEnabled && (
+        <button className="floating-cart" onClick={() => setCartOpen(true)} aria-label="Abrir carrito">
+          🛒 <b>{cart.reduce((total, item) => total + item.quantity, 0)}</b>
+        </button>
+      )}
+      {cartOpen && <CartModal items={cart} store={store} close={() => setCartOpen(false)} change={setCart} />}
     </main>
   );
 }
@@ -1181,6 +1206,7 @@ function stringifyCategorySettings(
   const promo = parseCategorySettings(previousValue).find(
     (item) => item.key === "__PROMO_SETTINGS__",
   );
+  const cart = parseCategorySettings(previousValue).find((item) => item.key === "__CART_SETTINGS__");
   return JSON.stringify(
     items.filter((item) => item.key !== "__CATEGORY_BACKGROUND__").map((item) => ({
       key: item.key.trim().toUpperCase() || "NUEVO",
@@ -1192,8 +1218,17 @@ function stringifyCategorySettings(
       label: "",
       image: categoryBackgroundImage,
       color: categoryBackgroundColorValue,
-    }] : []).concat(layout ? [layout] : []).concat(promo ? [promo] : []),
+    }] : []).concat(layout ? [layout] : []).concat(promo ? [promo] : []).concat(cart ? [cart] : []),
   );
+}
+function cartSettings(value: string) {
+  const item = parseCategorySettings(value).find((entry) => entry.key === "__CART_SETTINGS__");
+  return { enabled: item?.label === "on" };
+}
+function setCartSettings(value: string, enabled: boolean) {
+  let items: CatalogType[] = [];
+  try { const parsed = JSON.parse(value || "[]"); if (Array.isArray(parsed)) items = parsed; } catch {}
+  return JSON.stringify([...items.filter((item) => item?.key !== "__CART_SETTINGS__"), { key: "__CART_SETTINGS__", label: enabled ? "on" : "off", image: "", color: "" }]);
 }
 function categoryBackground(value: string) {
   return parseCategorySettings(value).find((item) => item.key === "__CATEGORY_BACKGROUND__")?.image || "";
@@ -1208,12 +1243,16 @@ function StoreProductCard({
   template,
   optimized,
   open,
+  cartEnabled,
+  addToCart,
 }: {
   product: Product;
   isFood: boolean;
   template: TemplateKey;
   optimized: boolean;
   open: () => void;
+  cartEnabled: boolean;
+  addToCart: () => void;
 }) {
   const gallery = template === "ropa"
     ? [{ label: "Foto principal", image: product.image }]
@@ -1333,9 +1372,32 @@ function StoreProductCard({
             <span>PEDIR POR WHATSAPP</span>
           </button>
         )}
+        {cartEnabled && <button className="add-cart-button" onClick={addToCart}>🛒 AGREGAR AL CARRITO</button>}
       </div>
     </article>
   );
+}
+
+function CartModal({ items, store, close, change }: { items: CartItem[]; store: Store; close: () => void; change: (items: CartItem[]) => void }) {
+  const total = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  const message = `Hola, quiero pedir:\n${items.map((item) => `${item.quantity} x ${item.product.name} - S/ ${item.product.price * item.quantity}`).join("\n")}\nTotal: S/ ${total.toFixed(2)}`;
+  return <div className="cart-modal-bg" role="dialog" aria-modal="true">
+    <button className="order-backdrop" onClick={close} aria-label="Cerrar" />
+    <aside className="cart-panel">
+      <button className="order-close" onClick={close}>×</button>
+      <h2>Tu carrito</h2>
+      {!items.length && <p>Tu carrito está vacío.</p>}
+      {items.map((item) => <div className="cart-row" key={item.product.id}>
+        <img src={item.product.image} alt="" /><span><b>{item.product.name}</b><small>S/ {item.product.price}</small></span>
+        <button onClick={() => change(items.map((entry) => entry.product.id === item.product.id ? { ...entry, quantity: Math.max(1, entry.quantity - 1) } : entry))}>−</button>
+        <b>{item.quantity}</b>
+        <button onClick={() => change(items.map((entry) => entry.product.id === item.product.id ? { ...entry, quantity: entry.quantity + 1 } : entry))}>+</button>
+        <button className="cart-remove" onClick={() => change(items.filter((entry) => entry.product.id !== item.product.id))}>×</button>
+      </div>)}
+      <strong className="cart-total">Total: S/ {total.toFixed(2)}</strong>
+      {!!items.length && <a className="whatsapp-glow" href={`https://wa.me/${store.whatsapp}?text=${encodeURIComponent(message)}`} target="_blank" rel="noreferrer"><img src="/whatsapp.png" alt="" /><span>FINALIZAR POR WHATSAPP</span></a>}
+    </aside>
+  </div>;
 }
 
 function AdminProductGallery({ product }: { product: Product }) {
@@ -2933,6 +2995,18 @@ function AdminV2({
   notice: string;
 }) {
   const [uploading, setUploading] = useState(false);
+  const tenantMode = typeof window !== "undefined" && Boolean(customerSubdomain(location.hostname) || new URLSearchParams(location.search).get("tienda"));
+  const [clients, setClients] = useState<Array<{id:number;slug:string;name:string;templateKey:string;adminKey:string}>>([]);
+  const [clientDraft, setClientDraft] = useState({ name: "", slug: "", templateKey: "ropa" });
+  useEffect(() => { if (!tenantMode) fetch("/api/tenants").then((r) => r.ok ? r.json() : { clients: [] }).then((data) => setClients(data.clients || [])); }, []);
+  async function createClient(event: FormEvent) {
+    event.preventDefault();
+    const response = await fetch("/api/tenants", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(clientDraft) });
+    if (!response.ok) return alert("Ese subdominio ya existe o no es válido.");
+    const data = await response.json();
+    setClients((current) => [data.client, ...current]);
+    setClientDraft({ name: "", slug: "", templateKey: "ropa" });
+  }
   const [previewDevice, setPreviewDevice] = useState<"mobile" | "desktop">(
     "mobile",
   );
@@ -3331,7 +3405,7 @@ function AdminV2({
             ? "Personalizar secciones"
           : section === "flyers"
             ? "Estudio de flyers"
-            : "Redes y enlaces";
+            : section === "clients" ? "Clientes y subdominios" : "Redes y enlaces";
 
   return (
     <main className="admin-shell">
@@ -3345,7 +3419,7 @@ function AdminV2({
           )}
           <small>PANEL ADMIN</small>
         </div>
-        <label className="catalog-switcher">
+        {!tenantMode && <label className="catalog-switcher">
           CATÁLOGO A EDITAR
           <select
             value={template}
@@ -3357,7 +3431,7 @@ function AdminV2({
               <option value={item.key} key={item.key}>{item.label}</option>
             ))}
           </select>
-        </label>
+        </label>}
         <nav>
           <button
             className={section === "cover" ? "active" : ""}
@@ -3401,6 +3475,10 @@ function AdminV2({
             <span className="admin-nav-icon nav-social" aria-hidden="true"></span>
             <span>Redes</span>
           </button>
+          {!tenantMode && <button className={section === "clients" ? "active" : ""} onClick={() => setSection("clients")}>
+            <span className="admin-nav-icon nav-products" aria-hidden="true"></span>
+            <span>Clientes y subdominios</span>
+          </button>}
         </nav>
         <button className="view-store" onClick={close}>
           ← Ver catálogo
@@ -3710,6 +3788,20 @@ function AdminV2({
           </form>
         )}
 
+        {section === "clients" && !tenantMode && (
+          <section className="tenant-manager">
+            <form className="admin-card tenant-create" onSubmit={createClient}>
+              <small>PANEL MAESTRO</small><h2>Crear catálogo para un cliente</h2>
+              <p>Cada cliente tendrá un subdominio, un solo rubro y un administrador independiente.</p>
+              <label>Nombre del negocio<input required value={clientDraft.name} onChange={(e) => setClientDraft({...clientDraft,name:e.target.value})} /></label>
+              <label>Subdominio<div className="tenant-slug"><input required minLength={3} placeholder="cliente" value={clientDraft.slug} onChange={(e) => setClientDraft({...clientDraft,slug:e.target.value.toLowerCase().replace(/[^a-z0-9-]/g,"")})} /><b>.micatalago.shop</b></div></label>
+              <label>Rubro<select value={clientDraft.templateKey} onChange={(e) => setClientDraft({...clientDraft,templateKey:e.target.value})}>{catalogMenuItems.map((item) => <option value={item.key} key={item.key}>{item.label}</option>)}</select></label>
+              <button className="admin-primary">Crear cliente y subdominio</button>
+            </form>
+            <section className="admin-card tenant-list"><h2>Clientes creados</h2>{clients.map((client) => <article key={client.id}><div><b>{client.name}</b><span>{client.slug}.micatalago.shop · {templates[client.templateKey as TemplateKey]?.label || client.templateKey}</span></div><a href={`https://${client.slug}.micatalago.shop`} target="_blank">Ver catálogo</a><a href={`https://${client.slug}.micatalago.shop/admin?llave=${client.adminKey}`} target="_blank">Abrir administrador</a></article>)}</section>
+          </section>
+        )}
+
         {section === "layout" && (
           <form className={`layout-customizer preview-${previewDevice}`} onSubmit={saveSettings}>
             <section className="admin-card layout-preview-card">
@@ -3791,6 +3883,20 @@ function AdminV2({
                     </label>
                   );
                 })}
+                <label>
+                  <span>Carrito de compras</span>
+                  <input
+                    type="checkbox"
+                    checked={cartSettings(store.categorySettings).enabled}
+                    onChange={(event) => {
+                      update("categorySettings", setCartSettings(store.categorySettings, event.target.checked));
+                      requestAnimationFrame(() => {
+                        const frame = catalogPreviewRef.current;
+                        if (frame) frame.src = frame.src;
+                      });
+                    }}
+                  />
+                </label>
               </div>
               <button className="admin-primary">Guardar personalización</button>
             </section>
@@ -6397,7 +6503,7 @@ async function captureFlyerPreview(node: HTMLElement) {
     width: node.offsetWidth,
     height: node.offsetHeight,
     canvasWidth: 1080,
-    canvasHeight: 1920,
+    canvasHeight: 1350,
     backgroundColor: "#10131c",
     cacheBust: true,
     filter: (child) =>
@@ -6418,7 +6524,7 @@ async function exportLayeredFlyerMp4(
     throw new Error("video_unsupported");
   const { Muxer, ArrayBufferTarget } = await import("mp4-muxer");
   const width = 720,
-    height = 1280,
+    height = 900,
     fps = 24,
     seconds = 5,
     total = fps * seconds;
