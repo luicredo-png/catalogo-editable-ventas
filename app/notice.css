@@ -287,8 +287,8 @@ body main.storefront.clothing-store .store-header:has(.template-links) .store-lo
 body main.storefront .collection-stage{margin-inline:0!important;border:none!important;border-radius:0!important;outline:none!important}
 body main.storefront .collection-stage .store-product,body main.storefront .collection-stage .store-product::before,body main.storefront .collection-stage .store-product::after{border:none!important;outline:none!important;box-shadow:none!important}
 /* Fondos horizontales: conservar la imagen completa y adaptarla al ancho sin recortes al hacer zoom */
-body main.storefront .collection-stage{background-size:100% auto!important;background-repeat:repeat-y!important;background-position:center top!important;background-attachment:scroll!important;min-height:420px!important}
-body main.storefront .collection-stage.collection-motion-zoom{animation:none!important;background-size:100% auto!important}
+body main.storefront .collection-stage{background-size:cover!important;background-repeat:no-repeat!important;background-position:center center!important;background-attachment:fixed!important;min-height:420px!important}
+body main.storefront .collection-stage.collection-motion-zoom{animation:none!important;background-size:cover!important}
 /* La portada se desplaza y no se repite detrás de los productos; solo quedan fijos marca y rubros */
 body main.storefront{background-attachment:scroll!important;background-repeat:no-repeat!important;background-position:center top!important}
 /* Flyers en formato historia vertical 9:16, igual en editor y exportación */
