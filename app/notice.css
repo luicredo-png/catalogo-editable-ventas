@@ -302,5 +302,6 @@ body main.storefront{background-attachment:scroll!important;background-repeat:no
 body main.storefront .collection-stage,body main.storefront footer{width:100%!important;margin-inline:0!important;border:0!important;border-radius:0!important;outline:0!important}
 /* Las categorías acompañan el contenido; no quedan ancladas al desplazarse */
 body main.storefront .category-tabs,body main.storefront .clothing-category-panel{position:relative!important;top:auto!important}
+@media(max-width:760px){body main.storefront .template-links{display:none!important}}
 body main.storefront .collection-stage img.collection-background,body main.storefront .collection-stage .collection-background img{width:100%!important;height:auto!important;max-height:none!important;object-fit:contain!important;object-position:center top!important}
 @media(min-width:621px){.storefront .collection-stage .product-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important}}
