@@ -20,7 +20,7 @@ const catalogMenuItems: { key: TemplateKey; label: string }[] = [
 
 function customerSubdomain(hostname: string) {
   const host = hostname.toLowerCase().replace(/:\d+$/, "");
-  const base = host.endsWith(".micatalogo.shop") ? "micatalogo.shop" : "micatalago.shop";
+  const base = host.endsWith(".xn--micatlogo-41a.shop") ? "xn--micatlogo-41a.shop" : "micatalago.shop";
   if (!host.endsWith(`.${base}`)) return "";
   const subdomain = host.slice(0, -(base.length + 1));
   return subdomain && subdomain !== "www" && subdomain !== "creador" ? subdomain : "";
