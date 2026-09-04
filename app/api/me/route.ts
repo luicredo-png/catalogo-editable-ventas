@@ -59,6 +59,15 @@ export async function GET(request:Request){
  if(!identity)return Response.json({error:'session_required'},{status:401});
  const user=identity.user;
  await init();
+ const url=new URL(request.url);
+ const tenantSlug=String(url.searchParams.get('slug')||'');
+ if(tenantSlug){
+  const tenant=await env.DB.prepare("SELECT * FROM stores WHERE slug=? AND owner_id LIKE 'tenant:%'").bind(tenantSlug).first<Record<string,unknown>>();
+  const key=String(url.searchParams.get('clave')||'');
+  if(!tenant||!key||key!==String(tenant.owner_email))return Response.json({error:'invalid_tenant_access'},{status:403});
+  const rows=await env.DB.prepare('SELECT id,name,category,description,price,old_price AS oldPrice,image,options_json AS optionsJson,whatsapp_message AS whatsappMessage,active FROM products WHERE store_id=? ORDER BY sort_order,id').bind(tenant.id).all();
+  return Response.json({user:{email:'cliente@micatalago.shop',displayName:String(tenant.name),guest:false},adminKey:key,store:tenant,products:rows.results.map(p=>productRow(p as Record<string,unknown>))},{headers:identity.setCookie?{'set-cookie':identity.setCookie}:{}});
+ }
  const requested=new URL(request.url).searchParams.get('template') as TemplateKey|null;
  const key:TemplateKey=requested&&requested in templates?requested:'ropa';
  const template=templates[key];
@@ -115,5 +124,4 @@ function heroDefaults(key:TemplateKey){
  if(key==='accesorios')return{image:'https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?auto=format&fit=crop&w=1800&q=88',eyebrow:'DETALLES ÚNICOS',description:'Accesorios elegidos para transformar cada look.',highlight:'NUEVOS FAVORITOS',cta:'Descubrir accesorios'};
  return{image:'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1800&q=88',eyebrow:'NUEVA TEMPORADA',description:'Estilo, comodidad y tendencia en cada prenda.',highlight:'2026',cta:'Ver colección'};
 }
-
 
