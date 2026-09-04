@@ -191,11 +191,10 @@ export default function Home({
   useEffect(() => {
     if (!startAdmin) return;
     let mounted = true;
-    const shared = new URLSearchParams(location.search).get("llave") || "";
     const tenant = customerSubdomain(location.hostname) || new URLSearchParams(location.search).get("tienda") || "";
     setSingleCatalog(Boolean(tenant));
     fetch(
-      `/api/me?template=${template}${tenant ? `&slug=${encodeURIComponent(tenant)}` : ""}${shared ? `&llave=${encodeURIComponent(shared)}&clave=${encodeURIComponent(shared)}` : ""}`,
+      `/api/me?template=${template}${tenant ? `&slug=${encodeURIComponent(tenant)}` : ""}`,
     )
       .then((r) =>
         r.ok ? r.json() : Promise.reject(new Error("admin_unavailable")),
@@ -203,7 +202,7 @@ export default function Home({
       .then((d) => {
         if (!mounted) return;
         setProducts(d.products);
-        setAdminKey(String(d.adminKey || ""));
+        setAdminKey("");
         const next = normalizeStore(d.store);
         setStore(next);
         setActiveTemplate(next.templateKey);
@@ -246,11 +245,11 @@ export default function Home({
   );
   async function saveProduct(p: Product) {
     const isNew = p.id === 0;
-    const auth = adminKey ? `?clave=${encodeURIComponent(adminKey)}` : "";
+    const auth = "";
     const r = await fetch(isNew ? `/api/products${auth}` : `/api/products/${p.id}${auth}`, {
       method: isNew ? "POST" : "PUT",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ ...p, storeId: store.id, adminKey }),
+      body: JSON.stringify({ ...p, storeId: store.id }),
     });
     if (!r.ok) return toast("No se pudo guardar");
     const d = await r.json();
@@ -262,7 +261,7 @@ export default function Home({
   }
   async function removeProduct(p: Product) {
     if (!confirm(`¿Eliminar ${p.name}?`)) return;
-    const r = await fetch(`/api/products/${p.id}${adminKey ? `?clave=${encodeURIComponent(adminKey)}` : ""}`, { method: "DELETE" });
+    const r = await fetch(`/api/products/${p.id}`, { method: "DELETE" });
     if (r.ok) {
       setProducts((x) => x.filter((v) => v.id !== p.id));
       toast("Producto eliminado");
@@ -273,7 +272,7 @@ export default function Home({
     const r = await fetch("/api/settings", {
       method: "PUT",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ ...store, adminKey }),
+      body: JSON.stringify({ ...store }),
     });
     toast(r.ok ? "Diseño guardado" : "No se pudo guardar");
   }
@@ -1854,7 +1853,7 @@ function Admin({
     try {
       const form = new FormData();
       form.append("file", file);
-      const r = await fetch("/api/upload", { method: "POST", body: form });
+      const r = await fetch("/api/upload?template=" + encodeURIComponent(new URLSearchParams(location.search).get("catalogo") || "ropa"), { method: "POST", body: form });
       if (!r.ok) {
         alert(
           field === "collectionBackgroundImage"
@@ -1882,7 +1881,7 @@ function Admin({
     if(horizontal.length!==selected.length)alert(horizontalHeroMessage);
     if(!horizontal.length)return;
     setUploading(true);
-    try{const urls:string[]=[];for(const file of horizontal){const form=new FormData();form.append("file",file);const response=await fetch("/api/upload",{method:"POST",body:form});if(response.ok){const result=await response.json();urls.push(String(result.url))}}if(urls.length)setStore({...store,heroImage:urls.join("|||")});else alert("No se pudo subir la portada.")}
+    try{const urls:string[]=[];for(const file of horizontal){const form=new FormData();form.append("file",file);const response=await fetch("/api/upload?template=" + encodeURIComponent(new URLSearchParams(location.search).get("catalogo") || "ropa"),{method:"POST",body:form});if(response.ok){const result=await response.json();urls.push(String(result.url))}}if(urls.length)setStore({...store,heroImage:urls.join("|||")});else alert("No se pudo subir la portada.")}
     finally{setUploading(false)}
   }
   const typeItems = catalogTypes(
@@ -1940,7 +1939,7 @@ function Admin({
     try {
       const form = new FormData();
       form.append("file", file);
-      const response = await fetch("/api/upload", { method: "POST", body: form });
+      const response = await fetch("/api/upload?template=" + encodeURIComponent(new URLSearchParams(location.search).get("catalogo") || "ropa"), { method: "POST", body: form });
       if (!response.ok) return alert("No se pudo subir el fondo de categorías.");
       const result = await response.json() as { url?: string };
       if (!result.url) return;
@@ -3288,7 +3287,7 @@ function AdminV2({
     try {
       const form = new FormData();
       form.append("file", file);
-      const response = await fetch("/api/upload", {
+      const response = await fetch("/api/upload?template=" + encodeURIComponent(new URLSearchParams(location.search).get("catalogo") || "ropa"), {
         method: "POST",
         body: form,
       });
@@ -3338,7 +3337,7 @@ function AdminV2({
       for (const file of horizontal) {
         const form = new FormData();
         form.append("file", file);
-        const response = await fetch("/api/upload", { method: "POST", body: form });
+        const response = await fetch("/api/upload?template=" + encodeURIComponent(new URLSearchParams(location.search).get("catalogo") || "ropa"), { method: "POST", body: form });
         if (!response.ok) continue;
         const result = await response.json() as { url?: string };
         if (result.url) urls.push(String(result.url));
@@ -3824,7 +3823,7 @@ function AdminV2({
               <label>Rubro<select value={clientDraft.templateKey} onChange={(e) => setClientDraft({...clientDraft,templateKey:e.target.value})}>{catalogMenuItems.map((item) => <option value={item.key} key={item.key}>{item.label}</option>)}</select></label>
               <button className="admin-primary">Crear cliente y subdominio</button>
             </form>
-            <section className="admin-card tenant-list"><h2>Clientes creados</h2>{clients.map((client) => <article key={client.id}><div><b>{client.name}</b><span>{client.slug}.micatalago.shop · {templates[client.templateKey as TemplateKey]?.label || client.templateKey}</span></div><a href={`https://${client.slug}.micatalago.shop`} target="_blank">Ver catálogo</a><a href={`https://${client.slug}.micatalago.shop/admin?llave=${client.adminKey}`} target="_blank">Abrir administrador</a></article>)}</section>
+            <section className="admin-card tenant-list"><h2>Clientes creados</h2>{clients.map((client) => <article key={client.id}><div><b>{client.name}</b><span>{client.slug}.micatalago.shop · {templates[client.templateKey as TemplateKey]?.label || client.templateKey}</span></div><a href={`https://${client.slug}.micatalago.shop`} target="_blank">Ver catálogo</a><a href={`https://${client.slug}.micatalago.shop/admin`} target="_blank">Abrir administrador</a></article>)}</section>
           </section>
         )}
 
@@ -5138,7 +5137,7 @@ function FlyerStudio({
     setError("");
     const form = new FormData();
     form.append("file", file);
-    const response = await fetch("/api/upload", { method: "POST", body: form });
+    const response = await fetch("/api/upload?template=" + encodeURIComponent(new URLSearchParams(location.search).get("catalogo") || "ropa"), { method: "POST", body: form });
     if (!response.ok)
       return setError(
         kind === "background"
@@ -6530,7 +6529,7 @@ async function captureFlyerPreview(node: HTMLElement) {
     width: node.offsetWidth,
     height: node.offsetHeight,
     canvasWidth: 1080,
-    canvasHeight: 1350,
+    canvasHeight: 1920,
     backgroundColor: "#10131c",
     cacheBust: true,
     filter: (child) =>
@@ -6551,7 +6550,7 @@ async function exportLayeredFlyerMp4(
     throw new Error("video_unsupported");
   const { Muxer, ArrayBufferTarget } = await import("mp4-muxer");
   const width = 720,
-    height = 900,
+    height = 1280,
     fps = 24,
     seconds = 5,
     total = fps * seconds;
@@ -7466,7 +7465,7 @@ function OptionGroupEditor({
     setUploadingIndex(index);setPhotoError("");
     const parsed=parseOptionValue(group.values[index]);
     const uploaded:string[]=[];
-    for(const file of Array.from(files)){const form=new FormData();form.append("file",file);const response=await fetch("/api/upload",{method:"POST",body:form});if(response.ok){const result=await response.json();uploaded.push(String(result.url))}}
+    for(const file of Array.from(files)){const form=new FormData();form.append("file",file);const response=await fetch("/api/upload?template=" + encodeURIComponent(new URLSearchParams(location.search).get("catalogo") || "ropa"),{method:"POST",body:form});if(response.ok){const result=await response.json();uploaded.push(String(result.url))}}
     if(uploaded.length){const replacePlaceholder=!parsed.image;const base=group.values.map((value,i)=>i===index&&replacePlaceholder?colorValue(parsed.label,parsed.color||colorSwatch(value),uploaded[0]):value);const extras=(replacePlaceholder?uploaded.slice(1):uploaded).map(url=>colorValue(parsed.label,parsed.color||colorSwatch(group.values[index]),url));updateValues([...base,...extras])}else setPhotoError("No se pudieron subir las fotos.");
     setUploadingIndex(null);
   }
