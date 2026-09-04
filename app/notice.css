@@ -269,3 +269,15 @@ body main.storefront.clothing-store.home-hide-hero .store-header{justify-content
 .store-social-links a[aria-label="Facebook"],.store-social-links a[aria-label="Instagram"]{min-width:44px!important;width:44px!important;height:44px!important;padding:10px!important;gap:0!important;justify-content:center!important;box-sizing:border-box}
 .promo-social-button:has(img[src*="facebook"]),.promo-social-button:has(img[src*="instagram"]){font-size:0!important;gap:0!important;min-width:44px!important;justify-content:center!important}
 .promo-social-button:has(img[src*="facebook"])>span,.promo-social-button:has(img[src*="instagram"])>span{display:none!important}
+.storefront .template-links a[aria-current="page"]{text-decoration:underline!important;text-underline-offset:8px;text-decoration-thickness:3px}
+body main.storefront.clothing-store .store-header:has(.template-links){position:relative!important;inset:auto!important;display:flex!important;flex-wrap:wrap!important;justify-content:center!important;gap:12px!important;height:auto!important;min-height:80px!important;padding:18px 20px!important;background:var(--store-bg,#050b14)!important;border-radius:0!important}
+body main.storefront.clothing-store .store-header .template-links{display:flex!important;position:static!important;order:-1!important;flex:1 0 100%!important;justify-content:center!important;flex-wrap:wrap!important;gap:12px 22px!important;max-width:100%!important;padding:16px!important;box-sizing:border-box}
+body main.storefront.clothing-store .store-header:has(.template-links)>button{position:static!important}
+body main.storefront.clothing-store .store-header:has(.template-links) .store-logo{position:static!important;transform:none!important}
+.store-photo>video{display:block;width:100%;height:100%;object-fit:cover}
+.order-image>video{display:block;width:100%;height:100%;min-height:260px;object-fit:contain}
+.card-photo-thumbs video,.order-photo-thumbs video,.admin-gallery-thumbs video{width:100%;height:100%;object-fit:cover;pointer-events:none}
+.admin-gallery-main:is(video){width:100%;height:240px;object-fit:contain}
+.variant-photo-card>video{width:100%;height:118px;object-fit:contain}
+.color-folder video{width:52px;height:52px;border-radius:10px;object-fit:cover;pointer-events:none}
+.cart-row video{width:58px;height:58px;object-fit:cover;border-radius:10px}

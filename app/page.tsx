@@ -425,10 +425,10 @@ export default function Home({
           <>
             <div className="template-links">
               {catalogMenuItems.map((item) => (
-                <a href={`/${item.key}`} key={item.key}>{item.label}</a>
+                <a href={`/${item.key}`} key={item.key} aria-current={activeTemplate === item.key ? "page" : undefined}>{item.label}</a>
               ))}
             </div>
-            {!isDemoHost && <button
+            {<button
               onClick={() => (location.href = `/admin?catalogo=${activeTemplate}`)}
             >
               ADMINISTRAR
@@ -1242,6 +1242,15 @@ function categoryBackgroundColor(value: string) {
   return parseCategorySettings(value).find((item) => item.key === "__CATEGORY_BACKGROUND__")?.color || "";
 }
 
+function ProductMedia({ src, alt, className, controls = false, loading, decoding }: {
+  src: string; alt: string; className?: string; controls?: boolean;
+  loading?: "lazy" | "eager"; decoding?: "async" | "sync" | "auto";
+}) {
+  return isVideoMedia(src)
+    ? <video className={className} src={src} aria-label={alt || "Video del producto"} controls={controls} muted playsInline preload="metadata" />
+    : <img className={className} src={src} alt={alt} loading={loading} decoding={decoding} />;
+}
+
 function StoreProductCard({
   product,
   isFood,
@@ -1264,7 +1273,7 @@ function StoreProductCard({
     : productGallery(product);
   const [preview, setPreview] = useState(product.image);
   useEffect(() => {
-    if (gallery.length < 2) return;
+    if (gallery.length < 2 || gallery.some(item => isVideoMedia(item.image))) return;
     const timer = setInterval(
       () =>
         setPreview(
@@ -1285,7 +1294,7 @@ function StoreProductCard({
   return (
     <article className="store-product">
       <div className="store-photo">
-        <img
+        <ProductMedia
           src={preview}
           alt={product.name}
           loading={optimized ? "lazy" : undefined}
@@ -1309,7 +1318,7 @@ function StoreProductCard({
                 onClick={() => setPreview(item.image)}
                 title={`Color ${index + 1}`}
               >
-                <img
+                <ProductMedia
                   src={item.image}
                   alt={`Color ${index + 1} de ${product.name}`}
                   loading={optimized ? "lazy" : undefined}
@@ -1393,7 +1402,7 @@ function CartModal({ items, store, close, change }: { items: CartItem[]; store: 
       <h2>Tu carrito</h2>
       {!items.length && <p>Tu carrito está vacío.</p>}
       {items.map((item) => <div className="cart-row" key={item.product.id}>
-        <img src={item.product.image} alt="" /><span><b>{item.product.name}</b><small>S/ {item.product.price}</small></span>
+        <ProductMedia src={item.product.image} alt="" /><span><b>{item.product.name}</b><small>S/ {item.product.price}</small></span>
         <button onClick={() => change(items.map((entry) => entry.product.id === item.product.id ? { ...entry, quantity: Math.max(1, entry.quantity - 1) } : entry))}>−</button>
         <b>{item.quantity}</b>
         <button onClick={() => change(items.map((entry) => entry.product.id === item.product.id ? { ...entry, quantity: entry.quantity + 1 } : entry))}>+</button>
@@ -1410,7 +1419,7 @@ function AdminProductGallery({ product }: { product: Product }) {
     [preview, setPreview] = useState(gallery[0]?.image || product.image);
   return (
     <div className="admin-product-gallery">
-      <img className="admin-gallery-main" src={preview} alt={product.name} />
+      <ProductMedia className="admin-gallery-main" src={preview} alt={product.name} controls />
       {gallery.length > 1 && (
         <div className="admin-gallery-thumbs">
           {gallery.map((item, index) => (
@@ -1421,7 +1430,7 @@ function AdminProductGallery({ product }: { product: Product }) {
               onClick={() => setPreview(item.image)}
               title={`Color ${index + 1}`}
             >
-              <img src={item.image} alt={`Color ${index + 1}`} />
+              <ProductMedia src={item.image} alt={`Archivo ${index + 1}`} />
             </button>
           ))}
         </div>
@@ -1545,7 +1554,7 @@ function ProductOrderModal({
           ×
         </button>
         <div className="order-image">
-          <img src={displayImage} alt={product.name} />
+          <ProductMedia src={displayImage} alt={product.name} controls />
           <span>{food ? "ARMA TU PEDIDO" : "ELIGE TU FAVORITO"}</span>
           {visibleGallery.length > 1 && (
             <div className="order-photo-thumbs">
@@ -1564,7 +1573,7 @@ function ProductOrderModal({
                   }}
                   title={`Foto ${index + 1}`}
                 >
-                  <img
+                  <ProductMedia
                     src={item.image}
                     alt={`Vista ${index + 1} de ${product.name}`}
                   />
@@ -2962,6 +2971,7 @@ function Admin({
       {editing && (
         <ProductEditor
           p={editing}
+          template={template}
           close={() => setEditing(null)}
           save={saveProduct}
         />
@@ -3007,7 +3017,18 @@ function AdminV2({
   async function createClient(event: FormEvent) {
     event.preventDefault();
     const response = await fetch("/api/tenants", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(clientDraft) });
-    if (!response.ok) return alert("Ese subdominio ya existe o no es válido.");
+    if (!response.ok) {
+      const message = response.status === 503
+        ? "El creador está temporalmente bloqueado por seguridad. Falta configurar el acceso privado del propietario. No se ha creado ningún cliente."
+        : response.status === 401 || response.status === 403
+          ? "Inicia sesión con la cuenta autorizada para crear clientes."
+          : response.status === 409
+            ? "Ese subdominio ya existe. Elige otro nombre."
+            : response.status === 400
+              ? "El subdominio no es válido. Usa al menos 3 letras, números o guiones."
+              : "No se pudo crear el cliente. Inténtalo más tarde.";
+      return alert(message);
+    }
     const data = await response.json();
     setClients((current) => [data.client, ...current]);
     setClientDraft({ name: "", slug: "", templateKey: "ropa" });
@@ -3799,11 +3820,11 @@ function AdminV2({
               <small>PANEL MAESTRO</small><h2>Crear catálogo para un cliente</h2>
               <p>Cada cliente tendrá un subdominio, un solo rubro y un administrador independiente.</p>
               <label>Nombre del negocio<input required value={clientDraft.name} onChange={(e) => setClientDraft({...clientDraft,name:e.target.value})} /></label>
-              <label>Subdominio<div className="tenant-slug"><input required minLength={3} placeholder="cliente" value={clientDraft.slug} onChange={(e) => setClientDraft({...clientDraft,slug:e.target.value.toLowerCase().replace(/[^a-z0-9-]/g,"")})} /><b>.micatalogo.shop</b></div></label>
+              <label>Subdominio<div className="tenant-slug"><input required minLength={3} placeholder="cliente" value={clientDraft.slug} onChange={(e) => setClientDraft({...clientDraft,slug:e.target.value.toLowerCase().replace(/[^a-z0-9-]/g,"")})} /><b>.micatalago.shop</b></div></label>
               <label>Rubro<select value={clientDraft.templateKey} onChange={(e) => setClientDraft({...clientDraft,templateKey:e.target.value})}>{catalogMenuItems.map((item) => <option value={item.key} key={item.key}>{item.label}</option>)}</select></label>
               <button className="admin-primary">Crear cliente y subdominio</button>
             </form>
-            <section className="admin-card tenant-list"><h2>Clientes creados</h2>{clients.map((client) => <article key={client.id}><div><b>{client.name}</b><span>{client.slug}.micatalogo.shop · {templates[client.templateKey as TemplateKey]?.label || client.templateKey}</span></div><a href={`https://${client.slug}.micatalogo.shop`} target="_blank">Ver catálogo</a><a href={`https://${client.slug}.micatalogo.shop/admin?llave=${client.adminKey}`} target="_blank">Abrir administrador</a></article>)}</section>
+            <section className="admin-card tenant-list"><h2>Clientes creados</h2>{clients.map((client) => <article key={client.id}><div><b>{client.name}</b><span>{client.slug}.micatalago.shop · {templates[client.templateKey as TemplateKey]?.label || client.templateKey}</span></div><a href={`https://${client.slug}.micatalago.shop`} target="_blank">Ver catálogo</a><a href={`https://${client.slug}.micatalago.shop/admin?llave=${client.adminKey}`} target="_blank">Abrir administrador</a></article>)}</section>
           </section>
         )}
 
@@ -4584,6 +4605,7 @@ function AdminV2({
       {editing && (
         <ProductEditor
           p={editing}
+          template={template}
           categories={typeItems
             .filter((item) => item.key !== "TODOS")
             .map((item) => ({ key: item.key, label: item.label }))}
@@ -7201,15 +7223,19 @@ function drawFlyerText(
 
 function ProductEditor({
   p,
+  template = "ropa",
   categories = [],
   close,
   save,
 }: {
   p: Product;
+  template?: TemplateKey;
   categories?: { key: string; label: string }[];
   close: () => void;
   save: (p: Product) => void;
 }) {
+  const foodVariants = template === "restaurantes" || template === "comida-rapida";
+  const variantLabel = foodVariants ? "Tipo" : "Color";
   const [d, setD] = useState({
     ...p,
     options: [{
@@ -7218,7 +7244,12 @@ function ProductEditor({
         const values = (p.options || [])
           .filter((group) => group.name.toLowerCase().includes("color"))
           .flatMap((group) => group.values);
-        return values.length ? values : [colorValue("Color 1", "#8d96a5")];
+        return values.length ? values.map((value) => {
+          const parsed = parseOptionValue(value);
+          return foodVariants && /^Color \d+$/i.test(parsed.label)
+            ? colorValue(parsed.label.replace(/^Color/i, "Tipo"), parsed.color || "#8d96a5", parsed.image)
+            : value;
+        }) : [colorValue(`${variantLabel} 1`, "#8d96a5")];
       })(),
     }],
     whatsappMessage: p.whatsappMessage || "",
@@ -7252,7 +7283,7 @@ function ProductEditor({
             .flatMap((group) => group.values)
             .map(parseOptionValue)
             .find((value) => value.image)?.image;
-          save({ ...d, image: firstPhoto || d.image });
+          save({ ...d, image: firstPhoto || d.image, options: [...d.options, ...(p.options || []).filter(group => !group.name.toLowerCase().includes("color"))] });
         }}
       >
         <div className="editor-head">
@@ -7317,6 +7348,7 @@ function ProductEditor({
           {d.options.slice(0, 1).map((group, i) => (
             <OptionGroupEditor
               key={i}
+              variantLabel={variantLabel}
               group={group}
               updateName={(value) => updateGroupName(i, value)}
               updateValues={(values) => updateGroupValues(i, values)}
@@ -7360,11 +7392,13 @@ function ProductEditor({
 
 function OptionGroupEditor({
   group,
+  variantLabel = "Color",
   updateName,
   updateValues,
   remove,
 }: {
   group: OptionGroup;
+  variantLabel?: string;
   updateName: (value: string) => void;
   updateValues: (values: string[]) => void;
   remove: () => void;
@@ -7445,7 +7479,7 @@ function OptionGroupEditor({
       .map((value, index) => ({ value, index, parsed: parseOptionValue(value) }))
       .filter((item) => item.parsed.label === activeColor);
     const addColorSlot = () => {
-      const name = `Color ${colorNames.length + 1}`;
+      const name = `${variantLabel} ${colorNames.length + 1}`;
       updateValues([
         ...group.values,
         colorValue(name, "#8d96a5"),
@@ -7465,9 +7499,9 @@ function OptionGroupEditor({
       <article className="option-editor-card gallery-editor">
         <div className="option-editor-head">
           <div>
-            <b>Colores y fotos del producto</b>
+            <b>{variantLabel === "Tipo" ? "Tipos" : "Colores"}, fotos y videos del producto</b>
             <small>
-              Escribe el color y sube una o varias fotos. Usa “Subir más” para añadir otros ángulos del mismo color.
+              Escribe el {variantLabel.toLowerCase()} y sube fotos o videos MP4 (máximo 50 MB por video).
             </small>
           </div>
         </div>
@@ -7477,7 +7511,7 @@ function OptionGroupEditor({
             return (
               <div className={`color-folder${activeColor === name ? " active" : ""}`} key={name}>
                 <button type="button" onClick={() => setOpenColor(name)}>
-                  {first?.image ? <img src={first.image} alt="" /> : <span>Sin foto</span>}
+                  {first?.image ? <ProductMedia src={first.image} alt={name} /> : <span>Sin archivos</span>}
                   <b>{name}</b>
                 </button>
                 <button
@@ -7493,17 +7527,17 @@ function OptionGroupEditor({
         </div>
         {activeColor && (
           <section className="active-color-editor">
-            <label>Nombre del color<input value={activeColor} onChange={(event) => renameColor(event.target.value)} /></label>
+            <label>Nombre del {variantLabel.toLowerCase()}<input value={activeColor} onChange={(event) => renameColor(event.target.value)} /></label>
             <div className="variant-photo-grid active-color-photos">
               {activePhotos.map(({ index, parsed }) => (
                 <div className="variant-photo-card" key={`${parsed.image}-${index}`}>
-                  {parsed.image ? <img src={parsed.image} alt={`${activeColor}, foto ${index + 1}`} /> : <span>Sin fotos</span>}
+                  {parsed.image ? <ProductMedia src={parsed.image} alt={`${activeColor}, archivo ${index + 1}`} controls /> : <span>Sin archivos</span>}
                   {parsed.image && <button type="button" onClick={() => activePhotos.length === 1 ? changeValue(index, activeColor, parsed.color, "") : removeValue(index)} aria-label="Borrar foto">×</button>}
                 </div>
               ))}
               <label className="add-color-photos">
-                {uploadingIndex !== null ? "Subiendo…" : "+ Agregar fotos a este color"}
-                <input type="file" multiple accept="image/png,image/jpeg,image/webp" disabled={uploadingIndex !== null} onChange={(event) => uploadColorAngles(activePhotos[0].index, event.target.files)} />
+                {uploadingIndex !== null ? "Subiendo…" : `+ Agregar fotos o videos a este ${variantLabel.toLowerCase()}`}
+                <input type="file" multiple accept="image/png,image/jpeg,image/webp,video/mp4" disabled={uploadingIndex !== null} onChange={(event) => uploadColorAngles(activePhotos[0].index, event.target.files)} />
               </label>
             </div>
           </section>
@@ -7514,7 +7548,7 @@ function OptionGroupEditor({
           className="add-gallery-photo"
           onClick={addColorSlot}
         >
-          + Agregar otro color
+          + Agregar otro {variantLabel.toLowerCase()}
         </button>
       </article>
     );
