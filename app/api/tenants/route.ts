@@ -1,14 +1,25 @@
 import { env } from 'cloudflare:workers';
 
+
 const PUBLIC_OWNER = 'public:catalog-demo';
 const RUBROS = ['restaurantes','comida-rapida','detalles-romanticos','ropa','zapatos-mujer','perfumeria','postres','accesorios'];
 
-export async function GET() {
+
+// Fail closed until verified server-side owner authentication is configured.
+const unavailable = () => Response.json(
+  { error: 'creator_temporarily_unavailable' },
+  { status: 503, headers: { 'Cache-Control': 'no-store' } },
+);
+export async function GET() { return unavailable(); }
+export async function POST() { return unavailable(); }
+
+async function disabledGet() {
   const rows = await env.DB.prepare("SELECT id,slug,name,template_key AS templateKey,owner_email AS adminKey,created_at AS createdAt FROM stores WHERE owner_id LIKE 'tenant:%' ORDER BY id DESC").all();
   return Response.json({ clients: rows.results });
 }
 
-export async function POST(request: Request) {
+
+async function disabledPost(request: Request) {
   const body = await request.json<Record<string, unknown>>();
   const slug = String(body.slug || '').toLowerCase().trim().replace(/[^a-z0-9-]/g, '').replace(/^-+|-+$/g, '').slice(0, 45);
   const templateKey = RUBROS.includes(String(body.templateKey)) ? String(body.templateKey) : 'ropa';
@@ -24,5 +35,5 @@ export async function POST(request: Request) {
   const result = await env.DB.prepare(`INSERT INTO stores (${columns.join(',')}) VALUES (${columns.map(() => '?').join(',')})`).bind(...columns.map((key) => record[key] ?? '')).run();
   const id = Number(result.meta.last_row_id);
   await env.DB.prepare('INSERT INTO products (store_id,name,category,description,price,old_price,image,options_json,whatsapp_message,active,sort_order) SELECT ?,name,category,description,price,old_price,image,options_json,whatsapp_message,active,sort_order FROM products WHERE store_id=?').bind(id, Number(source.id)).run();
-  return Response.json({ client: { id, slug, name, templateKey, adminKey, catalogUrl: `https://${slug}.micatalogo.shop`, adminUrl: `https://${slug}.micatalogo.shop/admin?llave=${adminKey}` } });
+  return Response.json({ client: { id, slug, name, templateKey, adminKey, catalogUrl: `https://${slug}.micatalago.shop`, adminUrl: `https://${slug}.micatalago.shop/admin?llave=${adminKey}` } });
 }
