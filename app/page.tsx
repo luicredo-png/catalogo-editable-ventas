@@ -5246,8 +5246,13 @@ function FlyerStudio({
     setDownloading(true);
     setError("");
     try {
-      if (!flyerPreviewRef.current) throw new Error("preview");
-      const canvas = await captureFlyerPreview(flyerPreviewRef.current);
+      const canvas = document.createElement("canvas");
+      canvas.width = 1080;
+      canvas.height = 1920;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("canvas");
+      const assets = await prepareLayeredFlyerAssets(renderData);
+      drawLayeredFlyerFrame(ctx, assets, renderData, 1080, 1920);
       const blob = await new Promise<Blob | null>((resolve) =>
         canvas.toBlob(resolve, "image/jpeg", 0.95),
       );
@@ -5265,12 +5270,9 @@ function FlyerStudio({
     setDownloading(true);
     setError("");
     try {
-      if (!flyerPreviewRef.current) throw new Error("preview");
-      const previewCanvas = await captureFlyerPreview(flyerPreviewRef.current);
       await exportLayeredFlyerMp4(
         renderData,
         `flyer-${flyerFileName(subject)}.mp4`,
-        previewCanvas,
       );
     } catch (cause) {
       setError(
