@@ -128,7 +128,7 @@ export default function Home({
     [adminLoading, setAdminLoading] = useState(startAdmin),
     [adminError, setAdminError] = useState(""),
     [adminKey, setAdminKey] = useState(""),
-    [section, setSection] = useState<AdminSection>("products"),
+    [section, setSection] = useState<AdminSection>(() => typeof window !== "undefined" && location.hostname.startsWith("creador.") ? "clients" : "products"),
     [editing, setEditing] = useState<Product | null>(null),
     [selected, setSelected] = useState<Product | null>(null),
     [cart, setCart] = useState<CartItem[]>([]),
