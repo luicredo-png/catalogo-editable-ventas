@@ -57,6 +57,7 @@ function productRow(p:Record<string,unknown>){let options=[];try{options=JSON.pa
 export async function GET(request:Request){
  const admin=await authorize(request,env);
  if(admin instanceof Response)return admin;
+ const user={userId:PUBLIC_OWNER};
  const url=new URL(request.url);
  const tenantSlug=String(url.searchParams.get('slug')||'');
  if(tenantSlug){
