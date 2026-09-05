@@ -196,9 +196,14 @@ export default function Home({
     fetch(
       `/api/me?template=${template}${tenant ? `&slug=${encodeURIComponent(tenant)}` : ""}`,
     )
-      .then((r) =>
-        r.ok ? r.json() : Promise.reject(new Error("admin_unavailable")),
-      )
+      .then((r) => {
+        if (r.status === 401) {
+          const next = `${location.pathname}${location.search}`;
+          location.replace(`/login?next=${encodeURIComponent(next)}`);
+          return new Promise<never>(() => {});
+        }
+        return r.ok ? r.json() : Promise.reject(new Error("admin_unavailable"));
+      })
       .then((d) => {
         if (!mounted) return;
         setProducts(d.products);
