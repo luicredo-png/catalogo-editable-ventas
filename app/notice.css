@@ -282,7 +282,7 @@ body main.storefront.clothing-store .store-header:has(.template-links) .store-lo
 .color-folder video{width:52px;height:52px;border-radius:10px;object-fit:cover;pointer-events:none}
 .cart-row video{width:58px;height:58px;object-fit:cover;border-radius:10px}
 .storefront .collection-stage{border:0!important;outline:0!important;box-shadow:none!important}
-.storefront .collection-stage .store-product{border:0!important;outline:0!important;box-shadow:none!important;background:transparent!important}
+
 .storefront .collection-stage .store-photo,.storefront .collection-stage .store-photo img{border:0!important;outline:0!important;box-shadow:none!important}
 body main.storefront .collection-stage{margin-inline:0!important;border:none!important;border-radius:0!important;outline:none!important}
 body main.storefront .collection-stage .store-product,body main.storefront .collection-stage .store-product::before,body main.storefront .collection-stage .store-product::after{border:none!important;outline:none!important;box-shadow:none!important}
