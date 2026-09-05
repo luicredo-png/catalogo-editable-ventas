@@ -334,3 +334,6 @@ body main.storefront .collection-stage img.collection-background,body main.store
 .storefront.template-ropa :is(.photo-gallery-strip>button,.store-product-info>button.whatsapp-glow,.order-content>.whatsapp-glow,.option-group button){font-family:var(--ropa-font)!important;font-style:normal!important;font-weight:950}
 .storefront.template-ropa :is(.photo-gallery-strip>button,.store-product-info>button.whatsapp-glow,.order-content>.whatsapp-glow)>:is(span,b){font-family:var(--ropa-font)!important;font-style:normal!important;font-weight:950!important}
 .storefront.template-ropa .photo-gallery-strip>button{letter-spacing:.075em}
+
+/* En móvil cada catálogo se comparte con su enlace directo. */
+@media(max-width:760px){body main.storefront .store-header .template-links,body main.storefront .store-header:has(.template-links)>button{display:none!important}body main.storefront.clothing-store .store-header:has(.template-links){min-height:74px!important;padding:8px 18px!important;justify-content:center!important}body main.storefront.clothing-store .store-header:has(.template-links) .store-logo{margin:auto!important}}
