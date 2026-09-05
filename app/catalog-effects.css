@@ -14,18 +14,12 @@
   body main.storefront.catalog-3d .store-product .store-photo { transform: translateZ(28px); }
 }
 
-/* Destellos editoriales para los títulos de productos. */
+/* Destellos editoriales sin sustituir el color ni la tipografía elegidos. */
 body main.storefront.sparkle-products .store-product-info h2 {
   position: relative;
-  display: inline-block;
-  width: fit-content;
-  background-image: linear-gradient(105deg, var(--store-text) 20%, #fff 42%, var(--accent) 52%, var(--store-text) 72%);
-  background-size: 240% 100%;
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
-  animation: productSparkleSweep 3.6s ease-in-out infinite;
+  display: block;
+  width: max-content;
+  max-width: calc(100% - 1.3em);
 }
 body main.storefront.sparkle-products .store-product-info h2::after {
   content: "✦";
@@ -39,22 +33,28 @@ body main.storefront.sparkle-products .store-product-info h2::after {
   filter: drop-shadow(0 0 7px var(--accent));
   animation: productSparklePulse 1.8s ease-in-out infinite;
 }
-@keyframes productSparkleSweep { 0%, 35% { background-position: 100% 50%; } 70%, 100% { background-position: 0 50%; } }
-@keyframes productSparklePulse { 0%, 100% { opacity: 0.35; transform: scale(0.7) rotate(0deg); } 50% { opacity: 1; transform: scale(1.15) rotate(35deg); } }
+@keyframes productSparklePulse {
+  0%, 100% { opacity: 0.35; transform: scale(0.7) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.15) rotate(35deg); }
+}
 
-/* Revelado de color para el título y el destacado de la portada. */
+/* Revelado con movimiento: conserva los colores y tipografías del catálogo. */
 body main.storefront.dia-hero :is(.hero-copy, .clothing-entry-copy) h1,
 body main.storefront.dia-hero :is(.generic-hero-highlight, .clothing-entry-copy > em) {
-  background-image: linear-gradient(90deg, #a97cf8, #f38cb8, #fdcc92, var(--store-text));
-  background-size: 240% 100%;
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
-  animation: diaTextReveal 1.25s cubic-bezier(.22, .8, .28, 1) both;
+  overflow: visible;
+  animation: diaTextReveal 1.1s cubic-bezier(.22, .8, .28, 1) both;
 }
 body main.storefront.dia-hero :is(.generic-hero-highlight, .clothing-entry-copy > em) { animation-delay: 180ms; }
-@keyframes diaTextReveal { from { opacity: 0; background-position: 100% 50%; clip-path: inset(0 100% 0 0); transform: translateY(18px); } to { opacity: 1; background-position: 0 50%; clip-path: inset(0 0 0 0); transform: translateY(0); } }
+@keyframes diaTextReveal {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Cada dato del producto ocupa su propia línea. */
+body main.storefront .store-product-info > small,
+body main.storefront .store-product-info > h2,
+body main.storefront .store-product-info > p > b { display: block; }
+body main.storefront .store-product-info > p > b { margin-bottom: 0.35em; }
 
 @media (prefers-reduced-motion: reduce) {
   body main.storefront.catalog-3d .store-product,
