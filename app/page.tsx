@@ -1323,10 +1323,30 @@ function StoreProductCard({
   cartEnabled: boolean;
   addToCart: () => void;
 }) {
+  const colorGroup = product.options?.find((group) => group.name.toLowerCase().includes("color"));
+  const colorLabels = template === "ropa"
+    ? Array.from(new Set((colorGroup?.values || []).map(optionLabel)))
+    : [];
+  const [cardColor, setCardColor] = useState(colorLabels[0] || "");
+  const activeCardColor = colorLabels.includes(cardColor) ? cardColor : colorLabels[0] || "";
+  const colorGallery = (colorGroup?.values || [])
+    .filter((value) => optionLabel(value) === activeCardColor && parseOptionValue(value).image)
+    .map((value) => ({ label: activeCardColor, image: parseOptionValue(value).image }));
   const gallery = template === "ropa"
-    ? [{ label: "Foto principal", image: product.image }]
+    ? colorGallery.length ? colorGallery : [{ label: "Foto principal", image: product.image }]
     : productGallery(product);
+  const thumbGallery = template === "ropa"
+    ? colorLabels.map((label) => {
+        const first = (colorGroup?.values || []).find(
+          (value) => optionLabel(value) === label && parseOptionValue(value).image,
+        );
+        return { label, image: parseOptionValue(first || "").image };
+      }).filter((item) => item.image)
+    : gallery;
   const [preview, setPreview] = useState(product.image);
+  useEffect(() => {
+    setPreview(gallery[0]?.image || product.image);
+  }, [product.id, activeCardColor, gallery.map((item) => item.image).join("|")]);
   useEffect(() => {
     if (gallery.length < 2 || gallery.some(item => isVideoMedia(item.image))) return;
     const timer = setInterval(
@@ -1345,7 +1365,7 @@ function StoreProductCard({
       4200,
     );
     return () => clearInterval(timer);
-  }, [product.id, gallery.map((item) => item.image).join("|")]);
+  }, [product.id, activeCardColor, gallery.map((item) => item.image).join("|")]);
   const tiltCard = (event: React.PointerEvent<HTMLElement>) => {
     if (event.pointerType === "touch") return;
     const card = event.currentTarget;
@@ -1380,15 +1400,19 @@ function StoreProductCard({
         )}
         {product.oldPrice > product.price && <span>OFERTA</span>}
         {isFood && <b className="fresh-badge">PREPARADO AL MOMENTO</b>}
-        {gallery.length > 1 && (
+        {thumbGallery.length > 1 && (
           <div className="card-photo-thumbs">
-            {gallery.map((item, index) => (
+            {thumbGallery.map((item, index) => (
               <button
                 type="button"
-                className={preview === item.image ? "active" : ""}
-                key={item.image}
-                onClick={(event) => { event.stopPropagation(); setPreview(item.image); }}
-                title={`Color ${index + 1}`}
+                className={template === "ropa" ? activeCardColor === item.label ? "active" : "" : preview === item.image ? "active" : ""}
+                key={`${item.label}-${item.image}`}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  if (template === "ropa") setCardColor(item.label);
+                  setPreview(item.image);
+                }}
+                title={template === "ropa" ? item.label : `Color ${index + 1}`}
               >
                 <ProductMedia
                   src={item.image}
