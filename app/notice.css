@@ -307,3 +307,4 @@ body main.storefront .collection-stage img.collection-background,body main.store
 @media(min-width:621px){.storefront .collection-stage .product-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important}}
 /* La capa del detalle ocupa toda la pantalla; no hereda el radio de los botones. */
 .storefront .order-backdrop{border-radius:0!important;background:rgba(2,4,8,.72)!important;backdrop-filter:blur(16px)!important;-webkit-backdrop-filter:blur(16px)!important}
+.storefront .clickable-product-photo{cursor:pointer}

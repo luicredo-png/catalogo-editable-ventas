@@ -1360,7 +1360,7 @@ function StoreProductCard({
       onPointerMove={tiltCard}
       onPointerLeave={resetCardTilt}
     >
-      <div className="store-photo">
+      <div className="store-photo clickable-product-photo" onClick={open} role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") open(); }} aria-label={`Ver opciones de ${product.name}`}>
         <ProductMedia
           src={preview}
           alt={product.name}
@@ -1369,8 +1369,8 @@ function StoreProductCard({
         />
         {gallery.length > 1 && (
           <div className="subtle-photo-arrows">
-            <button type="button" aria-label="Foto anterior" onClick={() => setPreview(current => gallery[(Math.max(0, gallery.findIndex(item => item.image === current)) - 1 + gallery.length) % gallery.length].image)}>‹</button>
-            <button type="button" aria-label="Foto siguiente" onClick={() => setPreview(current => gallery[(Math.max(0, gallery.findIndex(item => item.image === current)) + 1) % gallery.length].image)}>›</button>
+            <button type="button" aria-label="Foto anterior" onClick={(event) => { event.stopPropagation(); setPreview(current => gallery[(Math.max(0, gallery.findIndex(item => item.image === current)) - 1 + gallery.length) % gallery.length].image); }}>‹</button>
+            <button type="button" aria-label="Foto siguiente" onClick={(event) => { event.stopPropagation(); setPreview(current => gallery[(Math.max(0, gallery.findIndex(item => item.image === current)) + 1) % gallery.length].image); }}>›</button>
           </div>
         )}
         {product.oldPrice > product.price && <span>OFERTA</span>}
@@ -1382,7 +1382,7 @@ function StoreProductCard({
                 type="button"
                 className={preview === item.image ? "active" : ""}
                 key={item.image}
-                onClick={() => setPreview(item.image)}
+                onClick={(event) => { event.stopPropagation(); setPreview(item.image); }}
                 title={`Color ${index + 1}`}
               >
                 <ProductMedia
@@ -1463,7 +1463,7 @@ function CartModal({ items, store, close, change }: { items: CartItem[]; store: 
   const total = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
   const message = `Hola, quiero pedir:\n${items.map((item) => `${item.quantity} x ${item.product.name} - S/ ${item.product.price * item.quantity}`).join("\n")}\nTotal: S/ ${total.toFixed(2)}`;
   return <div className="cart-modal-bg" role="dialog" aria-modal="true">
-    <button className="order-backdrop" onClick={close} aria-label="Cerrar" />
+    <div className="order-backdrop" onClick={close} aria-hidden="true" />
     <aside className="cart-panel">
       <button className="order-close" onClick={close}>×</button>
       <h2>Tu carrito</h2>
@@ -1611,11 +1611,7 @@ function ProductOrderModal({
     .replaceAll("{catalogo}", catalogUrl);
   return (
     <div className="order-modal-bg" role="dialog" aria-modal="true">
-      <button
-        className="order-backdrop"
-        onClick={close}
-        aria-label="Cerrar"
-      ></button>
+      <div className="order-backdrop" onClick={close} aria-hidden="true" />
       <article className="order-modal">
         <button className="order-close" onClick={close}>
           ×
