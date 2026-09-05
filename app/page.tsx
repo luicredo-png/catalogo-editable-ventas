@@ -1564,6 +1564,7 @@ function ProductOrderModal({
     ),
   );
   const [galleryPreview, setGalleryPreview] = useState(product.image);
+  const swipeStartX = useRef<number | null>(null);
   const selectedColor = colorGroup ? choices[colorGroup.name] : "";
   const selectedColorLabel = optionLabel(selectedColor || "");
   const uniqueColorValues = colorGroup
@@ -1579,16 +1580,36 @@ function ProductOrderModal({
     (value) =>
       parseOptionValue(value).image && optionLabel(value) === selectedColorLabel,
   ) || [];
-  const visibleGallery =
-    template === "ropa"
-      ? colorPhotos.map((value) => {
-          const parsed = parseOptionValue(value);
-          return { label: parsed.label, image: parsed.image, value };
-        })
-      : colorPhotos.map((value) => {
-          const parsed = parseOptionValue(value);
-          return { label: parsed.label, image: parsed.image, value };
-        });
+  const selectedColorGallery = colorPhotos.map((value) => {
+    const parsed = parseOptionValue(value);
+    return { label: parsed.label, image: parsed.image, value };
+  });
+  const visibleGallery = template === "ropa"
+    ? uniqueColorValues.map((value) => {
+        const label = optionLabel(value);
+        const first = colorGroup?.values.find(
+          (candidate) => optionLabel(candidate) === label && parseOptionValue(candidate).image,
+        ) || value;
+        const parsed = parseOptionValue(first);
+        return { label, image: parsed.image, value };
+      }).filter((item) => item.image)
+    : selectedColorGallery;
+  const rotateGallery = (step: number) => {
+    if (selectedColorGallery.length < 2) return;
+    setGalleryPreview((current) => {
+      const index = Math.max(0, selectedColorGallery.findIndex((item) => item.image === current));
+      return selectedColorGallery[(index + step + selectedColorGallery.length) % selectedColorGallery.length].image;
+    });
+  };
+  useEffect(() => {
+    if (template !== "ropa" || !selectedColorGallery.length) return;
+    setGalleryPreview(selectedColorGallery[0].image);
+  }, [product.id, template, selectedColorLabel]);
+  useEffect(() => {
+    if (template !== "ropa" || selectedColorGallery.length < 2 || selectedColorGallery.some((item) => isVideoMedia(item.image))) return;
+    const timer = setInterval(() => rotateGallery(1), 4200);
+    return () => clearInterval(timer);
+  }, [template, selectedColorLabel, selectedColorGallery.map((item) => item.image).join("|")]);
   const visibleGroups =
     template === "ropa"
       ? groups.map((group) =>
@@ -1621,19 +1642,36 @@ function ProductOrderModal({
         <button className="order-close" onClick={close}>
           ×
         </button>
-        <div className="order-image">
+        <div
+          className="order-image"
+          onTouchStart={(event) => { swipeStartX.current = event.touches[0]?.clientX ?? null; }}
+          onTouchEnd={(event) => {
+            if (swipeStartX.current === null) return;
+            const distance = (event.changedTouches[0]?.clientX ?? swipeStartX.current) - swipeStartX.current;
+            swipeStartX.current = null;
+            if (Math.abs(distance) > 45) rotateGallery(distance < 0 ? 1 : -1);
+          }}
+        >
           <ProductMedia src={displayImage} alt={product.name} controls />
           <span>{food ? "ARMA TU PEDIDO" : "ELIGE TU FAVORITO"}</span>
+          {template === "ropa" && selectedColorGallery.length > 1 && (
+            <div className="order-gallery-arrows">
+              <button type="button" aria-label="Foto anterior" onClick={() => rotateGallery(-1)}>‹</button>
+              <button type="button" aria-label="Foto siguiente" onClick={() => rotateGallery(1)}>›</button>
+            </div>
+          )}
           {visibleGallery.length > 1 && (
             <div className="order-photo-thumbs">
               {visibleGallery.map((item, index) => (
                 <button
                   type="button"
-                  className={displayImage === item.image ? "active" : ""}
+                  className={template === "ropa" ? selectedColorLabel === item.label ? "active" : "" : displayImage === item.image ? "active" : ""}
                   key={`${item.image}-${index}`}
                   onClick={() => {
-                    if (template === "ropa") setGalleryPreview(item.image);
-                    else if ("value" in item && colorGroup)
+                    if (template === "ropa" && colorGroup) {
+                      setChoices((current) => ({ ...current, [colorGroup.name]: item.value }));
+                      setGalleryPreview(item.image);
+                    } else if ("value" in item && colorGroup)
                       setChoices((current) => ({
                         ...current,
                         [colorGroup.name]: item.value,

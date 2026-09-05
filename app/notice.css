@@ -278,6 +278,7 @@ body main.storefront.clothing-store .store-header:has(.template-links) .store-lo
 .order-image>video{display:block;width:100%;height:100%;min-height:260px;object-fit:contain}
 .card-photo-thumbs video,.order-photo-thumbs video,.admin-gallery-thumbs video{width:100%;height:100%;object-fit:cover;pointer-events:none}
 .admin-gallery-main:is(video){width:100%;height:240px;object-fit:contain}
+.storefront.template-ropa .order-modal{border:0!important}.order-gallery-arrows{position:absolute;z-index:4;inset:50% 84px auto 8px;display:flex;justify-content:space-between;pointer-events:none;transform:translateY(-50%)}.order-gallery-arrows button{pointer-events:auto;display:grid;place-items:center;width:38px;height:38px;border:1px solid #ffffff9c;border-radius:50%;background:#06111dcc;color:#fff;font-size:28px;line-height:1;box-shadow:0 6px 18px #0008;cursor:pointer}.order-gallery-arrows button:hover{background:#168cff}@media(max-width:680px){.order-gallery-arrows{right:8px}.order-gallery-arrows button{width:34px;height:34px}}
 .variant-photo-card>video{width:100%;height:118px;object-fit:contain}
 .color-folder video{width:52px;height:52px;border-radius:10px;object-fit:cover;pointer-events:none}
 .cart-row video{width:58px;height:58px;object-fit:cover;border-radius:10px}
