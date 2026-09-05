@@ -308,3 +308,13 @@ body main.storefront .collection-stage img.collection-background,body main.store
 /* La capa del detalle ocupa toda la pantalla; no hereda el radio de los botones. */
 .storefront .order-backdrop{border-radius:0!important;background:rgba(2,4,8,.72)!important;backdrop-filter:blur(16px)!important;-webkit-backdrop-filter:blur(16px)!important}
 .storefront .clickable-product-photo{cursor:pointer}
+
+/* Botones de ROPA inspirados en Revolt Perú. */
+.storefront.template-ropa .photo-gallery-strip>button{isolation:isolate;position:relative;overflow:hidden;width:100%;min-height:46px;padding:9px 10px 9px 14px;border:1px solid #7cecff!important;border-radius:12px!important;background:linear-gradient(118deg,#003b9e 0%,#007cff 44%,#00c6ff 100%)!important;color:#fff!important;font-size:10px;font-weight:950;letter-spacing:.11em;text-shadow:0 1px 2px #00366f;box-shadow:0 7px 22px #0078ff50,inset 0 1px #d6fbffb8!important;transition:transform .18s,box-shadow .18s,filter .18s}
+.storefront.template-ropa .photo-gallery-strip>button:hover{filter:saturate(1.15);transform:translateY(-2px);box-shadow:0 10px 30px #008cff80,0 0 14px #56e6ff99,inset 0 1px #fff!important}
+.storefront.template-ropa .photo-gallery-strip>button:active{transform:translateY(0) scale(.985)}
+.storefront.template-ropa .photo-gallery-strip>button b{display:grid;place-items:center;width:26px;height:26px;border:1px solid #71e9ff;border-radius:50%;background:#031224;color:#a8f3ff;box-shadow:0 0 12px #00bfff99}
+.storefront.template-ropa .store-product-info>button.whatsapp-glow{isolation:isolate;position:relative;overflow:hidden!important;width:100%;min-height:44px;border:1px solid #87ffb2!important;border-radius:12px!important;background:linear-gradient(115deg,#0bad4d 0%,#20db6a 46%,#5cff95 100%)!important;color:#012d13!important;font-size:11px;font-weight:1000;letter-spacing:.045em;text-shadow:0 1px #b9ffd0;box-shadow:0 8px 22px #15ce5a47,0 0 0 1px #0c7f3d,inset 0 1px #d9ffe6!important;transition:transform .18s,box-shadow .18s,filter .18s}
+.storefront.template-ropa .store-product-info>button.whatsapp-glow:hover{filter:saturate(1.15);transform:translateY(-2px) scale(1.012);box-shadow:0 12px 30px #17dc6580,0 0 18px #4dff9088,inset 0 1px #fff!important}
+.storefront.template-ropa .store-product-info>button.whatsapp-glow span{color:#012d13!important}
+@media(max-width:650px){.storefront.template-ropa .photo-gallery-strip>button{min-height:39px;padding:7px 8px 7px 12px;font-size:8px}.storefront.template-ropa .photo-gallery-strip>button b{width:24px;height:24px}.storefront.template-ropa .store-product-info>button.whatsapp-glow{padding:9px 7px;font-size:9px}}
