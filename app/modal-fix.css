@@ -1,0 +1,14 @@
+/* El fondo elegido para las ventanas también se aplica al detalle del producto. */
+body main.storefront.surface-media .order-modal {
+  background-color: var(--surface) !important;
+  background-image:
+    linear-gradient(180deg, rgba(3, 7, 12, 0.14), rgba(3, 7, 12, 0.5)),
+    var(--surface-image) !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-size: cover !important;
+}
+body main.storefront.surface-media .order-content {
+  background: linear-gradient(180deg, rgba(3, 7, 12, 0.28), rgba(3, 7, 12, 0.72)) !important;
+  backdrop-filter: blur(1px);
+}
