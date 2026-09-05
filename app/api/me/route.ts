@@ -2,44 +2,8 @@ import { env } from 'cloudflare:workers';
 import { authorize, privateError } from '@/lib/admin-auth';
 import { templates, type TemplateKey } from '../../../lib/catalog-templates';
 import {generatedBusinessHeroDefaults,isGeneratedBusinessKey} from '../../../lib/generated-business-catalogs';
-import {ensureRopaCollection} from '@/lib/ropa-collection';
-import {ensureButtonStyleColumns} from '@/lib/button-styles-db';
 
 const PUBLIC_OWNER='public:catalog-demo';
-
-async function init(){
- const db=env.DB;
- await db.batch([
-  db.prepare("CREATE TABLE IF NOT EXISTS stores (id INTEGER PRIMARY KEY AUTOINCREMENT, owner_id TEXT NOT NULL, owner_email TEXT NOT NULL, template_key TEXT NOT NULL DEFAULT 'ropa', slug TEXT NOT NULL UNIQUE, name TEXT NOT NULL DEFAULT 'Mi tienda', whatsapp TEXT NOT NULL DEFAULT '51999999999', accent TEXT NOT NULL DEFAULT '#168cff', background_color TEXT NOT NULL DEFAULT '#050b14', background_image TEXT NOT NULL DEFAULT '', collection_background_color TEXT NOT NULL DEFAULT '#050b14', collection_background_image TEXT NOT NULL DEFAULT '', collection_motion TEXT NOT NULL DEFAULT 'none', collection_overlay_strength REAL NOT NULL DEFAULT 0.35, mobile_columns INTEGER NOT NULL DEFAULT 1, promo_text TEXT NOT NULL DEFAULT '🔥 OFERTA ESPECIAL · PIDE HOY POR WHATSAPP · NUEVOS MODELOS DISPONIBLES', category_settings TEXT NOT NULL DEFAULT '', font_family TEXT NOT NULL DEFAULT 'var(--font-outfit)', heading_font TEXT NOT NULL DEFAULT 'var(--font-space)', hero_font TEXT NOT NULL DEFAULT 'var(--font-space)', store_name_font TEXT NOT NULL DEFAULT 'var(--font-space)', hero_eyebrow_font TEXT NOT NULL DEFAULT 'var(--font-space)', hero_highlight_font TEXT NOT NULL DEFAULT 'var(--font-space)', hero_description_font TEXT NOT NULL DEFAULT 'var(--font-outfit)', hero_cta_font TEXT NOT NULL DEFAULT 'var(--font-outfit)', product_font TEXT NOT NULL DEFAULT 'var(--font-outfit)', price_font TEXT NOT NULL DEFAULT 'var(--font-space)', button_font TEXT NOT NULL DEFAULT 'var(--font-outfit)', button_color TEXT NOT NULL DEFAULT '#25d366', secondary_color TEXT NOT NULL DEFAULT '#168cff', hero_button_color TEXT NOT NULL DEFAULT '#168cff', text_color TEXT NOT NULL DEFAULT '#ffffff', surface_color TEXT NOT NULL DEFAULT '#07111e', surface_style TEXT NOT NULL DEFAULT 'solid', surface_background_image TEXT NOT NULL DEFAULT '', overlay_strength REAL NOT NULL DEFAULT 0.62, catalog_title TEXT NOT NULL DEFAULT 'ÚLTIMOS MODELOS', logo_url TEXT NOT NULL DEFAULT '', hero_image TEXT NOT NULL DEFAULT '', hero_eyebrow TEXT NOT NULL DEFAULT '', hero_description TEXT NOT NULL DEFAULT '', hero_highlight TEXT NOT NULL DEFAULT '', hero_cta_label TEXT NOT NULL DEFAULT 'Ver catálogo', created_at TEXT NOT NULL)"),
-  db.prepare("CREATE TABLE IF NOT EXISTS products (id INTEGER PRIMARY KEY AUTOINCREMENT, store_id INTEGER NOT NULL, name TEXT NOT NULL, category TEXT NOT NULL, description TEXT NOT NULL, price REAL NOT NULL, old_price REAL NOT NULL, image TEXT NOT NULL, options_json TEXT NOT NULL DEFAULT '[]', whatsapp_message TEXT NOT NULL DEFAULT '', active INTEGER NOT NULL DEFAULT 1, sort_order INTEGER NOT NULL DEFAULT 0)"),
-  db.prepare("CREATE INDEX IF NOT EXISTS idx_products_store ON products(store_id, sort_order, id)"),
- db.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_stores_owner_template ON stores(owner_id,template_key)")
- ]);
- const info=await db.prepare('PRAGMA table_info(stores)').all<Record<string,unknown>>();
- const columns=new Set(info.results.map(column=>String(column.name)));
- if(!columns.has('instagram'))await db.prepare("ALTER TABLE stores ADD COLUMN instagram TEXT NOT NULL DEFAULT ''").run();
- if(!columns.has('facebook'))await db.prepare("ALTER TABLE stores ADD COLUMN facebook TEXT NOT NULL DEFAULT ''").run();
- const additions=[['hero_image',"ALTER TABLE stores ADD COLUMN hero_image TEXT NOT NULL DEFAULT ''"],['hero_eyebrow',"ALTER TABLE stores ADD COLUMN hero_eyebrow TEXT NOT NULL DEFAULT ''"],['hero_description',"ALTER TABLE stores ADD COLUMN hero_description TEXT NOT NULL DEFAULT ''"],['hero_highlight',"ALTER TABLE stores ADD COLUMN hero_highlight TEXT NOT NULL DEFAULT ''"],['hero_cta_label',"ALTER TABLE stores ADD COLUMN hero_cta_label TEXT NOT NULL DEFAULT 'Ver catálogo'"],['hero_font',"ALTER TABLE stores ADD COLUMN hero_font TEXT NOT NULL DEFAULT 'var(--font-space)'"],['store_name_font',"ALTER TABLE stores ADD COLUMN store_name_font TEXT NOT NULL DEFAULT 'var(--font-space)'"],['hero_eyebrow_font',"ALTER TABLE stores ADD COLUMN hero_eyebrow_font TEXT NOT NULL DEFAULT 'var(--font-space)'"],['hero_highlight_font',"ALTER TABLE stores ADD COLUMN hero_highlight_font TEXT NOT NULL DEFAULT 'var(--font-space)'"],['hero_description_font',"ALTER TABLE stores ADD COLUMN hero_description_font TEXT NOT NULL DEFAULT 'var(--font-outfit)'"],['hero_cta_font',"ALTER TABLE stores ADD COLUMN hero_cta_font TEXT NOT NULL DEFAULT 'var(--font-outfit)'"],['product_font',"ALTER TABLE stores ADD COLUMN product_font TEXT NOT NULL DEFAULT 'var(--font-outfit)'"],['price_font',"ALTER TABLE stores ADD COLUMN price_font TEXT NOT NULL DEFAULT 'var(--font-space)'"],['button_font',"ALTER TABLE stores ADD COLUMN button_font TEXT NOT NULL DEFAULT 'var(--font-outfit)'"],['hero_button_color',"ALTER TABLE stores ADD COLUMN hero_button_color TEXT NOT NULL DEFAULT '#168cff'"],['collection_background_color',"ALTER TABLE stores ADD COLUMN collection_background_color TEXT NOT NULL DEFAULT '#050b14'"],['collection_background_image',"ALTER TABLE stores ADD COLUMN collection_background_image TEXT NOT NULL DEFAULT ''"],['collection_motion',"ALTER TABLE stores ADD COLUMN collection_motion TEXT NOT NULL DEFAULT 'none'"],['collection_overlay_strength',"ALTER TABLE stores ADD COLUMN collection_overlay_strength REAL NOT NULL DEFAULT 0.35"],['mobile_columns',"ALTER TABLE stores ADD COLUMN mobile_columns INTEGER NOT NULL DEFAULT 1"],['promo_text',"ALTER TABLE stores ADD COLUMN promo_text TEXT NOT NULL DEFAULT '🔥 OFERTA ESPECIAL · PIDE HOY POR WHATSAPP · NUEVOS MODELOS DISPONIBLES'"],['category_settings',"ALTER TABLE stores ADD COLUMN category_settings TEXT NOT NULL DEFAULT ''"],['surface_style',"ALTER TABLE stores ADD COLUMN surface_style TEXT NOT NULL DEFAULT 'solid'"],['surface_background_image',"ALTER TABLE stores ADD COLUMN surface_background_image TEXT NOT NULL DEFAULT ''"],['whatsapp_message',"ALTER TABLE stores ADD COLUMN whatsapp_message TEXT NOT NULL DEFAULT 'Hola, quiero pedir {producto}. Precio: S/ {precio}. Catálogo: {catalogo}'"]];
- for(const [name,sql] of additions)if(!columns.has(name))await db.prepare(sql).run();
- await ensureButtonStyleColumns(db);
-}
-
-async function ensureGeneratedBusinessCatalog(
- db:typeof env.DB,
- storeId:number,
- key:TemplateKey,
-){
- if(!isGeneratedBusinessKey(key))return;
- const template=templates[key],hero=generatedBusinessHeroDefaults[key];
- const current=await db.prepare('SELECT image FROM products WHERE store_id=? ORDER BY sort_order,id LIMIT 1').bind(storeId).first<{image:string}>();
- if(current?.image===template.products[0]?.image)return;
- const defaults=designDefaults(key),s=template.store;
- await db.batch([
-  db.prepare('DELETE FROM products WHERE store_id=?').bind(storeId),
-  db.prepare('UPDATE stores SET name=?,slug=?,accent=?,background_color=?,collection_background_color=?,font_family=?,heading_font=?,hero_font=?,product_font=?,price_font=?,button_font=?,secondary_color=?,hero_button_color=?,text_color=?,surface_color=?,overlay_strength=?,catalog_title=?,hero_image=?,hero_eyebrow=?,hero_description=?,hero_highlight=?,hero_cta_label=? WHERE id=?').bind(s.name,key,s.accent,s.backgroundColor,s.backgroundColor,defaults.fontFamily,defaults.headingFont,defaults.headingFont,defaults.fontFamily,defaults.headingFont,defaults.fontFamily,defaults.secondaryColor,defaults.secondaryColor,defaults.textColor,defaults.surfaceColor,defaults.overlayStrength,s.catalogTitle,hero.heroImage,hero.heroEyebrow,hero.heroDescription,hero.heroHighlight,hero.heroCtaLabel,storeId),
-  ...template.products.map((p,i)=>db.prepare('INSERT INTO products (store_id,name,category,description,price,old_price,image,options_json,whatsapp_message,active,sort_order) VALUES (?,?,?,?,?,?,?,?,?,?,?)').bind(storeId,p.name,p.category,p.description,p.price,p.oldPrice,p.image,JSON.stringify(p.options||defaultOptions(key)),p.whatsappMessage||'',p.active?1:0,i)),
- ]);
-}
 
 function defaultOptions(key:TemplateKey){
  if(key==='restaurantes')return [{name:'Presentación',values:['Clásico','Generoso']},{name:'Acompañamiento',values:['Papas doradas','Ensalada','Arroz']},{name:'Extras',values:['Sin extras','Huevo + S/ 3','Salsa extra + S/ 2']}];
@@ -98,8 +62,6 @@ export async function GET(request:Request){
    store=await env.DB.prepare('SELECT * FROM stores WHERE id=?').bind(id).first<Record<string,unknown>>();
   }
  }
- await ensureGeneratedBusinessCatalog(env.DB,Number(store!.id),key);
- if(key==='ropa')await ensureRopaCollection(env.DB,Number(store!.id));
  const rows=await env.DB.prepare('SELECT id,name,category,description,price,old_price AS oldPrice,image,options_json AS optionsJson,whatsapp_message AS whatsappMessage,active FROM products WHERE store_id=? ORDER BY sort_order,id').bind(store!.id).all();
  return Response.json({user:{email:admin.email,displayName:'Editor demo',guest:admin.demo},adminKey:'',store,products:rows.results.map(p=>productRow(p as Record<string,unknown>))},{headers:{'Cache-Control':'private, no-store'}});
 }
