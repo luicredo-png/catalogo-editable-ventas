@@ -14,6 +14,8 @@ const isCodexSeatbeltSandbox = process.env.CODEX_SANDBOX === 'seatbelt';
 
 const localBindingConfig = {
   main: 'vinext/server/app-router-entry',
+  // Preserve secrets and dashboard variables on every GitHub deployment.
+  keep_vars: true,
   compatibility_flags: ['nodejs_compat'],
   d1_databases: d1
     ? [
