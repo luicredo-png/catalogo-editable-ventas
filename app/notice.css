@@ -305,3 +305,5 @@ body main.storefront .category-tabs,body main.storefront .clothing-category-pane
 @media(max-width:760px){body main.storefront .template-links{display:none!important}}
 body main.storefront .collection-stage img.collection-background,body main.storefront .collection-stage .collection-background img{width:100%!important;height:auto!important;max-height:none!important;object-fit:contain!important;object-position:center top!important}
 @media(min-width:621px){.storefront .collection-stage .product-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important}}
+/* La capa del detalle ocupa toda la pantalla; no hereda el radio de los botones. */
+.storefront .order-backdrop{border-radius:0!important;background:rgba(2,4,8,.72)!important;backdrop-filter:blur(16px)!important;-webkit-backdrop-filter:blur(16px)!important}
