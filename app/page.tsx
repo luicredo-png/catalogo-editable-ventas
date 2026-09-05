@@ -3115,6 +3115,13 @@ function AdminV2({
     setClients((current) => [data.client, ...current]);
     setClientDraft({ name: "", slug: "", templateKey: "ropa" });
   }
+  async function removeClient(client: {id:number;slug:string;name:string}) {
+    if (!confirm(`¿Eliminar definitivamente ${client.name}?\n\nSe borrarán su subdominio, acceso y productos. Esta acción no se puede deshacer.`)) return;
+    const response = await fetch("/api/tenants", { method: "DELETE", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: client.id, slug: client.slug }) });
+    if (!response.ok) return alert("No se pudo eliminar el cliente. Recarga la página e inténtalo nuevamente.");
+    setClients((current) => current.filter((item) => item.id !== client.id));
+    alert(`${client.name} y su subdominio fueron eliminados.`);
+  }
   const [previewDevice, setPreviewDevice] = useState<"mobile" | "desktop">(
     "mobile",
   );
@@ -3926,7 +3933,7 @@ function AdminV2({
               <label>Rubro<select value={clientDraft.templateKey} onChange={(e) => setClientDraft({...clientDraft,templateKey:e.target.value})}>{catalogMenuItems.map((item) => <option value={item.key} key={item.key}>{item.label}</option>)}</select></label>
               <button className="admin-primary">Crear cliente y subdominio</button>
             </form>
-            <section className="admin-card tenant-list"><h2>Clientes creados</h2>{clients.map((client) => <article key={client.id}><div><b>{client.name}</b><span>{client.slug}.micatalago.shop · {templates[client.templateKey as TemplateKey]?.label || client.templateKey}</span></div><a href={`https://${client.slug}.micatalago.shop`} target="_blank">Ver catálogo</a><a href={`https://${client.slug}.micatalago.shop/admin`} target="_blank">Abrir administrador</a></article>)}</section>
+            <section className="admin-card tenant-list"><h2>Clientes creados</h2>{clients.map((client) => <article key={client.id}><div><b>{client.name}</b><span>{client.slug}.micatalago.shop · {templates[client.templateKey as TemplateKey]?.label || client.templateKey}</span></div><a href={`https://${client.slug}.micatalago.shop`} target="_blank">Ver catálogo</a><a href={`https://${client.slug}.micatalago.shop/admin`} target="_blank">Abrir administrador</a><button type="button" className="tenant-delete" onClick={() => removeClient(client)}>Eliminar</button></article>)}</section>
           </section>
         )}
 
