@@ -8,6 +8,7 @@ import './inventory.css';
 import './flyer.css';
 import './appearance.css';
 import './modal-fix.css';
+import './catalog-effects.css';
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] });
 const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] });

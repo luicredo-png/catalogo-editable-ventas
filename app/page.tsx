@@ -390,6 +390,7 @@ export default function Home({
     appearanceOverride || store.storeAppearance || "dark";
   const homeLayout = homeLayoutSettings(store.categorySettings);
   const promoAppearance = promoSettings(store.categorySettings);
+  const visualEffects = visualEffectsSettings(store.categorySettings, template);
   const cartEnabled = cartSettings(store.categorySettings).enabled;
   const addToCart = (product: Product) => {
     setCart((current) => {
@@ -1092,6 +1093,11 @@ type HomeLayoutSettings = {
   heroSize: "compact" | "normal" | "large";
   hidden: string[];
 };
+type VisualEffectsSettings = {
+  card3d: boolean;
+  productSparkles: boolean;
+  heroReveal: boolean;
+};
 type PromoSettings = {
   font: string;
   weight: number;
@@ -1157,6 +1163,51 @@ function setHomeLayoutSettings(
       key: "__HOME_LAYOUT__",
       label: settings.heroSize,
       image: settings.hidden.join(","),
+      color: "",
+    },
+  ]);
+}
+function visualEffectsSettings(
+  value: string,
+  template: TemplateKey,
+): VisualEffectsSettings {
+  const item = parseCategorySettings(value).find(
+    (entry) => entry.key === "__VISUAL_EFFECTS__",
+  );
+  try {
+    const saved = JSON.parse(item?.image || "{}");
+    return {
+      card3d: saved.card3d !== false,
+      productSparkles:
+        typeof saved.productSparkles === "boolean"
+          ? saved.productSparkles
+          : template === "zapatos-mujer" || template === "detalles-romanticos",
+      heroReveal: saved.heroReveal !== false,
+    };
+  } catch {
+    return {
+      card3d: true,
+      productSparkles:
+        template === "zapatos-mujer" || template === "detalles-romanticos",
+      heroReveal: true,
+    };
+  }
+}
+function setVisualEffectsSettings(
+  value: string,
+  settings: VisualEffectsSettings,
+) {
+  let items: CatalogType[] = [];
+  try {
+    const parsed = JSON.parse(value || "[]");
+    if (Array.isArray(parsed)) items = parsed;
+  } catch {}
+  return JSON.stringify([
+    ...items.filter((item) => item?.key !== "__VISUAL_EFFECTS__"),
+    {
+      key: "__VISUAL_EFFECTS__",
+      label: "",
+      image: JSON.stringify(settings),
       color: "",
     },
   ]);
@@ -1290,8 +1341,25 @@ function StoreProductCard({
     );
     return () => clearInterval(timer);
   }, [product.id, gallery.map((item) => item.image).join("|")]);
+  const tiltCard = (event: React.PointerEvent<HTMLElement>) => {
+    if (event.pointerType === "touch") return;
+    const card = event.currentTarget;
+    const rect = card.getBoundingClientRect();
+    const x = (event.clientX - rect.left) / rect.width - 0.5;
+    const y = (event.clientY - rect.top) / rect.height - 0.5;
+    card.style.setProperty("--card-ry", `${(x * 8).toFixed(2)}deg`);
+    card.style.setProperty("--card-rx", `${(-y * 8).toFixed(2)}deg`);
+  };
+  const resetCardTilt = (event: React.PointerEvent<HTMLElement>) => {
+    event.currentTarget.style.removeProperty("--card-rx");
+    event.currentTarget.style.removeProperty("--card-ry");
+  };
   return (
-    <article className="store-product">
+    <article
+      className="store-product"
+      onPointerMove={tiltCard}
+      onPointerLeave={resetCardTilt}
+    >
       <div className="store-photo">
         <ProductMedia
           src={preview}
@@ -1905,6 +1973,25 @@ function Admin({
     ["products", "Productos"],
     ["footer", "Pie de página"],
   ] as const;
+  const applyVisualEffectsPreview = (settings: VisualEffectsSettings) => {
+    requestAnimationFrame(() => {
+      const main = catalogPreviewRef.current?.contentDocument?.querySelector(
+        "main.storefront",
+      );
+      if (!main) return;
+      main.classList.toggle("catalog-3d", settings.card3d);
+      main.classList.toggle("sparkle-products", settings.productSparkles);
+      main.classList.toggle("dia-hero", settings.heroReveal);
+    });
+  };
+  const updateVisualEffects = (patch: Partial<VisualEffectsSettings>) => {
+    const next = { ...visualEffects, ...patch };
+    update(
+      "categorySettings",
+      setVisualEffectsSettings(store.categorySettings, next),
+    );
+    applyVisualEffectsPreview(next);
+  };
   const saveTypeItems = (items: CatalogType[]) =>
     setStore({
       ...store,
@@ -3072,6 +3159,7 @@ function AdminV2({
   const categoryBackgroundColorValue = categoryBackgroundColor(store.categorySettings);
   const homeLayout = homeLayoutSettings(store.categorySettings);
   const promoAppearance = promoSettings(store.categorySettings);
+  const visualEffects = visualEffectsSettings(store.categorySettings, template);
   const applyPromoPreview = (settings: PromoSettings, text = store.promoText) => {
     requestAnimationFrame(() => {
       const ticker = catalogPreviewRef.current?.contentDocument?.querySelector(".promo-ticker") as HTMLElement | null;
@@ -3189,6 +3277,25 @@ function AdminV2({
     const next = { ...homeLayout, ...patch };
     update("categorySettings", setHomeLayoutSettings(store.categorySettings, next));
     applyHomeLayoutPreview(next, focusKey);
+  };
+  const applyVisualEffectsPreview = (settings: VisualEffectsSettings) => {
+    requestAnimationFrame(() => {
+      const main = catalogPreviewRef.current?.contentDocument?.querySelector(
+        "main.storefront",
+      );
+      if (!main) return;
+      main.classList.toggle("catalog-3d", settings.card3d);
+      main.classList.toggle("sparkle-products", settings.productSparkles);
+      main.classList.toggle("dia-hero", settings.heroReveal);
+    });
+  };
+  const updateVisualEffects = (patch: Partial<VisualEffectsSettings>) => {
+    const next = { ...visualEffects, ...patch };
+    update(
+      "categorySettings",
+      setVisualEffectsSettings(store.categorySettings, next),
+    );
+    applyVisualEffectsPreview(next);
   };
   const saveTypeItems = (items: CatalogType[]) =>
     setStore({
@@ -3860,6 +3967,7 @@ function AdminV2({
                     onLoad={() => {
                       applyHomeLayoutPreview(homeLayout);
                       applyPromoPreview(promoAppearance);
+                      applyVisualEffectsPreview(visualEffects);
                     }}
                     title={`Vista previa de ${templates[template].label}`}
                   />
@@ -3921,6 +4029,25 @@ function AdminV2({
                       });
                     }}
                   />
+                </label>
+              </div>
+              <div>
+                <small>EFECTOS VISUALES</small>
+                <h2>Efectos activables</h2>
+                <p>Activa solo los que encajen con el estilo de este catálogo.</p>
+              </div>
+              <div className="home-section-toggles">
+                <label>
+                  <span>Profundidad 3D en productos</span>
+                  <input type="checkbox" checked={visualEffects.card3d} onChange={(event) => updateVisualEffects({ card3d: event.target.checked })} />
+                </label>
+                <label>
+                  <span>Destellos en títulos de productos</span>
+                  <input type="checkbox" checked={visualEffects.productSparkles} onChange={(event) => updateVisualEffects({ productSparkles: event.target.checked })} />
+                </label>
+                <label>
+                  <span>Revelado de color en portada</span>
+                  <input type="checkbox" checked={visualEffects.heroReveal} onChange={(event) => updateVisualEffects({ heroReveal: event.target.checked })} />
                 </label>
               </div>
               <button className="admin-primary">Guardar personalización</button>
