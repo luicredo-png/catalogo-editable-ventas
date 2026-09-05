@@ -1449,7 +1449,7 @@ function StoreProductCard({
           </button>
         ) : (
           <button className="whatsapp-glow" onClick={open}>
-            <img src="/whatsapp.png" alt="" />
+            <img src={template === "ropa" ? "/whatsapp-revolt.svg" : "/whatsapp.png"} alt="" />
             <span>PEDIR POR WHATSAPP</span>
           </button>
         )}
@@ -1675,7 +1675,7 @@ function ProductOrderModal({
             href={`https://wa.me/${store.whatsapp}?text=${encodeURIComponent(message)}`}
             target="_blank"
           >
-            <img src="/whatsapp.png" alt="" />
+            <img src={template === "ropa" ? "/whatsapp-revolt.svg" : "/whatsapp.png"} alt="" />
             <span>ENVIAR PEDIDO POR WHATSAPP</span>
           </a>
         </div>
