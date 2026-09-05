@@ -1,5 +1,5 @@
 import { env } from 'cloudflare:workers';
-import { getCatalogIdentity } from '@/lib/catalog-user';
+import { authorize, privateError } from '@/lib/admin-auth';
 import { templates, type TemplateKey } from '../../../lib/catalog-templates';
 import {generatedBusinessHeroDefaults,isGeneratedBusinessKey} from '../../../lib/generated-business-catalogs';
 import {ensureRopaCollection} from '@/lib/ropa-collection';
@@ -55,19 +55,18 @@ function defaultOptions(key:TemplateKey){
 function productRow(p:Record<string,unknown>){let options=[];try{options=JSON.parse(String(p.optionsJson||'[]'))}catch{}return{...p,options,active:Boolean(p.active)}}
 
 export async function GET(request:Request){
- const identity=await getCatalogIdentity(request,true);
- if(!identity)return Response.json({error:'session_required'},{status:401});
- const user=identity.user;
- await init();
+ const admin=await authorize(request,env);
+ if(admin instanceof Response)return admin;
  const url=new URL(request.url);
  const tenantSlug=String(url.searchParams.get('slug')||'');
  if(tenantSlug){
+  if(!admin.owner&&(admin.demo||admin.tenant!==tenantSlug))return privateError(403,'forbidden');
   const tenant=await env.DB.prepare("SELECT * FROM stores WHERE slug=? AND owner_id LIKE 'tenant:%'").bind(tenantSlug).first<Record<string,unknown>>();
-  const key=String(url.searchParams.get('clave')||'');
-  if(!tenant||!key||key!==String(tenant.owner_email))return Response.json({error:'invalid_tenant_access'},{status:403});
+  if(!tenant)return privateError(404,'store_not_found');
   const rows=await env.DB.prepare('SELECT id,name,category,description,price,old_price AS oldPrice,image,options_json AS optionsJson,whatsapp_message AS whatsappMessage,active FROM products WHERE store_id=? ORDER BY sort_order,id').bind(tenant.id).all();
-  return Response.json({user:{email:'cliente@micatalago.shop',displayName:String(tenant.name),guest:false},adminKey:key,store:tenant,products:rows.results.map(p=>productRow(p as Record<string,unknown>))},{headers:identity.setCookie?{'set-cookie':identity.setCookie}:{}});
+  return Response.json({user:{email:admin.email,displayName:String(tenant.name),guest:false},adminKey:'',store:tenant,products:rows.results.map(p=>productRow(p as Record<string,unknown>))},{headers:{'Cache-Control':'private, no-store'}});
  }
+ if(!admin.owner&&!admin.demo)return privateError(403,'forbidden');
  const requested=new URL(request.url).searchParams.get('template') as TemplateKey|null;
  const key:TemplateKey=requested&&requested in templates?requested:'ropa';
  const template=templates[key];
@@ -101,7 +100,7 @@ export async function GET(request:Request){
  await ensureGeneratedBusinessCatalog(env.DB,Number(store!.id),key);
  if(key==='ropa')await ensureRopaCollection(env.DB,Number(store!.id));
  const rows=await env.DB.prepare('SELECT id,name,category,description,price,old_price AS oldPrice,image,options_json AS optionsJson,whatsapp_message AS whatsappMessage,active FROM products WHERE store_id=? ORDER BY sort_order,id').bind(store!.id).all();
- return Response.json({user:{email:'publico@catalogo.demo',displayName:'Editor público',guest:true},adminKey:'',store,products:rows.results.map(p=>productRow(p as Record<string,unknown>))},{headers:identity.setCookie?{'set-cookie':identity.setCookie}:{}});
+ return Response.json({user:{email:admin.email,displayName:'Editor demo',guest:admin.demo},adminKey:'',store,products:rows.results.map(p=>productRow(p as Record<string,unknown>))},{headers:{'Cache-Control':'private, no-store'}});
 }
 
 function designDefaults(key:TemplateKey){
