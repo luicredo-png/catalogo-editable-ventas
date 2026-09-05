@@ -321,3 +321,14 @@ body main.storefront .collection-stage img.collection-background,body main.store
 @media(max-width:650px){.storefront.template-ropa .photo-gallery-strip>button{min-height:39px;padding:7px 8px 7px 12px;font-size:8px}.storefront.template-ropa .photo-gallery-strip>button b{width:24px;height:24px}.storefront.template-ropa .store-product-info>button.whatsapp-glow{padding:9px 7px;font-size:9px}}
 @keyframes ropaColorButtonShine{0%,58%{opacity:0;left:-40%}65%{opacity:1}84%,100%{opacity:0;left:128%}}
 @media(prefers-reduced-motion:reduce){.storefront.template-ropa .photo-gallery-strip>button::before{animation:none}}
+
+/* Tipografia de ROPA: la misma familia visual limpia y pesada de Revolt. */
+.storefront.template-ropa{--ropa-font:var(--font-inter),Inter,Arial,sans-serif;font-family:var(--ropa-font)!important}
+.storefront.template-ropa :is(.store-header,.template-links,.hero-copy,.store-search,.category-tabs,.promo-ticker,.model-count,.store-product,.store-product-info,.photo-gallery-strip,.order-modal,.order-content,.option-group,.order-total,footer,button,input,a){font-family:var(--ropa-font)!important}
+.storefront.template-ropa :is(.store-product-info>small,.order-content>small,.option-group>b){font-weight:900;letter-spacing:.18em;text-transform:uppercase}
+.storefront.template-ropa :is(.store-product-info h2,.order-content h2){font-family:var(--ropa-font)!important;font-weight:900;letter-spacing:-.045em}
+.storefront.template-ropa :is(.store-product-info p,.order-content>p){font-family:var(--ropa-font)!important;font-weight:500;letter-spacing:-.015em}
+.storefront.template-ropa .store-product-info p>b{font-family:var(--ropa-font)!important;font-weight:900;letter-spacing:.12em}
+.storefront.template-ropa :is(.store-price strong,.order-total strong){font-family:var(--ropa-font)!important;font-weight:900;letter-spacing:-.04em}
+.storefront.template-ropa :is(.photo-gallery-strip>button,.store-product-info>button.whatsapp-glow,.order-content>.whatsapp-glow,.option-group button){font-family:var(--ropa-font)!important;font-weight:900}
+.storefront.template-ropa .photo-gallery-strip>button{letter-spacing:.045em}
