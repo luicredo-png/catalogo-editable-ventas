@@ -139,7 +139,24 @@ export default function Home({
     >(null),
     [heroSlideIndex, setHeroSlideIndex] = useState(0);
   const [hydrated, setHydrated] = useState(false);
+  const previewOverrideRef = useRef(false);
   useEffect(() => setHydrated(true), []);
+  useEffect(() => {
+    if (startAdmin || window.parent === window) return;
+    const receivePreview = (event: MessageEvent) => {
+      if (event.origin !== location.origin || event.source !== window.parent) return;
+      const data = event.data as { type?: string; store?: unknown; products?: Product[] };
+      if (data?.type !== "catalog-preview-update" || !data.store || typeof data.store !== "object") return;
+      previewOverrideRef.current = true;
+      const next = normalizeStore(data.store);
+      setStore(next);
+      setActiveTemplate(next.templateKey);
+      if (Array.isArray(data.products)) setProducts(data.products);
+    };
+    window.addEventListener("message", receivePreview);
+    window.parent.postMessage({ type: "catalog-preview-ready" }, location.origin);
+    return () => window.removeEventListener("message", receivePreview);
+  }, [startAdmin]);
   useEffect(() => {
     if (!startAdmin) return;
     const requested = new URLSearchParams(location.search).get("seccion");
@@ -171,6 +188,7 @@ export default function Home({
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((d) => {
         if (!mounted) return;
+        if (previewOverrideRef.current) return;
         setProducts(d.products);
         const next = normalizeStore(d.store);
         setStore(next);
@@ -3270,6 +3288,24 @@ function AdminV2({
     "mobile",
   );
   const catalogPreviewRef = useRef<HTMLIFrameElement>(null);
+  useEffect(() => {
+    const frame = catalogPreviewRef.current;
+    if (!frame) return;
+    const sendPreview = () => frame.contentWindow?.postMessage(
+      { type: "catalog-preview-update", store, products },
+      location.origin,
+    );
+    const receiveReady = (event: MessageEvent) => {
+      if (event.origin === location.origin && event.source === frame.contentWindow && event.data?.type === "catalog-preview-ready") sendPreview();
+    };
+    frame.addEventListener("load", sendPreview);
+    window.addEventListener("message", receiveReady);
+    sendPreview();
+    return () => {
+      frame.removeEventListener("load", sendPreview);
+      window.removeEventListener("message", receiveReady);
+    };
+  }, [store, products, section]);
   const [useCollectionColors, setUseCollectionColors] = useState(
     !store.collectionBackgroundImage && !store.surfaceBackgroundImage,
   );
