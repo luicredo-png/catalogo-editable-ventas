@@ -492,20 +492,16 @@ export default function Home({
           <section
             className="clothing-category-panel"
             aria-label="Categorías de moda"
-            style={
-              categoryBackground(store.categorySettings) ||
-              categoryBackgroundColor(store.categorySettings)
-                ? {
-                    backgroundColor:
-                      categoryBackgroundColor(store.categorySettings) || undefined,
-                    backgroundImage: categoryBackground(store.categorySettings)
-                      ? `linear-gradient(#05080d99,#05080d99),url(${categoryBackground(store.categorySettings)})`
-                      : undefined,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                  }
-                : undefined
-            }
+            style={{
+              "--category-panel-bg":
+                categoryBackgroundColor(store.categorySettings) ||
+                store.collectionBackgroundColor,
+              "--category-panel-image": categoryBackground(store.categorySettings)
+                ? `linear-gradient(#05080d99,#05080d99),url(${categoryBackground(store.categorySettings)})`
+                : "none",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            } as React.CSSProperties}
           >
             <div className="clothing-categories">
               {catalogTypes(products, store, clothingHero).map((c) => (
@@ -3255,6 +3251,19 @@ function AdminV2({
   const homeLayout = homeLayoutSettings(store.categorySettings);
   const promoAppearance = promoSettings(store.categorySettings);
   const visualEffects = visualEffectsSettings(store.categorySettings, template);
+  const applyCategoryBackgroundPreview = (image: string, color: string) => {
+    requestAnimationFrame(() => {
+      const panel = catalogPreviewRef.current?.contentDocument?.querySelector(
+        ".clothing-category-panel",
+      ) as HTMLElement | null;
+      if (!panel) return;
+      panel.style.setProperty("--category-panel-bg", color || store.collectionBackgroundColor);
+      panel.style.setProperty(
+        "--category-panel-image",
+        image ? `linear-gradient(#05080d99,#05080d99),url(${image})` : "none",
+      );
+    });
+  };
   const applyPromoPreview = (settings: PromoSettings, text = store.promoText) => {
     requestAnimationFrame(() => {
       const ticker = catalogPreviewRef.current?.contentDocument?.querySelector(".promo-ticker") as HTMLElement | null;
@@ -3569,6 +3578,7 @@ function AdminV2({
           store.categorySettings,
         ),
       });
+      applyCategoryBackgroundPreview(String(result.url), categoryBackgroundColorValue);
     } finally {
       setUploading(false);
     }
@@ -3583,6 +3593,7 @@ function AdminV2({
         store.categorySettings,
       ),
     });
+    applyCategoryBackgroundPreview("", categoryBackgroundColorValue);
   }
   function updateCategoryBackgroundColor(value: string) {
     setStore({
@@ -3594,6 +3605,7 @@ function AdminV2({
         store.categorySettings,
       ),
     });
+    applyCategoryBackgroundPreview(categoryBackgroundImage, value);
   }
   function newProduct() {
     setEditing({
