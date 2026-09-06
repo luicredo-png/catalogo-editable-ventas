@@ -1398,7 +1398,6 @@ function StoreProductCard({
             <button type="button" aria-label="Foto siguiente" onClick={(event) => { event.stopPropagation(); setPreview(current => gallery[(Math.max(0, gallery.findIndex(item => item.image === current)) + 1) % gallery.length].image); }}>›</button>
           </div>
         )}
-        {product.oldPrice > product.price && <span>OFERTA</span>}
         {isFood && <b className="fresh-badge">PREPARADO AL MOMENTO</b>}
         {thumbGallery.length > 1 && (
           <div className="card-photo-thumbs">
@@ -1667,7 +1666,7 @@ function ProductOrderModal({
           ×
         </button>
         <div
-          className="order-image"
+          className={`order-image${template === "ropa" ? " dual-product-gallery" : ""}`}
           onTouchStart={(event) => { swipeStartX.current = event.touches[0]?.clientX ?? null; }}
           onTouchEnd={(event) => {
             if (swipeStartX.current === null) return;
@@ -1682,6 +1681,21 @@ function ProductOrderModal({
             <div className="order-gallery-arrows">
               <button type="button" aria-label="Foto anterior" onClick={() => rotateGallery(-1)}>‹</button>
               <button type="button" aria-label="Foto siguiente" onClick={() => rotateGallery(1)}>›</button>
+            </div>
+          )}
+          {template === "ropa" && selectedColorGallery.length > 1 && (
+            <div className="order-angle-thumbs" aria-label={`Ángulos de ${selectedColorLabel}`}>
+              {selectedColorGallery.map((item, index) => (
+                <button
+                  type="button"
+                  className={displayImage === item.image ? "active" : ""}
+                  key={`angle-${item.image}-${index}`}
+                  onClick={() => setGalleryPreview(item.image)}
+                  title={`Ángulo ${index + 1}`}
+                >
+                  <ProductMedia src={item.image} alt={`Ángulo ${index + 1} de ${product.name}`} />
+                </button>
+              ))}
             </div>
           )}
           {visibleGallery.length > 1 && (
