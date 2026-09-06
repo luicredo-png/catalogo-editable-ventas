@@ -138,6 +138,8 @@ export default function Home({
       "dark" | "light" | null
     >(null),
     [heroSlideIndex, setHeroSlideIndex] = useState(0);
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
   useEffect(() => {
     if (!startAdmin) return;
     const requested = new URLSearchParams(location.search).get("seccion");
@@ -347,6 +349,15 @@ export default function Home({
     fontFamily: `${store.fontFamily}, Arial, sans-serif`,
     color: store.textColor,
   } as React.CSSProperties;
+  // Keep the Worker response deliberately small. The complete catalog is built
+  // in the visitor's browser after hydration, avoiding CPU-limit failures when
+  // a tenant has many products or images.
+  if (!hydrated)
+    return (
+      <main className="app-boot-screen" aria-label="Abriendo catálogo">
+        <div className="admin-gate-spinner" />
+      </main>
+    );
   if (adminLoading)
     return (
       <main className="admin-gate">
