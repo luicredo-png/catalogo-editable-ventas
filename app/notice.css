@@ -396,3 +396,15 @@ body main.storefront .clothing-entry-copy>span{color:var(--hero-eyebrow-color)!i
 body main.storefront :is(.store-hero,.clothing-entry) :is(.hero-copy,.clothing-entry-copy)>h1{color:var(--hero-title-color)!important}
 body main.storefront :is(.store-hero,.clothing-entry) :is(.generic-hero-highlight,.clothing-entry-copy>em){color:var(--hero-highlight-color)!important}
 body main.storefront :is(.store-hero,.clothing-entry) :is(.hero-copy,.clothing-entry-copy)>p{color:var(--hero-description-color)!important}
+
+/* El logo se integra en la portada mientras esta visible. La franja propia
+   aparece exclusivamente al desactivar la portada. */
+body main.storefront:not(.home-hide-hero) .store-header{
+ position:absolute!important;inset:0 0 auto!important;width:100%!important;margin:0!important;
+ background:linear-gradient(180deg,rgba(2,5,10,.78),transparent)!important;
+ border:0!important;border-radius:0!important;box-shadow:none!important
+}
+body main.storefront.home-hide-hero .store-header{
+ width:100%!important;margin:0!important;background:var(--logo-strip-bg,var(--store-bg,#050b14))!important;
+ border:0!important;border-radius:0!important;box-shadow:none!important
+}
