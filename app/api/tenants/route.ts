@@ -33,6 +33,21 @@ export async function POST(request:Request){
  }
 }
 
+export async function PATCH(request:Request){
+ const denied=await owner(request);if(denied)return denied;
+ let body:Record<string,unknown>;try{body=await request.json<Record<string,unknown>>()}catch{return privateError(400,'invalid_request')}
+ const id=Number(body.id),slug=String(body.slug||'').trim().toLowerCase(),password=String(body.password||'');
+ if(!Number.isInteger(id)||id<1||!/^[a-z0-9][a-z0-9-]{1,43}[a-z0-9]$/.test(slug)||password.length<12||password.length>128)return privateError(400,'invalid_fields');
+ const tenant=await env.DB.prepare("SELECT id FROM stores WHERE id=? AND slug=? AND owner_id LIKE 'tenant:%'").bind(id,slug).first<{id:number}>();
+ if(!tenant)return privateError(404,'client_not_found');
+ const passwordHash=await hashPassword(password);
+ await env.DB.batch([
+  env.DB.prepare('UPDATE catalog_admins SET password_hash=? WHERE store_id=? AND active=1').bind(passwordHash,id),
+  env.DB.prepare('DELETE FROM catalog_sessions WHERE user_id IN (SELECT id FROM catalog_admins WHERE store_id=?)').bind(id),
+ ]);
+ return Response.json({ok:true},{headers:{'Cache-Control':'private, no-store'}});
+}
+
 export async function DELETE(request:Request){
  const denied=await owner(request);if(denied)return denied;
  let body:Record<string,unknown>;try{body=await request.json<Record<string,unknown>>()}catch{return privateError(400,'invalid_request')}
