@@ -355,7 +355,8 @@ body main.storefront .collection-stage img.collection-background,body main.store
 body main.storefront.clothing-store.home-hide-hero .store-header{
  position:relative!important;inset:auto!important;display:grid!important;grid-template-columns:1fr!important;grid-template-rows:88px!important;
  place-items:center!important;width:100%!important;height:104px!important;min-height:104px!important;
- margin:0!important;padding:8px 5vw!important;overflow:hidden!important;background:var(--store-bg,#050b14)!important
+ margin:0!important;padding:8px 5vw!important;overflow:hidden!important;background:var(--logo-strip-bg,var(--store-bg,#050b14))!important;
+ border:0!important;border-radius:0!important;box-shadow:none!important
 }
 body main.storefront.clothing-store.home-hide-hero .store-header .store-logo{
  position:static!important;display:flex!important;align-items:center!important;justify-content:center!important;
@@ -376,7 +377,8 @@ body main.storefront.clothing-store .clothing-category-panel{
  body main.storefront.clothing-store.home-hide-hero .store-header{
   position:relative!important;display:grid!important;grid-template-columns:1fr!important;grid-template-rows:88px!important;
   place-items:center!important;width:100%!important;height:104px!important;min-height:104px!important;
-  margin:0!important;padding:8px 18px!important;overflow:hidden!important;background:var(--store-bg,#050b14)!important
+  margin:0!important;padding:8px 18px!important;overflow:hidden!important;background:var(--logo-strip-bg,var(--store-bg,#050b14))!important;
+  border:0!important;border-radius:0!important;box-shadow:none!important
  }
  body main.storefront.clothing-store.home-hide-hero .store-header .store-logo{
   position:static!important;display:flex!important;align-items:center!important;justify-content:center!important;
@@ -387,3 +389,10 @@ body main.storefront.clothing-store .clothing-category-panel{
  }
  body main.storefront.clothing-store.home-hide-hero .store-header :is(.template-links,button){display:none!important}
 }
+
+/* Cada texto de portada conserva su propio color editable. */
+body main.storefront :is(.store-hero,.clothing-entry) .hero-copy>span,
+body main.storefront .clothing-entry-copy>span{color:var(--hero-eyebrow-color)!important}
+body main.storefront :is(.store-hero,.clothing-entry) :is(.hero-copy,.clothing-entry-copy)>h1{color:var(--hero-title-color)!important}
+body main.storefront :is(.store-hero,.clothing-entry) :is(.generic-hero-highlight,.clothing-entry-copy>em){color:var(--hero-highlight-color)!important}
+body main.storefront :is(.store-hero,.clothing-entry) :is(.hero-copy,.clothing-entry-copy)>p{color:var(--hero-description-color)!important}
