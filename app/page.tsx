@@ -350,6 +350,7 @@ export default function Home({
     "--hero-highlight-color": heroColors.highlight,
     "--hero-description-color": heroColors.description,
     "--logo-strip-bg": heroColors.logoStripBackground,
+    "--logo-filter": heroColors.logoGlow ? `drop-shadow(0 0 18px ${store.accent})` : "none",
     "--surface": store.surfaceColor,
     "--overlay": store.backgroundImage ? store.overlayStrength : 0,
     fontFamily: `${store.fontFamily}, Arial, sans-serif`,
@@ -1131,6 +1132,7 @@ type HeroColorSettings = {
   highlight: string;
   description: string;
   logoStripBackground: string;
+  logoGlow: boolean;
 };
 function heroColorSettings(value: string, store: Store): HeroColorSettings {
   const item = parseCategorySettings(value).find((entry) => entry.key === "__HERO_COLORS__");
@@ -1142,9 +1144,10 @@ function heroColorSettings(value: string, store: Store): HeroColorSettings {
       highlight: String(saved.highlight || store.accent),
       description: String(saved.description || store.textColor),
       logoStripBackground: String(saved.logoStripBackground || store.backgroundColor),
+      logoGlow: saved.logoGlow === true,
     };
   } catch {
-    return { eyebrow: store.accent, title: store.textColor, highlight: store.accent, description: store.textColor, logoStripBackground: store.backgroundColor };
+    return { eyebrow: store.accent, title: store.textColor, highlight: store.accent, description: store.textColor, logoStripBackground: store.backgroundColor, logoGlow: false };
   }
 }
 function setHeroColorSettings(value: string, settings: HeroColorSettings) {
@@ -4208,6 +4211,16 @@ function AdminV2({
                   change={(logoStripBackground) => updateHeroColors({ logoStripBackground })}
                 />
               )}
+              <div className="home-section-toggles">
+                <label>
+                  <span>Luz detrás del logo</span>
+                  <input
+                    type="checkbox"
+                    checked={heroColors.logoGlow}
+                    onChange={(event) => updateHeroColors({ logoGlow: event.target.checked })}
+                  />
+                </label>
+              </div>
               <div>
                 <small>EFECTOS VISUALES</small>
                 <h2>Efectos activables</h2>

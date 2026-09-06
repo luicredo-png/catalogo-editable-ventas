@@ -408,3 +408,14 @@ body main.storefront.home-hide-hero .store-header{
  width:100%!important;margin:0!important;background:var(--logo-strip-bg,var(--store-bg,#050b14))!important;
  border:0!important;border-radius:0!important;box-shadow:none!important
 }
+
+/* El logo queda centrado en todos los catálogos. La luz solo aparece cuando
+   se activa expresamente desde Portada. */
+body main.storefront:not(.home-hide-hero) .store-header .store-logo{
+ position:absolute!important;left:50%!important;transform:translateX(-50%)!important;
+ display:flex!important;justify-content:center!important;margin:0!important
+}
+body main.storefront .store-header .store-logo,
+body main.storefront .hero-center-logo{
+ filter:var(--logo-filter,none)!important
+}
