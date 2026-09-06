@@ -17,7 +17,7 @@ body main.storefront.clothing-store .clothing-entry-copy a{display:inline-flex;a
 body main.storefront.clothing-store .clothing-entry-copy a:hover{transform:translateY(-2px);filter:brightness(1.12)}
 body main.storefront.clothing-store .clothing-entry-tag{position:absolute;right:clamp(25px,5vw,80px);bottom:42px;z-index:2;display:flex;align-items:center;gap:11px;padding:12px 15px;border:1px solid #ffffff32;border-radius:15px;background:#060a11a3;color:#fff;backdrop-filter:blur(12px);font-size:10px;line-height:1.35}
 body main.storefront.clothing-store .clothing-entry-tag i{width:10px;height:10px;border-radius:50%;background:#25d366;box-shadow:0 0 0 6px #25d36620,0 0 18px #25d366}
-body main.storefront.clothing-store .clothing-category-panel{display:grid;grid-template-columns:1fr minmax(230px,330px);align-items:center;gap:30px;padding:28px clamp(22px,5vw,74px);background:#f6f7f9;color:#151a24;border-bottom:1px solid #e5e8ed}
+body main.storefront.clothing-store .clothing-category-panel{display:grid;grid-template-columns:1fr;align-items:center;gap:30px;padding:28px clamp(22px,5vw,74px);background:#f6f7f9;color:#151a24;border-bottom:1px solid #e5e8ed}
 body main.storefront.clothing-store .clothing-categories{display:flex;align-items:start;gap:clamp(16px,3vw,42px);overflow-x:auto;padding:4px 3px 8px;scrollbar-width:none}
 body main.storefront.clothing-store .clothing-categories::-webkit-scrollbar{display:none}
 body main.storefront.clothing-store .clothing-categories button{flex:0 0 86px;display:grid;justify-items:center;gap:9px;border:0;padding:0;background:transparent;color:#263040;cursor:pointer}

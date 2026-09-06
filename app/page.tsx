@@ -480,6 +480,18 @@ export default function Home({
                 {store.heroCtaLabel} <b>→</b>
               </a>
             </div>
+            <label className="store-search clothing-hero-search">
+              ⌕
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={
+                  activeTemplate === "zapatos-mujer"
+                    ? "Buscar zapato..."
+                    : "Buscar prenda..."
+                }
+              />
+            </label>
             <div className="clothing-entry-tag">
               <i></i>
               <span>
@@ -517,18 +529,6 @@ export default function Home({
                 </button>
               ))}
             </div>
-            <label className="clothing-search">
-              ⌕
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder={
-                  activeTemplate === "zapatos-mujer"
-                    ? "Buscar zapato..."
-                    : "Buscar prenda..."
-                }
-              />
-            </label>
           </section>
           <section className="shipping-banner">
             <div>
@@ -3182,14 +3182,19 @@ function AdminV2({
   const [uploading, setUploading] = useState(false);
   const tenantMode = typeof window !== "undefined" && Boolean(customerSubdomain(location.hostname) || new URLSearchParams(location.search).get("tienda"));
   const [clients, setClients] = useState<Array<{id:number;slug:string;name:string;templateKey:string;adminKey:string}>>([]);
-  const [clientDraft, setClientDraft] = useState({ name: "", slug: "", templateKey: "ropa" });
+  const [clientDraft, setClientDraft] = useState({ name: "", slug: "", templateKey: "ropa", password: "" });
+  const [creatingClient, setCreatingClient] = useState(false);
+  const [clientCreateError, setClientCreateError] = useState("");
   useEffect(() => { if (!tenantMode) fetch("/api/tenants").then((r) => r.ok ? r.json() : { clients: [] }).then((data) => setClients(data.clients || [])); }, []);
   async function createClient(event: FormEvent) {
     event.preventDefault();
-    const response = await fetch("/api/tenants", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(clientDraft) });
-    if (!response.ok) {
+    setCreatingClient(true);
+    setClientCreateError("");
+    try {
+      const response = await fetch("/api/tenants", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(clientDraft) });
+      if (!response.ok) {
       const message = response.status === 503
-        ? "El creador está temporalmente bloqueado por seguridad. Falta configurar el acceso privado del propietario. No se ha creado ningún cliente."
+        ? "No se pudo crear el cliente en este momento. Inténtalo nuevamente."
         : response.status === 401 || response.status === 403
           ? "Inicia sesión con la cuenta autorizada para crear clientes."
           : response.status === 409
@@ -3197,11 +3202,26 @@ function AdminV2({
             : response.status === 400
               ? "El subdominio no es válido. Usa al menos 3 letras, números o guiones."
               : "No se pudo crear el cliente. Inténtalo más tarde.";
-      return alert(message);
+        setClientCreateError(message);
+        return;
+      }
+      const contentType = response.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) {
+        setClientCreateError("La creación no terminó correctamente. Inténtalo nuevamente.");
+        return;
+      }
+      const data = await response.json().catch(() => null);
+      if (!data?.client) {
+        setClientCreateError("La creación no terminó correctamente. Inténtalo nuevamente.");
+        return;
+      }
+      setClients((current) => [data.client, ...current]);
+      setClientDraft({ name: "", slug: "", templateKey: "ropa", password: "" });
+    } catch {
+      setClientCreateError("No se pudo conectar con el creador. Inténtalo nuevamente.");
+    } finally {
+      setCreatingClient(false);
     }
-    const data = await response.json();
-    setClients((current) => [data.client, ...current]);
-    setClientDraft({ name: "", slug: "", templateKey: "ropa" });
   }
   async function removeClient(client: {id:number;slug:string;name:string}) {
     if (!confirm(`¿Eliminar definitivamente ${client.name}?\n\nSe borrarán su subdominio, acceso y productos. Esta acción no se puede deshacer.`)) return;
@@ -4027,12 +4047,14 @@ function AdminV2({
             <form className="admin-card tenant-create" onSubmit={createClient}>
               <small>PANEL MAESTRO</small><h2>Crear catálogo para un cliente</h2>
               <p>Cada cliente tendrá un subdominio, un solo rubro y un administrador independiente.</p>
-              <label>Nombre del negocio<input required value={clientDraft.name} onChange={(e) => setClientDraft({...clientDraft,name:e.target.value})} /></label>
-              <label>Subdominio<div className="tenant-slug"><input required minLength={3} placeholder="cliente" value={clientDraft.slug} onChange={(e) => setClientDraft({...clientDraft,slug:e.target.value.toLowerCase().replace(/[^a-z0-9-]/g,"")})} /><b>.micatalago.shop</b></div></label>
+              <label>Nombre del negocio<input required value={clientDraft.name} onChange={(e) => setClientDraft({...clientDraft,name:e.target.value})} /><small>También será su usuario, en minúsculas y sin espacios.</small></label>
+              <label>Subdominio<div className="tenant-slug"><input required minLength={3} placeholder="cliente" value={clientDraft.slug} onChange={(e) => setClientDraft({...clientDraft,slug:e.target.value.toLowerCase().replace(/[^a-z0-9-]/g,"")})} /><b>.micatálogo.shop</b></div></label>
               <label>Rubro<select value={clientDraft.templateKey} onChange={(e) => setClientDraft({...clientDraft,templateKey:e.target.value})}>{catalogMenuItems.map((item) => <option value={item.key} key={item.key}>{item.label}</option>)}</select></label>
-              <button className="admin-primary">Crear cliente y subdominio</button>
+              <label>Contraseña inicial<input required minLength={12} maxLength={128} type="password" autoComplete="new-password" value={clientDraft.password} onChange={(e) => setClientDraft({...clientDraft,password:e.target.value})} /><small>Mínimo 12 caracteres.</small></label>
+              <button className="admin-primary" disabled={creatingClient}>{creatingClient ? "Creando…" : "Crear cliente y subdominio"}</button>
+              {clientCreateError && <p className="tenant-create-error" role="alert">{clientCreateError}</p>}
             </form>
-            <section className="admin-card tenant-list"><h2>Clientes creados</h2>{clients.map((client) => <article key={client.id}><div><b>{client.name}</b><span>{client.slug}.micatalago.shop · {templates[client.templateKey as TemplateKey]?.label || client.templateKey}</span></div><a href={`https://${client.slug}.micatalago.shop`} target="_blank">Ver catálogo</a><a href={`https://${client.slug}.micatalago.shop/admin`} target="_blank">Abrir administrador</a><button type="button" className="tenant-delete" onClick={() => removeClient(client)}>Eliminar</button></article>)}</section>
+            <section className="admin-card tenant-list"><h2>Clientes creados</h2>{clients.map((client) => <article key={client.id}><div><b>{client.name}</b><span>{client.slug}.micatálogo.shop · {templates[client.templateKey as TemplateKey]?.label || client.templateKey}</span></div><a href={`https://${client.slug}.xn--micatlogo-41a.shop`} target="_blank">Ver catálogo</a><a href={`https://${client.slug}.xn--micatlogo-41a.shop/admin`} target="_blank">Abrir administrador</a><button type="button" className="tenant-delete" onClick={() => removeClient(client)}>Eliminar</button></article>)}</section>
           </section>
         )}
 
