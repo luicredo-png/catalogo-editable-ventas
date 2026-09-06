@@ -419,3 +419,29 @@ body main.storefront .store-header .store-logo,
 body main.storefront .hero-center-logo{
  filter:var(--logo-filter,none)!important
 }
+
+/* En los demos el logo y el selector de rubros usan filas distintas para que
+   nunca se superpongan. */
+@media(min-width:761px){
+ body main.storefront:not(.home-hide-hero) .store-header:has(.template-links){
+  display:grid!important;grid-template-columns:1fr!important;grid-template-rows:46px 52px!important;
+  justify-items:center!important;align-items:center!important;width:100%!important;height:112px!important;
+  min-height:112px!important;padding:6px 4vw 8px!important
+ }
+ body main.storefront:not(.home-hide-hero) .store-header:has(.template-links) .store-logo{
+  top:4px!important;height:44px!important;max-width:240px!important
+ }
+ body main.storefront:not(.home-hide-hero) .store-header:has(.template-links) .store-logo img{
+  width:auto!important;max-width:220px!important;max-height:44px!important;object-fit:contain!important
+ }
+ body main.storefront:not(.home-hide-hero) .store-header:has(.template-links) .template-links{
+  grid-row:2!important;justify-self:center!important;align-self:end!important;margin:0!important;
+  max-width:min(94vw,980px)!important
+ }
+ body main.storefront:not(.home-hide-hero) .store-header:has(.template-links)>button{
+  position:absolute!important;right:4vw!important;top:12px!important
+ }
+ body main.storefront:not(.home-hide-hero) .store-header:has(.template-links)+:is(.store-hero,.clothing-entry){
+  padding-top:max(132px,8vw)!important
+ }
+}
