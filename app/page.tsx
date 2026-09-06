@@ -3731,11 +3731,6 @@ function AdminV2({
             </small>
             <h1>{title}</h1>
           </div>
-          {section === "products" && (
-            <button className="admin-primary" onClick={newProduct}>
-              + Nuevo producto
-            </button>
-          )}
         </header>
 
         {section === "cover" && (
@@ -4164,6 +4159,15 @@ function AdminV2({
 
         {section === "products" && (
           <div className="catalog-products-section">
+            <div className="product-actions-bar">
+              <button
+                type="button"
+                className="admin-primary add-product-action"
+                onClick={newProduct}
+              >
+                + Agregar producto
+              </button>
+            </div>
             <form
               className="admin-card catalog-type-editor"
               onSubmit={saveSettings}

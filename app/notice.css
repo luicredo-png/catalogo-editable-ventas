@@ -370,6 +370,7 @@ body main.storefront.clothing-store.home-hide-hero .store-header :is(.template-l
 body main.storefront.clothing-store .clothing-category-panel{
  margin-inline:0!important;border:0!important;border-radius:0!important;box-shadow:none!important
 }
+.catalog-products-section>.product-actions-bar{position:sticky;z-index:12;top:12px;display:flex;justify-content:flex-end;margin:0 0 14px;pointer-events:none}.catalog-products-section>.product-actions-bar .add-product-action{display:inline-flex!important;align-items:center;justify-content:center;min-height:50px;padding:13px 22px!important;font-size:12px!important;pointer-events:auto;cursor:pointer}@media(max-width:760px){.catalog-products-section>.product-actions-bar{top:8px}.catalog-products-section>.product-actions-bar .add-product-action{width:100%;min-height:52px}}
 @media(max-width:760px){
  body main.storefront.clothing-store.home-hide-hero .store-header{
   position:relative!important;display:grid!important;grid-template-columns:1fr!important;grid-template-rows:88px!important;
