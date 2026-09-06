@@ -1,7 +1,7 @@
 import { randomBytes, scrypt, timingSafeEqual, createHmac } from 'node:crypto';
 const cost = { N: 32768, r: 8, p: 3, maxmem: 64 * 1024 * 1024 };
 function derive(password: string, salt: string): Promise<Buffer> { return new Promise((resolve, reject) => scrypt(password, salt, 32, cost, (error, key) => error ? reject(error) : resolve(key))); }
-const pbkdf2Iterations = 210000;
+const pbkdf2Iterations = 100000;
 const encoder = new TextEncoder();
 const toHex = (value: ArrayBuffer | Uint8Array) => Array.from(value instanceof Uint8Array ? value : new Uint8Array(value), (byte) => byte.toString(16).padStart(2, '0')).join('');
 async function derivePbkdf2(password: string, salt: Uint8Array, iterations: number) {
