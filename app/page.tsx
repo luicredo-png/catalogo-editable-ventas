@@ -310,6 +310,7 @@ export default function Home({
     "";
   const collectionVideo = isVideoMedia(store.collectionBackgroundImage);
   const coverPreviewMedia=store.heroImage.split("|||").filter(Boolean)[0]||"";
+  const heroColors = heroColorSettings(store.categorySettings, store);
   const style = {
     "--accent": store.accent,
     "--store-bg": store.backgroundColor,
@@ -344,6 +345,11 @@ export default function Home({
     "--hero-button": store.heroButtonColor,
     "--hero-button-text": contrastText(store.heroButtonColor),
     "--store-text": store.textColor,
+    "--hero-eyebrow-color": heroColors.eyebrow,
+    "--hero-title-color": heroColors.title,
+    "--hero-highlight-color": heroColors.highlight,
+    "--hero-description-color": heroColors.description,
+    "--logo-strip-bg": heroColors.logoStripBackground,
     "--surface": store.surfaceColor,
     "--overlay": store.backgroundImage ? store.overlayStrength : 0,
     fontFamily: `${store.fontFamily}, Arial, sans-serif`,
@@ -1119,6 +1125,36 @@ type PromoSettings = {
   buttonLabel: string;
   network: "instagram" | "facebook" | "whatsapp";
 };
+type HeroColorSettings = {
+  eyebrow: string;
+  title: string;
+  highlight: string;
+  description: string;
+  logoStripBackground: string;
+};
+function heroColorSettings(value: string, store: Store): HeroColorSettings {
+  const item = parseCategorySettings(value).find((entry) => entry.key === "__HERO_COLORS__");
+  try {
+    const saved = JSON.parse(item?.image || "{}");
+    return {
+      eyebrow: String(saved.eyebrow || store.accent),
+      title: String(saved.title || store.textColor),
+      highlight: String(saved.highlight || store.accent),
+      description: String(saved.description || store.textColor),
+      logoStripBackground: String(saved.logoStripBackground || store.backgroundColor),
+    };
+  } catch {
+    return { eyebrow: store.accent, title: store.textColor, highlight: store.accent, description: store.textColor, logoStripBackground: store.backgroundColor };
+  }
+}
+function setHeroColorSettings(value: string, settings: HeroColorSettings) {
+  let items: CatalogType[] = [];
+  try { const parsed = JSON.parse(value || "[]"); if (Array.isArray(parsed)) items = parsed; } catch {}
+  return JSON.stringify([
+    ...items.filter((item) => item?.key !== "__HERO_COLORS__"),
+    { key: "__HERO_COLORS__", label: "", image: JSON.stringify(settings), color: "" },
+  ]);
+}
 function promoSettings(value: string): PromoSettings {
   const item = parseCategorySettings(value).find((entry) => entry.key === "__PROMO_SETTINGS__");
   try {
@@ -2044,6 +2080,7 @@ function Admin({
   const categoryBackgroundImage = categoryBackground(store.categorySettings);
   const categoryBackgroundColorValue = categoryBackgroundColor(store.categorySettings);
   const homeLayout = homeLayoutSettings(store.categorySettings);
+  const heroColors = heroColorSettings(store.categorySettings, store);
   const updateHomeLayout = (patch: Partial<HomeLayoutSettings>) =>
     update(
       "categorySettings",
@@ -2672,16 +2709,16 @@ function Admin({
                     {store.name}
                   </b>
                 )}
-                <small style={{ fontFamily: store.heroEyebrowFont }}>
+                <small style={{ fontFamily: store.heroEyebrowFont, color: heroColors.eyebrow }}>
                   {store.heroEyebrow}
                 </small>
-                <h2 style={{ fontFamily: store.heroFont }}>
+                <h2 style={{ fontFamily: store.heroFont, color: heroColors.title }}>
                   {store.catalogTitle}
                 </h2>
-                <em style={{ fontFamily: store.heroHighlightFont }}>
+                <em style={{ fontFamily: store.heroHighlightFont, color: heroColors.highlight }}>
                   {store.heroHighlight}
                 </em>
-                <p style={{ fontFamily: store.heroDescriptionFont }}>
+                <p style={{ fontFamily: store.heroDescriptionFont, color: heroColors.description }}>
                   {store.heroDescription}
                 </p>
                 <span
@@ -3270,6 +3307,7 @@ function AdminV2({
   const categoryBackgroundColorValue = categoryBackgroundColor(store.categorySettings);
   const homeLayout = homeLayoutSettings(store.categorySettings);
   const promoAppearance = promoSettings(store.categorySettings);
+  const heroColors = heroColorSettings(store.categorySettings, store);
   const visualEffects = visualEffectsSettings(store.categorySettings, template);
   const applyCategoryBackgroundPreview = (image: string, color: string) => {
     requestAnimationFrame(() => {
@@ -3318,6 +3356,10 @@ function AdminV2({
       setPromoSettings(store.categorySettings, next),
     );
     applyPromoPreview(next);
+  };
+  const updateHeroColors = (patch: Partial<HeroColorSettings>) => {
+    const next = { ...heroColors, ...patch };
+    update("categorySettings", setHeroColorSettings(store.categorySettings, next));
   };
   const downloadQr = async (themed: boolean) => {
     const response = await fetch(qrUrl);
@@ -3848,16 +3890,16 @@ function AdminV2({
                     {store.name}
                   </b>
                 )}
-                <small style={{ fontFamily: store.heroEyebrowFont }}>
+                <small style={{ fontFamily: store.heroEyebrowFont, color: heroColors.eyebrow }}>
                   {store.heroEyebrow}
                 </small>
-                <h2 style={{ fontFamily: store.heroFont }}>
+                <h2 style={{ fontFamily: store.heroFont, color: heroColors.title }}>
                   {store.catalogTitle}
                 </h2>
-                <em style={{ fontFamily: store.heroHighlightFont }}>
+                <em style={{ fontFamily: store.heroHighlightFont, color: heroColors.highlight }}>
                   {store.heroHighlight}
                 </em>
-                <p style={{ fontFamily: store.heroDescriptionFont }}>
+                <p style={{ fontFamily: store.heroDescriptionFont, color: heroColors.description }}>
                   {store.heroDescription}
                 </p>
                 <span
@@ -3894,6 +3936,7 @@ function AdminV2({
                   value={store.heroEyebrowFont}
                   change={(v) => update("heroEyebrowFont", v)}
                 />
+                <ColorField label="Color del texto superior" value={heroColors.eyebrow} change={(eyebrow) => updateHeroColors({ eyebrow })} />
               </div>
               <div className="cover-text-control">
                 <label>
@@ -3909,6 +3952,7 @@ function AdminV2({
                   value={store.heroFont}
                   change={(v) => update("heroFont", v)}
                 />
+                <ColorField label="Color del título" value={heroColors.title} change={(title) => updateHeroColors({ title })} />
               </div>
               <div className="cover-text-control">
                 <label>
@@ -3924,6 +3968,7 @@ function AdminV2({
                   value={store.heroHighlightFont}
                   change={(v) => update("heroHighlightFont", v)}
                 />
+                <ColorField label="Color del destacado" value={heroColors.highlight} change={(highlight) => updateHeroColors({ highlight })} />
               </div>
               <div className="cover-text-control">
                 <label>
@@ -3940,6 +3985,7 @@ function AdminV2({
                   value={store.heroDescriptionFont}
                   change={(v) => update("heroDescriptionFont", v)}
                 />
+                <ColorField label="Color de la descripción" value={heroColors.description} change={(description) => updateHeroColors({ description })} />
               </div>
               <div className="cover-text-control">
                 <label>
@@ -4155,6 +4201,13 @@ function AdminV2({
                   />
                 </label>
               </div>
+              {homeLayout.hidden.includes("hero") && (
+                <ColorField
+                  label="Color del espacio propio del logo"
+                  value={heroColors.logoStripBackground}
+                  change={(logoStripBackground) => updateHeroColors({ logoStripBackground })}
+                />
+              )}
               <div>
                 <small>EFECTOS VISUALES</small>
                 <h2>Efectos activables</h2>
