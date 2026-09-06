@@ -16,6 +16,7 @@ export default function CreatorPanel() {
   const [passwordClientId, setPasswordClientId] = useState<number | null>(null);
   async function load() {
     const response = await fetch("/api/tenants", { cache: "no-store" }), payload = await readApiPayload(response);
+    if (response.status === 401) { location.href = "/login?next=%2Fadmin"; return; }
     if (!response.ok || !payload?.clients) throw new Error("No se pudo consultar los clientes.");
     setClients(payload.clients);
   }
