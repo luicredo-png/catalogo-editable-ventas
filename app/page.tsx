@@ -479,13 +479,15 @@ export default function Home({
               />
             )}
             <div className="clothing-entry-copy">
-              <span>{store.heroEyebrow}</span>
-              <h1>{store.catalogTitle}</h1>
-              <em>{store.heroHighlight}</em>
-              <p>{store.heroDescription}</p>
-              <a href="#coleccion">
-                {store.heroCtaLabel} <b>→</b>
-              </a>
+              {store.heroEyebrow && <span>{store.heroEyebrow}</span>}
+              {store.catalogTitle && <h1>{store.catalogTitle}</h1>}
+              {store.heroHighlight && <em>{store.heroHighlight}</em>}
+              {store.heroDescription && <p>{store.heroDescription}</p>}
+              {store.heroCtaLabel && (
+                <a href="#coleccion">
+                  {store.heroCtaLabel} <b>→</b>
+                </a>
+              )}
             </div>
             <label className="store-search clothing-hero-search">
               ⌕
@@ -579,17 +581,19 @@ export default function Home({
               />
             )}
             <div className="hero-copy">
-              <span>{store.heroEyebrow}</span>
-              <h1>{store.catalogTitle}</h1>
+              {store.heroEyebrow && <span>{store.heroEyebrow}</span>}
+              {store.catalogTitle && <h1>{store.catalogTitle}</h1>}
               {store.heroHighlight && (
                 <em className="generic-hero-highlight">
                   {store.heroHighlight}
                 </em>
               )}
-              <p>{store.heroDescription}</p>
-              <a className="hero-cta" href="#coleccion">
-                {store.heroCtaLabel} <b>→</b>
-              </a>
+              {store.heroDescription && <p>{store.heroDescription}</p>}
+              {store.heroCtaLabel && (
+                <a className="hero-cta" href="#coleccion">
+                  {store.heroCtaLabel} <b>→</b>
+                </a>
+              )}
               <div className="hero-trust">
                 <b>✓ Sin comisiones</b>
                 <b>✓ Pedido personalizado</b>
@@ -825,20 +829,20 @@ function normalizeStore(s: Record<string, unknown>): Store {
       s.overlay_strength ?? s.overlayStrength ?? d.overlayStrength,
     ),
     catalogTitle: String(
-      s.catalog_title ||
-        s.catalogTitle ||
+      s.catalog_title ??
+        s.catalogTitle ??
         templates[templateKey].store.catalogTitle,
     ),
     logoUrl: String(s.logo_url || s.logoUrl || ""),
     heroImage: String(s.hero_image || s.heroImage || h.heroImage),
-    heroEyebrow: String(s.hero_eyebrow || s.heroEyebrow || h.heroEyebrow),
+    heroEyebrow: String(s.hero_eyebrow ?? s.heroEyebrow ?? h.heroEyebrow),
     heroDescription: String(
-      s.hero_description || s.heroDescription || h.heroDescription,
+      s.hero_description ?? s.heroDescription ?? h.heroDescription,
     ),
     heroHighlight: String(
-      s.hero_highlight || s.heroHighlight || h.heroHighlight,
+      s.hero_highlight ?? s.heroHighlight ?? h.heroHighlight,
     ),
-    heroCtaLabel: String(s.hero_cta_label || s.heroCtaLabel || h.heroCtaLabel),
+    heroCtaLabel: String(s.hero_cta_label ?? s.heroCtaLabel ?? h.heroCtaLabel),
   };
 }
 
@@ -2712,19 +2716,11 @@ function Admin({
                     {store.name}
                   </b>
                 )}
-                <small style={{ fontFamily: store.heroEyebrowFont, color: heroColors.eyebrow }}>
-                  {store.heroEyebrow}
-                </small>
-                <h2 style={{ fontFamily: store.heroFont, color: heroColors.title }}>
-                  {store.catalogTitle}
-                </h2>
-                <em style={{ fontFamily: store.heroHighlightFont, color: heroColors.highlight }}>
-                  {store.heroHighlight}
-                </em>
-                <p style={{ fontFamily: store.heroDescriptionFont, color: heroColors.description }}>
-                  {store.heroDescription}
-                </p>
-                <span
+                {store.heroEyebrow && <small style={{ fontFamily: store.heroEyebrowFont, color: heroColors.eyebrow }}>{store.heroEyebrow}</small>}
+                {store.catalogTitle && <h2 style={{ fontFamily: store.heroFont, color: heroColors.title }}>{store.catalogTitle}</h2>}
+                {store.heroHighlight && <em style={{ fontFamily: store.heroHighlightFont, color: heroColors.highlight }}>{store.heroHighlight}</em>}
+                {store.heroDescription && <p style={{ fontFamily: store.heroDescriptionFont, color: heroColors.description }}>{store.heroDescription}</p>}
+                {store.heroCtaLabel && <span
                   style={{
                     background: store.heroButtonColor,
                     color: contrastText(store.heroButtonColor),
@@ -2732,7 +2728,7 @@ function Admin({
                   }}
                 >
                   {store.heroCtaLabel} →
-                </span>
+                </span>}
               </section>
             </div>
             <div className="admin-card cover-fields">
@@ -3893,19 +3889,11 @@ function AdminV2({
                     {store.name}
                   </b>
                 )}
-                <small style={{ fontFamily: store.heroEyebrowFont, color: heroColors.eyebrow }}>
-                  {store.heroEyebrow}
-                </small>
-                <h2 style={{ fontFamily: store.heroFont, color: heroColors.title }}>
-                  {store.catalogTitle}
-                </h2>
-                <em style={{ fontFamily: store.heroHighlightFont, color: heroColors.highlight }}>
-                  {store.heroHighlight}
-                </em>
-                <p style={{ fontFamily: store.heroDescriptionFont, color: heroColors.description }}>
-                  {store.heroDescription}
-                </p>
-                <span
+                {store.heroEyebrow && <small style={{ fontFamily: store.heroEyebrowFont, color: heroColors.eyebrow }}>{store.heroEyebrow}</small>}
+                {store.catalogTitle && <h2 style={{ fontFamily: store.heroFont, color: heroColors.title }}>{store.catalogTitle}</h2>}
+                {store.heroHighlight && <em style={{ fontFamily: store.heroHighlightFont, color: heroColors.highlight }}>{store.heroHighlight}</em>}
+                {store.heroDescription && <p style={{ fontFamily: store.heroDescriptionFont, color: heroColors.description }}>{store.heroDescription}</p>}
+                {store.heroCtaLabel && <span
                   style={{
                     background: store.heroButtonColor,
                     color: contrastText(store.heroButtonColor),
@@ -3913,7 +3901,7 @@ function AdminV2({
                   }}
                 >
                   {store.heroCtaLabel} →
-                </span>
+                </span>}
               </section>
             </div>
             <div
