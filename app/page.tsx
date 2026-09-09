@@ -448,7 +448,6 @@ export default function Home({
       style={style}
     >
       {notice && <div className="toast">{notice}</div>}
-      <SocialLinks store={store} />
       <header className="store-header">
         <a href="#top" className="store-logo">
           {store.logoUrl ? (
@@ -486,6 +485,7 @@ export default function Home({
               backgroundImage: `linear-gradient(90deg,rgba(2,5,10,.92) 0%,rgba(2,5,10,.62) 43%,rgba(2,5,10,.1) 76%),url(${clothingHero})`,
             }}
           >
+            <SocialLinks store={store} />
             {isVideoMedia(clothingHero) && (
               <video className="hero-cover-video" src={clothingHero} autoPlay muted loop playsInline />
             )}
@@ -588,6 +588,7 @@ export default function Home({
                 : undefined
             }
           >
+            <SocialLinks store={store} />
             {isVideoMedia(currentHero) && (
               <video
                 className="hero-cover-video"
