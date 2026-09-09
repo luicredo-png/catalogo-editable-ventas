@@ -1570,10 +1570,10 @@ function StoreProductCard({
           <b>{isFood ? "INCLUYE" : "DETALLES"}</b>
           {product.description}
         </p>
-        <div className="store-price">
+        {product.price > 0 && <div className="store-price">
           <strong>S/ {product.price}</strong>
           {product.oldPrice > product.price && <del>S/ {product.oldPrice}</del>}
-        </div>
+        </div>}
         {isFood ? (
           <button className="configure-order" onClick={open}>
             ✦ ELEGIR OPCIONES Y PEDIR
@@ -1850,10 +1850,10 @@ function ProductOrderModal({
               }}
             />
           ))}
-          <div className="order-total">
+          {product.price > 0 && <div className="order-total">
             <span>Precio</span>
             <strong>S/ {product.price}</strong>
-          </div>
+          </div>}
           <a
             className="whatsapp-glow"
             href={`https://wa.me/${store.whatsapp}?text=${encodeURIComponent(message)}`}
@@ -2724,7 +2724,7 @@ function Admin({
                       <div>
                         <b>{p.name}</b>
                         <span>
-                          {p.category} · S/ {p.price} · {gallery.length}{" "}
+                          {p.category} {p.price > 0 ? `· S/ ${p.price} ` : "· "}{gallery.length}{" "}
                           {gallery.length === 1 ? "foto" : "colores"} ·{" "}
                           {p.active ? "Visible" : "Oculto"}
                         </span>
@@ -7640,6 +7640,9 @@ function ProductEditor({
     }],
     whatsappMessage: p.whatsappMessage || "",
   });
+  const sizeChoices = ["XS", "S", "M", "L", "XL", "XXL"];
+  const existingSizes = (p.options || []).find((group) => group.name.toLowerCase().includes("talla"))?.values || [];
+  const [selectedSizes, setSelectedSizes] = useState<string[]>(existingSizes);
   const f = (k: keyof Product, v: string | number | boolean | OptionGroup[]) =>
     setD((x) => ({ ...x, [k]: v }));
   const updateGroupName = (i: number, value: string) =>
@@ -7669,7 +7672,9 @@ function ProductEditor({
             .flatMap((group) => group.values)
             .map(parseOptionValue)
             .find((value) => value.image)?.image;
-          save({ ...d, image: firstPhoto || d.image, options: [...d.options, ...(p.options || []).filter(group => !group.name.toLowerCase().includes("color"))] });
+          const nonColor = (p.options || []).filter(group => !group.name.toLowerCase().includes("color") && !group.name.toLowerCase().includes("talla"));
+          const sizeGroup = selectedSizes.length ? [{ name: "Talla", values: selectedSizes }] : [];
+          save({ ...d, image: firstPhoto || d.image, options: [...d.options, ...sizeGroup, ...nonColor] });
         }}
       >
         <div className="editor-head">
@@ -7717,19 +7722,34 @@ function ProductEditor({
             Precio
             <input
               type="number"
-              value={d.price}
-              onChange={(e) => f("price", Number(e.target.value))}
+              value={d.price || ""}
+              onChange={(e) => f("price", e.target.value === "" ? 0 : Number(e.target.value))}
             />
           </label>
           <label>
             Precio anterior
             <input
               type="number"
-              value={d.oldPrice}
-              onChange={(e) => f("oldPrice", Number(e.target.value))}
+              value={d.oldPrice || ""}
+              onChange={(e) => f("oldPrice", e.target.value === "" ? 0 : Number(e.target.value))}
             />
           </label>
         </div>
+        {!foodVariants && <fieldset className="size-selector">
+          <legend>Tallas disponibles</legend>
+          <div>
+            {sizeChoices.map((size) => (
+              <label key={size} className="size-choice">
+                <input
+                  type="checkbox"
+                  checked={selectedSizes.includes(size)}
+                  onChange={(e) => setSelectedSizes((current) => e.target.checked ? [...current, size] : current.filter((item) => item !== size))}
+                />
+                <span>{size}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>}
         <section className="options-editor">
           {d.options.slice(0, 1).map((group, i) => (
             <OptionGroupEditor

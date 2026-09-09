@@ -330,6 +330,9 @@ body main.storefront .collection-stage img.collection-background,body main.store
 .storefront.template-ropa :is(.store-product-info>small,.order-content>small,.option-group>b){font-weight:900;letter-spacing:.18em;text-transform:uppercase}
 .storefront.template-ropa :is(.store-product-info h2,.order-content h2){font-family:var(--ropa-font)!important;font-weight:900;letter-spacing:-.045em}
 .storefront.template-ropa :is(.store-product-info p,.order-content>p){font-family:var(--ropa-font)!important;font-weight:500;letter-spacing:-.015em}
+/* Separar la etiqueta del detalle para que las descripciones respiren en todos los demos. */
+body main.storefront .store-product-info p{display:grid!important;grid-template-columns:max-content minmax(0,1fr);column-gap:12px;align-items:start;line-height:1.5}
+body main.storefront .store-product-info p>b{display:block;white-space:nowrap;line-height:1.5}
 .storefront.template-ropa .store-product-info p>b{font-family:var(--ropa-font)!important;font-weight:900;letter-spacing:.12em}
 .storefront.template-ropa :is(.store-price strong,.order-total strong){font-family:var(--ropa-font)!important;font-weight:900;letter-spacing:-.04em}
 .storefront.template-ropa :is(.photo-gallery-strip>button,.store-product-info>button.whatsapp-glow,.order-content>.whatsapp-glow,.option-group button){font-family:var(--ropa-font)!important;font-style:normal!important;font-weight:950}
@@ -472,3 +475,11 @@ body main.storefront :is(.store-hero,.clothing-entry)>.store-social-links span{d
 body main.storefront .store-product{content-visibility:auto;contain-intrinsic-size:auto 760px}
 body main.storefront footer.catalog-footer{content-visibility:auto;contain-intrinsic-size:auto 500px}
 @media(max-width:700px){body main.storefront :is(.store-hero,.clothing-entry)>.store-social-links{right:12px!important;bottom:12px!important}body main.storefront :is(.store-hero,.clothing-entry)>.store-social-links a{width:42px!important;height:42px!important;min-width:42px!important;padding:8px!important;border-radius:12px!important}}
+/* Descripciones y tallas con jerarquía limpia en todos los demos. */
+body main.storefront .store-product-info p{display:grid!important;grid-template-columns:max-content minmax(0,1fr);column-gap:12px;align-items:start;line-height:1.5}
+body main.storefront .store-product-info p>b{display:block;white-space:nowrap;line-height:1.5}
+.product-editor .size-selector{display:grid;gap:10px;margin:0;padding:14px;border:2px solid #b9c9dc;border-radius:14px;background:#f7fbff}
+.product-editor .size-selector legend{padding:0 5px;font-size:12px;font-weight:900;color:#24364b}
+.product-editor .size-selector>div{display:flex;flex-wrap:wrap;gap:8px}
+.product-editor .size-choice{display:inline-flex!important;align-items:center!important;gap:7px!important;min-width:54px;padding:9px 11px;border:1px solid #b9c9dc;border-radius:999px;background:#fff;color:#24364b;font-size:11px;font-weight:800;cursor:pointer}
+.product-editor .size-choice input{width:16px!important;height:16px!important;min-height:0!important;margin:0!important;accent-color:#168cff}
