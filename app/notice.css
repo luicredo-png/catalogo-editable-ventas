@@ -335,8 +335,8 @@ body main.storefront .store-product-info p{display:grid!important;grid-template-
 body main.storefront .store-product-info p>b{display:block;white-space:nowrap;line-height:1.5}
 .storefront.template-ropa .store-product-info p>b{font-family:var(--ropa-font)!important;font-weight:900;letter-spacing:.12em}
 .storefront.template-ropa :is(.store-price strong,.order-total strong){font-family:var(--ropa-font)!important;font-weight:900;letter-spacing:-.04em}
-.storefront.template-ropa :is(.photo-gallery-strip>button,.store-product-info>button.whatsapp-glow,.order-content>.whatsapp-glow,.option-group button){font-family:var(--ropa-font)!important;font-style:normal!important;font-weight:950}
-.storefront.template-ropa :is(.photo-gallery-strip>button,.store-product-info>button.whatsapp-glow,.order-content>.whatsapp-glow)>:is(span,b){font-family:var(--ropa-font)!important;font-style:normal!important;font-weight:950!important}
+.storefront.template-ropa :is(.photo-gallery-strip>button,.store-product-info>button.whatsapp-glow,.store-product-info>button.add-cart-button,.order-content>.whatsapp-glow,.option-group button){font-family:var(--ropa-font)!important;font-style:normal!important;font-weight:950}
+.storefront.template-ropa :is(.photo-gallery-strip>button,.store-product-info>button.whatsapp-glow,.store-product-info>button.add-cart-button,.order-content>.whatsapp-glow)>:is(span,b){font-family:var(--ropa-font)!important;font-style:normal!important;font-weight:950!important}
 .storefront.template-ropa .photo-gallery-strip>button{letter-spacing:.075em}
 
 /* En móvil cada catálogo se comparte con su enlace directo. */
