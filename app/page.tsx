@@ -530,6 +530,7 @@ export default function Home({
           </section>
           <section
             className="clothing-category-panel"
+            id="categorias"
             aria-label="Categorías de moda"
             style={{
               "--category-panel-bg":
@@ -627,7 +628,7 @@ export default function Home({
               />
             </label>
           </section>
-          <nav className="category-tabs visual-category-tabs" aria-label="Categorías">
+          <nav className="category-tabs visual-category-tabs" id="categorias" aria-label="Categorías">
             {catalogTypes(products, store, currentHero).map((c) => (
               <button
                 className={filter === c.key ? "active" : ""}
@@ -713,23 +714,39 @@ export default function Home({
           </div>
         )}
       </section>
-      <footer className="store-footer">
-        <div className="footer-brand">
-          {store.logoUrl && <img src={store.logoUrl} alt="" />}
-          <div>
-            <b>{store.name}</b>
-            <span>Tu catálogo abierto las 24 horas</span>
+      <footer className="store-footer footer-eight">
+        <div className="footer-eight-inner">
+          <div className="footer-eight-rule" />
+          <div className="footer-eight-center">
+            <a className="footer-eight-brand" href="#top">
+              {store.logoUrl ? <img src={store.logoUrl} alt={`Logo de ${store.name}`} /> : <i aria-hidden="true" />}
+              <b>{store.name}</b>
+            </a>
+            <p>Tu catálogo abierto las 24 horas</p>
+            <nav aria-label="Enlaces del pie de página">
+              <a href="#top">Inicio</a>
+              <a href="#coleccion">Productos</a>
+              <a href="#categorias">Categorías</a>
+              <a href={`https://wa.me/${store.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noreferrer">Pedidos</a>
+              <a href="/admin">Administrar</a>
+            </nav>
+            <div className="footer-eight-appearance">
+              <span>Apariencia</span>
+              <NeoToggle
+                checked={activeAppearance === "light"}
+                change={(checked) => setAppearanceOverride(checked ? "light" : "dark")}
+                label="Cambiar apariencia de la tienda"
+              />
+            </div>
           </div>
-        </div>
-        <div className="footer-appearance">
-          <span>Apariencia tienda</span>
-          <NeoToggle
-            checked={activeAppearance === "light"}
-            change={(checked) =>
-              setAppearanceOverride(checked ? "light" : "dark")
-            }
-            label="Cambiar apariencia de la tienda"
-          />
+          <div className="footer-eight-bottom">
+            <span>© {new Date().getFullYear()} {store.name}</span>
+            <div className="footer-eight-socials" aria-label="Redes sociales">
+              <a href={`https://wa.me/${store.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noreferrer" aria-label="WhatsApp"><img src="/whatsapp.png" alt="" /></a>
+              {store.facebook ? <a href={socialUrl(store.facebook, "facebook")} target="_blank" rel="noreferrer" aria-label="Facebook"><img src="/social/facebook.png" alt="" /></a> : <span className="footer-social-disabled" title="Configura Facebook en el administrador" aria-label="Facebook no configurado"><img src="/social/facebook.png" alt="" /></span>}
+              {store.instagram ? <a href={socialUrl(store.instagram, "instagram")} target="_blank" rel="noreferrer" aria-label="Instagram"><img src="/social/instagram.png" alt="" /></a> : <span className="footer-social-disabled" title="Configura Instagram en el administrador" aria-label="Instagram no configurado"><img src="/social/instagram.png" alt="" /></span>}
+            </div>
+          </div>
         </div>
       </footer>
       {selected && (
