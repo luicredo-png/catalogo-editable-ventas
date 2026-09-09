@@ -468,4 +468,7 @@ body main.storefront :is(.store-hero,.clothing-entry)>.store-social-links{positi
 body main.storefront :is(.store-hero,.clothing-entry)>.store-social-links a{display:grid!important;place-items:center!important;width:46px!important;height:46px!important;min-width:46px!important;padding:9px!important;border:1px solid #ffffff75!important;border-radius:14px!important;box-sizing:border-box!important;box-shadow:0 12px 28px #0008!important;backdrop-filter:blur(10px)}
 body main.storefront :is(.store-hero,.clothing-entry)>.store-social-links img{width:27px!important;height:27px!important;border-radius:7px!important;object-fit:contain!important}
 body main.storefront :is(.store-hero,.clothing-entry)>.store-social-links span{display:none!important}
+/* El navegador pospone el trabajo visual de tarjetas y footer fuera de pantalla. */
+body main.storefront .store-product{content-visibility:auto;contain-intrinsic-size:auto 760px}
+body main.storefront footer.catalog-footer{content-visibility:auto;contain-intrinsic-size:auto 500px}
 @media(max-width:700px){body main.storefront :is(.store-hero,.clothing-entry)>.store-social-links{right:12px!important;bottom:12px!important}body main.storefront :is(.store-hero,.clothing-entry)>.store-social-links a{width:42px!important;height:42px!important;min-width:42px!important;padding:8px!important;border-radius:12px!important}}
