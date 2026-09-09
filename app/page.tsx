@@ -184,6 +184,31 @@ export default function Home({
       tenantSlug ||
       new URLSearchParams(location.search).get("tienda") ||
       template;
+    const cacheKey = `catalog-cache:${slug}`;
+    let showedCachedCatalog = false;
+    try {
+      const cached = JSON.parse(localStorage.getItem(cacheKey) || "null") as {
+        savedAt?: number;
+        store?: Record<string, unknown>;
+        products?: Product[];
+      } | null;
+      if (
+        cached?.store &&
+        Array.isArray(cached.products) &&
+        Date.now() - Number(cached.savedAt || 0) < 5 * 60 * 1000
+      ) {
+        const next = normalizeStore(cached.store);
+        setProducts(cached.products);
+        setStore(next);
+        setActiveTemplate(next.templateKey);
+        setCatalogLoading(false);
+        showedCachedCatalog = true;
+      }
+    } catch {}
+    // Demo data is bundled, so it can be painted while the saved version refreshes.
+    if (!showedCachedCatalog && !tenantSlug && slug === template) {
+      setCatalogLoading(false);
+    }
     fetch(`/api/catalog?slug=${encodeURIComponent(slug)}`)
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((d) => {
@@ -193,6 +218,12 @@ export default function Home({
         const next = normalizeStore(d.store);
         setStore(next);
         setActiveTemplate(next.templateKey);
+        try {
+          localStorage.setItem(
+            cacheKey,
+            JSON.stringify({ savedAt: Date.now(), store: d.store, products: d.products }),
+          );
+        } catch {}
       })
       .catch(() => {})
       .finally(() => {
@@ -309,7 +340,6 @@ export default function Home({
     activeTemplate === "restaurantes" || activeTemplate === "comida-rapida";
   const isClothing =
     activeTemplate === "ropa" || activeTemplate === "zapatos-mujer";
-  const isGeneratedBusiness = isGeneratedBusinessKey(activeTemplate);
   const isDemoHost = typeof window !== "undefined" && ["micatalago.shop", "www.micatalago.shop", "micatalogo.shop", "www.micatalogo.shop"].includes(location.hostname.toLowerCase());
   const heroSlides = store.heroImage.split("|||").filter(Boolean);
   const currentHero = heroSlides[heroSlideIndex % Math.max(1, heroSlides.length)] || "";
@@ -661,25 +691,7 @@ export default function Home({
                 muted
                 loop
                 playsInline
-                preload="auto"
-              />
-              <video
-                className="collection-background-video video-copy-two"
-                src={store.collectionBackgroundImage}
-                autoPlay
-                muted
-                loop
-                playsInline
-                preload="auto"
-              />
-              <video
-                className="collection-background-video video-copy-three"
-                src={store.collectionBackgroundImage}
-                autoPlay
-                muted
-                loop
-                playsInline
-                preload="auto"
+                preload="metadata"
               />
             </div>
             <span
@@ -701,7 +713,6 @@ export default function Home({
               product={p}
               isFood={isFood}
               template={activeTemplate}
-              optimized={isGeneratedBusiness}
               open={() => setSelected(p)}
               cartEnabled={cartEnabled}
               addToCart={() => addToCart(p)}
@@ -735,9 +746,9 @@ export default function Home({
           <div className="catalog-footer-bottom">
             <span>© {new Date().getFullYear()} {store.name}</span>
             <div className="catalog-footer-socials" aria-label="Redes sociales">
-              <a href={`https://wa.me/${store.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noreferrer" aria-label="WhatsApp"><img src="/whatsapp.png" alt="" /></a>
-              {store.facebook ? <a href={socialUrl(store.facebook, "facebook")} target="_blank" rel="noreferrer" aria-label="Facebook"><img src="/social/facebook.png" alt="" /></a> : <span className="footer-social-disabled" title="Configura Facebook en el administrador" aria-label="Facebook no configurado"><img src="/social/facebook.png" alt="" /></span>}
-              {store.instagram ? <a href={socialUrl(store.instagram, "instagram")} target="_blank" rel="noreferrer" aria-label="Instagram"><img src="/social/instagram.png" alt="" /></a> : <span className="footer-social-disabled" title="Configura Instagram en el administrador" aria-label="Instagram no configurado"><img src="/social/instagram.png" alt="" /></span>}
+              <a href={`https://wa.me/${store.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noreferrer" aria-label="WhatsApp"><img src="/whatsapp-revolt.svg" alt="" /></a>
+              {store.facebook ? <a href={socialUrl(store.facebook, "facebook")} target="_blank" rel="noreferrer" aria-label="Facebook"><img src="/social/facebook.svg" alt="" /></a> : <span className="footer-social-disabled" title="Configura Facebook en el administrador" aria-label="Facebook no configurado"><img src="/social/facebook.svg" alt="" /></span>}
+              {store.instagram ? <a href={socialUrl(store.instagram, "instagram")} target="_blank" rel="noreferrer" aria-label="Instagram"><img src="/social/instagram.svg" alt="" /></a> : <span className="footer-social-disabled" title="Configura Instagram en el administrador" aria-label="Instagram no configurado"><img src="/social/instagram.svg" alt="" /></span>}
             </div>
           </div>
         </div>
@@ -1029,10 +1040,10 @@ function socialUrl(value: string, network: "instagram" | "facebook") {
     : `https://facebook.com/${handle}`;
 }
 function InstagramIcon() {
-  return <img src="/social/instagram.png" alt="" aria-hidden="true" />;
+  return <img src="/social/instagram.svg" alt="" aria-hidden="true" />;
 }
 function FacebookIcon() {
-  return <img src="/social/facebook.png" alt="" aria-hidden="true" />;
+  return <img src="/social/facebook.svg" alt="" aria-hidden="true" />;
 }
 function WhatsAppIcon() {
   return (
@@ -1388,7 +1399,6 @@ function StoreProductCard({
   product,
   isFood,
   template,
-  optimized,
   open,
   cartEnabled,
   addToCart,
@@ -1396,7 +1406,6 @@ function StoreProductCard({
   product: Product;
   isFood: boolean;
   template: TemplateKey;
-  optimized: boolean;
   open: () => void;
   cartEnabled: boolean;
   addToCart: () => void;
@@ -1406,6 +1415,8 @@ function StoreProductCard({
     ? Array.from(new Set((colorGroup?.values || []).map(optionLabel)))
     : [];
   const [cardColor, setCardColor] = useState(colorLabels[0] || "");
+  const cardRef = useRef<HTMLElement>(null);
+  const [cardVisible, setCardVisible] = useState(false);
   const activeCardColor = colorLabels.includes(cardColor) ? cardColor : colorLabels[0] || "";
   const colorGallery = (colorGroup?.values || [])
     .filter((value) => optionLabel(value) === activeCardColor && parseOptionValue(value).image)
@@ -1426,7 +1437,7 @@ function StoreProductCard({
     setPreview(gallery[0]?.image || product.image);
   }, [product.id, activeCardColor, gallery.map((item) => item.image).join("|")]);
   useEffect(() => {
-    if (gallery.length < 2 || gallery.some(item => isVideoMedia(item.image))) return;
+    if (!cardVisible || gallery.length < 2 || gallery.some(item => isVideoMedia(item.image))) return;
     const timer = setInterval(
       () =>
         setPreview(
@@ -1443,7 +1454,20 @@ function StoreProductCard({
       4200,
     );
     return () => clearInterval(timer);
-  }, [product.id, activeCardColor, gallery.map((item) => item.image).join("|")]);
+  }, [product.id, activeCardColor, cardVisible, gallery.map((item) => item.image).join("|")]);
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!card || !("IntersectionObserver" in window)) {
+      setCardVisible(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => setCardVisible(entry.isIntersecting),
+      { rootMargin: "180px" },
+    );
+    observer.observe(card);
+    return () => observer.disconnect();
+  }, []);
   const tiltCard = (event: React.PointerEvent<HTMLElement>) => {
     if (event.pointerType === "touch") return;
     const card = event.currentTarget;
@@ -1459,6 +1483,7 @@ function StoreProductCard({
   };
   return (
     <article
+      ref={cardRef}
       className="store-product"
       onPointerMove={tiltCard}
       onPointerLeave={resetCardTilt}
@@ -1467,8 +1492,8 @@ function StoreProductCard({
         <ProductMedia
           src={preview}
           alt={product.name}
-          loading={optimized ? "lazy" : undefined}
-          decoding={optimized ? "async" : undefined}
+          loading="lazy"
+          decoding="async"
         />
         {gallery.length > 1 && (
           <div className="subtle-photo-arrows">
@@ -1494,8 +1519,8 @@ function StoreProductCard({
                 <ProductMedia
                   src={item.image}
                   alt={`Color ${index + 1} de ${product.name}`}
-                  loading={optimized ? "lazy" : undefined}
-                  decoding={optimized ? "async" : undefined}
+                  loading="lazy"
+                  decoding="async"
                 />
               </button>
             ))}
@@ -3388,7 +3413,7 @@ function AdminV2({
         button.href = href;
         button.target = "_blank";
         button.rel = "noreferrer";
-        const icon = settings.network === "facebook" ? "/social/facebook.png" : settings.network === "instagram" ? "/social/instagram.png" : "";
+        const icon = settings.network === "facebook" ? "/social/facebook.svg" : settings.network === "instagram" ? "/social/instagram.svg" : "";
         button.innerHTML = icon ? `<img src="${icon}" alt=""><span>${settings.buttonLabel}</span>` : `<span>☎</span><span>${settings.buttonLabel}</span>`;
         ticker.appendChild(button);
       }
