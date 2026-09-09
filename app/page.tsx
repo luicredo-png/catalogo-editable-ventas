@@ -714,11 +714,11 @@ export default function Home({
           </div>
         )}
       </section>
-      <footer className="store-footer footer-eight">
-        <div className="footer-eight-inner">
-          <div className="footer-eight-rule" />
-          <div className="footer-eight-center">
-            <a className="footer-eight-brand" href="#top">
+      <footer className="store-footer catalog-footer">
+        <div className="catalog-footer-inner">
+          <div className="catalog-footer-rule" />
+          <div className="catalog-footer-center">
+            <a className="catalog-footer-brand" href="#top">
               {store.logoUrl ? <img src={store.logoUrl} alt={`Logo de ${store.name}`} /> : <i aria-hidden="true" />}
               <b>{store.name}</b>
             </a>
@@ -730,18 +730,10 @@ export default function Home({
               <a href={`https://wa.me/${store.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noreferrer">Pedidos</a>
               <a href="/admin">Administrar</a>
             </nav>
-            <div className="footer-eight-appearance">
-              <span>Apariencia</span>
-              <NeoToggle
-                checked={activeAppearance === "light"}
-                change={(checked) => setAppearanceOverride(checked ? "light" : "dark")}
-                label="Cambiar apariencia de la tienda"
-              />
-            </div>
           </div>
-          <div className="footer-eight-bottom">
+          <div className="catalog-footer-bottom">
             <span>© {new Date().getFullYear()} {store.name}</span>
-            <div className="footer-eight-socials" aria-label="Redes sociales">
+            <div className="catalog-footer-socials" aria-label="Redes sociales">
               <a href={`https://wa.me/${store.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noreferrer" aria-label="WhatsApp"><img src="/whatsapp.png" alt="" /></a>
               {store.facebook ? <a href={socialUrl(store.facebook, "facebook")} target="_blank" rel="noreferrer" aria-label="Facebook"><img src="/social/facebook.png" alt="" /></a> : <span className="footer-social-disabled" title="Configura Facebook en el administrador" aria-label="Facebook no configurado"><img src="/social/facebook.png" alt="" /></span>}
               {store.instagram ? <a href={socialUrl(store.instagram, "instagram")} target="_blank" rel="noreferrer" aria-label="Instagram"><img src="/social/instagram.png" alt="" /></a> : <span className="footer-social-disabled" title="Configura Instagram en el administrador" aria-label="Instagram no configurado"><img src="/social/instagram.png" alt="" /></span>}
