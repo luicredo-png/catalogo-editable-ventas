@@ -483,3 +483,7 @@ body main.storefront .store-product-info p>b{display:block;white-space:nowrap;li
 .product-editor .size-selector>div{display:flex;flex-wrap:wrap;gap:8px}
 .product-editor .size-choice{display:inline-flex!important;align-items:center!important;gap:7px!important;min-width:54px;padding:9px 11px;border:1px solid #b9c9dc;border-radius:999px;background:#fff;color:#24364b;font-size:11px;font-weight:800;cursor:pointer}
 .product-editor .size-choice input{width:16px!important;height:16px!important;min-height:0!important;margin:0!important;accent-color:#168cff}
+.preview-sizes{display:grid;gap:7px;margin:4px 0 12px;padding-top:10px;border-top:1px solid color-mix(in srgb,var(--store-text),transparent 84%)}
+.preview-sizes>small{color:var(--accent);font-size:9px;font-weight:900;letter-spacing:.14em}
+.preview-sizes>div{display:flex;flex-wrap:wrap;gap:6px}
+.preview-sizes span{padding:5px 9px;border:1px solid color-mix(in srgb,var(--accent),transparent 55%);border-radius:999px;color:var(--store-text);font-size:10px;font-weight:800;background:color-mix(in srgb,var(--accent),transparent 88%)}

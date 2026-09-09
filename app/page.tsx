@@ -1570,6 +1570,13 @@ function StoreProductCard({
           <b>{isFood ? "INCLUYE" : "DETALLES"}</b>
           {product.description}
         </p>
+        {(() => {
+          const sizes = product.options?.find((group) => group.name.toLowerCase().includes("talla"))?.values || [];
+          return sizes.length ? <div className="preview-sizes" aria-label="Tallas disponibles">
+            <small>TALLAS</small>
+            <div>{sizes.map((size) => <span key={size}>{optionLabel(size)}</span>)}</div>
+          </div> : null;
+        })()}
         {product.price > 0 && <div className="store-price">
           <strong>S/ {product.price}</strong>
           {product.oldPrice > product.price && <del>S/ {product.oldPrice}</del>}
