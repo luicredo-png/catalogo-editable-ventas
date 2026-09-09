@@ -15,7 +15,9 @@ body main.storefront.clothing-store .clothing-entry-copy em{margin:4px 0 16px;co
 body main.storefront.clothing-store .clothing-entry-copy p{max-width:370px;margin:0 0 24px;color:#eef3fb;font-family:var(--hero-description-font);font-size:15px;line-height:1.5;text-shadow:0 2px 12px #000}
 body main.storefront.clothing-store .clothing-entry-copy a{display:inline-flex;align-items:center;gap:18px;min-height:51px;padding:0 22px;border-radius:10px;background:var(--hero-button);color:var(--hero-button-text);font-family:var(--hero-cta-font);text-decoration:none;font-size:11px;font-weight:950;box-shadow:0 12px 32px color-mix(in srgb,var(--hero-button),transparent 53%);transition:.25s}
 body main.storefront.clothing-store .clothing-entry-copy a:hover{transform:translateY(-2px);filter:brightness(1.12)}
-body main.storefront.clothing-store .clothing-entry-tag{position:absolute;right:clamp(25px,5vw,80px);bottom:42px;z-index:2;display:flex;align-items:center;gap:11px;padding:12px 15px;border:1px solid #ffffff32;border-radius:15px;background:#060a11a3;color:#fff;backdrop-filter:blur(12px);font-size:10px;line-height:1.35}
+/* Las redes ocupan ese espacio en la portada; no mostrar la etiqueta que
+   quedaba detrás de sus botones en Ropa y sus subdominios. */
+body main.storefront.clothing-store .clothing-entry-tag{display:none!important}
 body main.storefront.clothing-store .clothing-entry-tag i{width:10px;height:10px;border-radius:50%;background:#25d366;box-shadow:0 0 0 6px #25d36620,0 0 18px #25d366}
 body main.storefront.clothing-store .clothing-category-panel{display:grid;grid-template-columns:1fr;align-items:center;gap:30px;padding:28px clamp(22px,5vw,74px);background:#f6f7f9;color:#151a24;border-bottom:1px solid #e5e8ed}
 body main.storefront.clothing-store .clothing-categories{display:flex;align-items:start;gap:clamp(16px,3vw,42px);overflow-x:auto;padding:4px 3px 8px;scrollbar-width:none}
