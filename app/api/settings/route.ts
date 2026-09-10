@@ -17,7 +17,9 @@ export async function PUT(request:Request){
  const motion=['none','gradient','float','zoom','aurora','waves','grid','blinking-squares','pulse','drift'].includes(String(s.collectionMotion))?String(s.collectionMotion):'none';
  const surfaceStyle=['solid','gradient','glass','media','transparent'].includes(String(s.surfaceStyle))?String(s.surfaceStyle):'solid';
  const surfaceBackgroundImage=String(s.surfaceBackgroundImage||'').slice(0,1000);
- const buttonStyle=(value:unknown,fallback:string)=>['glow','silver','dark','flash','gradient'].includes(String(value))?String(value):fallback;
+ // "ropa" preserves the bright gallery control used by the clothing demo.
+ // Keep splash too because it is already offered by the editor for hero buttons.
+ const buttonStyle=(value:unknown,fallback:string)=>['ropa','splash','glow','silver','dark','flash','gradient'].includes(String(value))?String(value):fallback;
  const whatsappMessage=String(s.whatsappMessage||'Hola, quiero pedir {producto}.\n{opciones}\nPrecio: S/ {precio}\nCatálogo: {catalogo}').slice(0,1600);
  const instagram=String(s.instagram||'').trim().slice(0,500);
  const facebook=String(s.facebook||'').trim().slice(0,500);

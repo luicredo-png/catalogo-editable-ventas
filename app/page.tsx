@@ -707,12 +707,13 @@ export default function Home({
           <span>Compra rápida · Atención directa</span>
         </div>
         <section className="product-grid">
-          {visible.map((p) => (
+          {visible.map((p, index) => (
             <StoreProductCard
               key={`${p.id}-${p.image}`}
               product={p}
               isFood={isFood}
               template={activeTemplate}
+              priority={index < 4}
               open={() => setSelected(p)}
               cartEnabled={cartEnabled}
               addToCart={() => addToCart(p)}
@@ -847,7 +848,9 @@ function normalizeStore(s: Record<string, unknown>): Store {
     ),
     buttonStyle: String(s.button_style || s.buttonStyle || "gradient"),
     secondaryButtonStyle: String(
-      s.secondary_button_style || s.secondaryButtonStyle || "glow",
+      s.secondary_button_style ||
+        s.secondaryButtonStyle ||
+        (templateKey === "ropa" ? "ropa" : "glow"),
     ),
     heroButtonStyle: String(s.hero_button_style || s.heroButtonStyle || "splash"),
     textColor: String(s.text_color || s.textColor || d.textColor),
@@ -1399,6 +1402,7 @@ function StoreProductCard({
   product,
   isFood,
   template,
+  priority = false,
   open,
   cartEnabled,
   addToCart,
@@ -1406,6 +1410,7 @@ function StoreProductCard({
   product: Product;
   isFood: boolean;
   template: TemplateKey;
+  priority?: boolean;
   open: () => void;
   cartEnabled: boolean;
   addToCart: () => void;
@@ -1492,7 +1497,7 @@ function StoreProductCard({
         <ProductMedia
           src={preview}
           alt={product.name}
-          loading="lazy"
+          loading={priority ? "eager" : "lazy"}
           decoding="async"
         />
         {gallery.length > 1 && (
@@ -4706,12 +4711,12 @@ function AdminV2({
                     </div>
                     <div>
                       <ButtonStyleSelect
-                        label="Estilo Ver colores"
+                        label="Diseño del botón Ver colores"
                         value={store.secondaryButtonStyle}
                         change={(v) => update("secondaryButtonStyle", v)}
                       />
                       <ColorField
-                        label="Color Ver colores"
+                        label="Color Ver colores (todas las tarjetas)"
                         value={store.secondaryColor}
                         change={(v) => update("secondaryColor", v)}
                       />
@@ -5111,6 +5116,7 @@ function ButtonStyleSelect({
     <label>
       {label}
       <select value={value} onChange={(e) => change(e.target.value)}>
+        <option value="ropa">Ropa brillante (como el demo)</option>
         <option value="splash">Splash 3D animado</option>
         <option value="glow">Neón brillante</option>
         <option value="silver">Plateado 3D</option>
