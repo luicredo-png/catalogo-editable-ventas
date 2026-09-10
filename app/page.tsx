@@ -680,6 +680,16 @@ export default function Home({
       )}
       <section
         className={`collection-stage collection-motion-${store.collectionMotion} ${collectionVideo ? "has-collection-video" : ""}`}
+        style={{
+          backgroundColor: store.collectionBackgroundColor,
+          backgroundImage:
+            !collectionVideo && store.collectionBackgroundImage
+              ? `linear-gradient(rgba(3,7,12,${store.collectionOverlayStrength}),rgba(3,7,12,${store.collectionOverlayStrength})), url(${store.collectionBackgroundImage})`
+              : undefined,
+          backgroundPosition: "center center",
+          backgroundSize: "cover",
+          backgroundRepeat: "no-repeat",
+        }}
       >
         {!collectionVideo && store.collectionBackgroundImage && (
           <>
@@ -689,6 +699,7 @@ export default function Home({
               alt=""
               aria-hidden="true"
               loading="eager"
+              fetchPriority="high"
               decoding="async"
             />
             <span className="collection-image-overlay" aria-hidden="true"></span>
