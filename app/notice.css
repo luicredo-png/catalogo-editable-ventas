@@ -342,6 +342,24 @@ body main.storefront .collection-stage img.collection-background,body main.store
   body main.storefront.clothing-store .clothing-entry>.store-social-links{bottom:14px!important}
 }
 
+/* La colección usa capas reales: en móviles Safari/Chrome ya no descartan la
+   imagen o el overlay al desplazarse por una grilla larga. */
+.collection-image-layer,.collection-image-overlay{position:absolute;inset:0;pointer-events:none}
+.collection-image-layer{z-index:0;background:var(--collection-image) center/cover no-repeat;transform:translateZ(0)}
+.collection-image-overlay{z-index:1;background:rgba(3,7,12,var(--collection-overlay))}
+
+/* Todos los diseños del botón respetan el color elegido, incluso plata y oscuro. */
+.storefront.secondary-button-silver :is(.photo-gallery-strip button,.colors button){border-color:color-mix(in srgb,var(--secondary),#fff 48%)!important;background:linear-gradient(to top,color-mix(in srgb,var(--secondary),#07111e 55%),color-mix(in srgb,var(--secondary),#fff 84%))!important;color:var(--secondary-text)!important;text-shadow:none!important}
+.storefront.secondary-button-dark :is(.photo-gallery-strip button,.colors button){border-color:color-mix(in srgb,var(--secondary),#fff 34%)!important;background:linear-gradient(145deg,color-mix(in srgb,var(--secondary),#111 42%),color-mix(in srgb,var(--secondary),#02070d 72%))!important;color:var(--secondary-text)!important}
+.storefront.secondary-button-glow :is(.photo-gallery-strip button,.colors button),.storefront.secondary-button-flash :is(.photo-gallery-strip button,.colors button){color:var(--secondary)!important;border-color:var(--secondary)!important}
+
+/* La mini vista previa comparte exactamente los colores y estilos del catálogo. */
+.collection-preview-actions .preview-product-button{--preview-button-color:#168cff;--preview-button-text:#fff;background:var(--preview-button-color)!important;color:var(--preview-button-text)!important}
+.collection-preview-actions .preview-button-glow,.collection-preview-actions .preview-button-flash{background:transparent!important;color:var(--preview-button-color)!important;border-color:var(--preview-button-color)!important}
+.collection-preview-actions .preview-button-silver{background:linear-gradient(to top,color-mix(in srgb,var(--preview-button-color),#07111e 55%),color-mix(in srgb,var(--preview-button-color),#fff 84%))!important;color:var(--preview-button-text)!important}
+.collection-preview-actions .preview-button-dark{background:linear-gradient(145deg,color-mix(in srgb,var(--preview-button-color),#111 42%),color-mix(in srgb,var(--preview-button-color),#02070d 72%))!important;color:var(--preview-button-text)!important}
+.collection-preview-actions .preview-button-gradient,.collection-preview-actions .preview-button-ropa,.collection-preview-actions .preview-button-splash{background:linear-gradient(118deg,color-mix(in srgb,var(--preview-button-color),#003b9e 35%),var(--preview-button-color) 48%,color-mix(in srgb,var(--preview-button-color),#00c6ff 28%))!important;color:var(--preview-button-text)!important}
+
 /* Tipografia de ROPA: la misma familia visual limpia y pesada de Revolt. */
 .storefront.template-ropa{--ropa-font:var(--font-inter,Inter),Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-family:var(--ropa-font)!important}
 .storefront.template-ropa :is(.store-header,.template-links,.hero-copy,.store-search,.category-tabs,.promo-ticker,.model-count,.store-product,.store-product-info,.photo-gallery-strip,.order-modal,.order-content,.option-group,.order-total,footer,button,input,a){font-family:var(--ropa-font)!important}
