@@ -336,8 +336,10 @@ body main.storefront .store-product-info p>b{display:block;white-space:nowrap;li
 .storefront.template-ropa .store-product-info p>b{font-family:var(--ropa-font)!important;font-weight:900;letter-spacing:.12em}
 .storefront.template-ropa :is(.store-price strong,.order-total strong){font-family:var(--ropa-font)!important;font-weight:900;letter-spacing:-.04em}
 .storefront.template-ropa :is(.photo-gallery-strip>button,.store-product-info>button.whatsapp-glow,.store-product-info>button.add-cart-button,.order-content>.whatsapp-glow,.option-group button){font-family:var(--ropa-font)!important;font-style:normal!important;font-weight:950}
+.storefront.template-ropa .store-product-info>button.add-cart-button{font-size:11px!important;letter-spacing:.045em!important;line-height:1!important}
 .storefront.template-ropa :is(.photo-gallery-strip>button,.store-product-info>button.whatsapp-glow,.store-product-info>button.add-cart-button,.order-content>.whatsapp-glow)>:is(span,b){font-family:var(--ropa-font)!important;font-style:normal!important;font-weight:950!important}
 .storefront.template-ropa .photo-gallery-strip>button{letter-spacing:.075em}
+@media(max-width:650px){.storefront.template-ropa .store-product-info>button.add-cart-button{font-size:9px!important}}
 
 /* En móvil cada catálogo se comparte con su enlace directo. */
 @media(max-width:760px){body main.storefront .store-header .template-links,body main.storefront .store-header:has(.template-links)>button{display:none!important}body main.storefront.clothing-store .store-header:has(.template-links){min-height:74px!important;padding:8px 18px!important;justify-content:center!important}body main.storefront.clothing-store .store-header:has(.template-links) .store-logo{margin:auto!important}}
