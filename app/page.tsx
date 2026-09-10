@@ -684,24 +684,20 @@ export default function Home({
           backgroundColor: store.collectionBackgroundColor,
           backgroundImage:
             !collectionVideo && store.collectionBackgroundImage
-              ? `linear-gradient(rgba(3,7,12,${store.collectionOverlayStrength}),rgba(3,7,12,${store.collectionOverlayStrength})), url(${store.collectionBackgroundImage})`
+              ? `url(${store.collectionBackgroundImage})`
               : undefined,
-          backgroundPosition: "center center",
-          backgroundSize: "cover",
-          backgroundRepeat: "no-repeat",
+          backgroundPosition: "center top",
+          backgroundSize: "100% auto",
+          backgroundRepeat: "repeat-y",
         }}
       >
         {!collectionVideo && store.collectionBackgroundImage && (
           <>
-            <img
+            <span
               className="collection-background-image"
-              src={store.collectionBackgroundImage}
-              alt=""
+              style={{ backgroundImage: `url(${store.collectionBackgroundImage})` }}
               aria-hidden="true"
-              loading="eager"
-              fetchPriority="high"
-              decoding="async"
-            />
+            ></span>
             <span className="collection-image-overlay" aria-hidden="true"></span>
           </>
         )}
