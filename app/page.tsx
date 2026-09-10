@@ -681,6 +681,12 @@ export default function Home({
       <section
         className={`collection-stage collection-motion-${store.collectionMotion} ${collectionVideo ? "has-collection-video" : ""}`}
       >
+        {!collectionVideo && store.collectionBackgroundImage && (
+          <>
+            <span className="collection-image-layer" aria-hidden="true"></span>
+            <span className="collection-image-overlay" aria-hidden="true"></span>
+          </>
+        )}
         {collectionVideo && (
           <>
             <div className="collection-video-layer" aria-hidden="true">
@@ -702,10 +708,6 @@ export default function Home({
         )}
         <i className="collection-light light-one"></i>
         <i className="collection-light light-two"></i>
-        <div className="model-count" id="coleccion">
-          <b>{visible.length} MODELOS</b>
-          <span>Compra rápida · Atención directa</span>
-        </div>
         <section className="product-grid">
           {visible.map((p, index) => (
             <StoreProductCard
@@ -4588,9 +4590,11 @@ function AdminV2({
                         type="button"
                         className={`preview-product-button preview-button-${store.secondaryButtonStyle}`}
                         style={{
+                          "--preview-button-color": store.secondaryColor,
+                          "--preview-button-text": contrastText(store.secondaryColor),
                           background: store.secondaryColor,
                           color: contrastText(store.secondaryColor),
-                        }}
+                        } as React.CSSProperties}
                       >
                         Ver colores
                       </button>
