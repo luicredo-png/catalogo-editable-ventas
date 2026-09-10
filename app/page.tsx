@@ -683,7 +683,14 @@ export default function Home({
       >
         {!collectionVideo && store.collectionBackgroundImage && (
           <>
-            <span className="collection-image-layer" aria-hidden="true"></span>
+            <img
+              className="collection-background-image"
+              src={store.collectionBackgroundImage}
+              alt=""
+              aria-hidden="true"
+              loading="eager"
+              decoding="async"
+            />
             <span className="collection-image-overlay" aria-hidden="true"></span>
           </>
         )}
