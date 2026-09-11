@@ -1379,11 +1379,16 @@ function parseCategorySettings(value: string): CatalogType[] {
   }
 }
 function catalogTypes(products: Product[], store: Store, heroImage: string) {
-  const saved = parseCategorySettings(store.categorySettings);
+  const saved = parseCategorySettings(store.categorySettings).filter(
+    (item) => !item.key.startsWith("__"),
+  );
   const productCategories = [...new Set(products.map((p) => p.category))];
   const base = ["TODOS", ...productCategories];
-  return base.map((key) => {
-    const savedItem = saved.find((item) => item.key === key);
+  const configured = saved.length
+    ? saved
+    : base.map((key) => ({ key, label: clothingCategoryLabel(key), image: "", color: "" }));
+  return configured.map((item) => {
+    const key = item.key;
     const fallback =
       key === "TODOS"
         ? isVideoMedia(heroImage)
@@ -1392,9 +1397,9 @@ function catalogTypes(products: Product[], store: Store, heroImage: string) {
         : products.find((p) => p.category === key && p.active)?.image || "";
     return {
       key,
-      label: savedItem?.label || clothingCategoryLabel(key),
-      image: savedItem?.image || fallback,
-      color: savedItem?.color || "",
+      label: item.label || clothingCategoryLabel(key),
+      image: item.image || fallback,
+      color: item.color || "",
     };
   });
 }
@@ -4444,16 +4449,20 @@ function AdminV2({
                       )}
                     </div>
                     <label>
-                      Categoría
+                      Texto visible
                       <input
                         value={item.label}
-                        onChange={(e) => {
-                          const label = e.target.value;
-                          updateType(index, {
-                            label,
-                            key: item.key === "TODOS" ? "TODOS" : label.trim().toUpperCase(),
-                          });
-                        }}
+                        onChange={(e) => updateType(index, { label: e.target.value })}
+                      />
+                    </label>
+                    <label>
+                      Categoría que filtra
+                      <input
+                        value={item.key}
+                        disabled={item.key === "TODOS"}
+                        onChange={(e) =>
+                          updateType(index, { key: e.target.value.toUpperCase() })
+                        }
                       />
                       <small>Esta categoría aparecerá al editar los productos.</small>
                     </label>
