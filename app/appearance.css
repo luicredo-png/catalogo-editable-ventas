@@ -10,7 +10,7 @@ body main.storefront.clothing-store .clothing-category-panel{background-color:va
 @media(max-width:620px){.promo-ticker{height:50px!important}.promo-ticker span{font-size:12px!important}.flyer-product-scale{top:auto;bottom:12px;width:165px}.flyer-layer-preview .flyer-product-layer{left:16%!important;width:68%!important;height:52%!important}}
 /* En PC el lienzo queda completo y fijo; solo se desplazan los controles. */
 @media(min-width:1041px){
-  .flyer-layer-controls{max-height:calc(100vh - 44px);overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding-right:8px}
+  .flyer-layer-controls{max-height:none;overflow:visible;overscroll-behavior:auto;padding-right:0}
   .flyer-layer-preview{position:sticky!important;top:22px!important;width:auto!important;height:calc(100vh - 44px)!important;max-height:calc(100vh - 44px)!important;min-height:0!important;aspect-ratio:9/16!important}
 }
 .flyer-layer-preview{aspect-ratio:9/16!important;min-height:0!important}.flyer-product-layer{padding:0!important}.flyer-uploaded-frame{inset:0!important;width:100%!important;height:100%!important;object-fit:contain!important}
