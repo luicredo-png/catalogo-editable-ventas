@@ -679,16 +679,9 @@ export default function Home({
         <PromoTicker text={store.promoText} settings={promoAppearance} store={store} />
       )}
       <section
-        className={`collection-stage collection-motion-${store.collectionMotion} ${collectionVideo ? "has-collection-video" : ""}`}
+        className={`collection-stage collection-motion-${store.collectionMotion} ${collectionVideo ? "has-collection-video" : store.collectionBackgroundImage ? "has-collection-image" : ""}`}
         style={{
           backgroundColor: store.collectionBackgroundColor,
-          backgroundImage:
-            !collectionVideo && store.collectionBackgroundImage
-              ? `url(${store.collectionBackgroundImage})`
-              : undefined,
-          backgroundPosition: "center top",
-          backgroundSize: "100% auto",
-          backgroundRepeat: "repeat-y",
         }}
       >
         {!collectionVideo && store.collectionBackgroundImage && (
