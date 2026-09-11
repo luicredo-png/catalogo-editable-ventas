@@ -5802,13 +5802,11 @@ function FlyerStudio({
     setDownloading(true);
     setError("");
     try {
-      const canvas = document.createElement("canvas");
-      canvas.width = 1080;
-      canvas.height = 1920;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) throw new Error("canvas");
-      const assets = await prepareLayeredFlyerAssets(renderData);
-      drawLayeredFlyerFrame(ctx, assets, renderData, 1080, 1920);
+      const preview = flyerPreviewRef.current;
+      if (!preview) throw new Error("preview");
+      // Export the same rendered stage the user sees so fonts, positions,
+      // frames, overlays and responsive adjustments cannot drift apart.
+      const canvas = await captureFlyerPreview(preview);
       const blob = await new Promise<Blob | null>((resolve) =>
         canvas.toBlob(resolve, "image/jpeg", 0.95),
       );
@@ -5824,9 +5822,13 @@ function FlyerStudio({
     setDownloading(true);
     setError("");
     try {
+      const preview = flyerPreviewRef.current;
+      if (!preview) throw new Error("preview");
+      const capturedPreview = await captureFlyerPreview(preview);
       await exportLayeredFlyerMp4(
         renderData,
         `flyer-${flyerFileName(subject)}.mp4`,
+        capturedPreview,
       );
     } catch (cause) {
       setError(
