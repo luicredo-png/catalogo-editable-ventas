@@ -3421,6 +3421,23 @@ function AdminV2({
   );
   const update = (k: keyof Store, v: string | number) =>
     setStore({ ...store, [k]: v });
+  const clearDesignBackground = (
+    field: "collectionBackgroundImage" | "surfaceBackgroundImage",
+  ) => {
+    const next = { ...store, [field]: "" };
+    if (field === "surfaceBackgroundImage") next.surfaceStyle = "solid";
+    setStore(next);
+    setUseCollectionColors(
+      !next.collectionBackgroundImage && !next.surfaceBackgroundImage,
+    );
+  };
+  const useProductAsBackground = (product: Product) => {
+    const media = productGallery(product)[0]?.image || product.image;
+    if (!media) return;
+    setStore({ ...store, collectionBackgroundImage: media });
+    setUseCollectionColors(false);
+    revealCatalogPart(".collection-stage");
+  };
   const revealCatalogPart = (selector: string) => {
     requestAnimationFrame(() => {
       try {
@@ -4570,26 +4587,80 @@ function AdminV2({
                 <h2>Carga los fondos y revísalos en la vista previa</h2>
               </div>
               <div className="media-upload-actions">
-                <UploadButton
-                  label="Fondo de productos"
-                  hint="Imagen, GIF o MP4"
-                  accept="image/png,image/jpeg,image/webp,image/gif,video/mp4"
-                  disabled={uploading}
-                  change={(file) =>
-                    uploadStoreImage("collectionBackgroundImage", file)
-                  }
-                />
-                <UploadButton
-                  label="Fondo de ventanas"
-                  hint="Imagen o GIF"
-                  accept="image/png,image/jpeg,image/webp,image/gif"
-                  disabled={uploading}
-                  change={(file) =>
-                    uploadStoreImage("surfaceBackgroundImage", file)
-                  }
-                />
+                <div className="background-upload-option">
+                  <UploadButton
+                    label="Fondo de productos"
+                    hint="Imagen, GIF o MP4"
+                    accept="image/png,image/jpeg,image/webp,image/gif,video/mp4"
+                    disabled={uploading}
+                    change={(file) =>
+                      uploadStoreImage("collectionBackgroundImage", file)
+                    }
+                  />
+                  {store.collectionBackgroundImage && (
+                    <button
+                      type="button"
+                      className="remove-uploaded-background"
+                      onClick={() => clearDesignBackground("collectionBackgroundImage")}
+                    >
+                      Eliminar fondo cargado
+                    </button>
+                  )}
+                </div>
+                <div className="background-upload-option">
+                  <UploadButton
+                    label="Fondo de ventanas"
+                    hint="Imagen o GIF"
+                    accept="image/png,image/jpeg,image/webp,image/gif"
+                    disabled={uploading}
+                    change={(file) =>
+                      uploadStoreImage("surfaceBackgroundImage", file)
+                    }
+                  />
+                  {store.surfaceBackgroundImage && (
+                    <button
+                      type="button"
+                      className="remove-uploaded-background"
+                      onClick={() => clearDesignBackground("surfaceBackgroundImage")}
+                    >
+                      Eliminar fondo cargado
+                    </button>
+                  )}
+                </div>
               </div>
             </section>
+            {products.some((product) => product.active && product.image) && (
+              <section className="admin-card product-background-picker">
+                <div>
+                  <small>USAR UN PRODUCTO</small>
+                  <h2>Escoge una foto del catálogo como fondo</h2>
+                  <p>El cambio se refleja de inmediato en la vista previa.</p>
+                </div>
+                <div className="product-background-picker-grid">
+                  {products
+                    .filter((product) => product.active && product.image)
+                    .map((product) => {
+                      const media = productGallery(product)[0]?.image || product.image;
+                      return (
+                        <button
+                          type="button"
+                          key={product.id}
+                          className={store.collectionBackgroundImage === media ? "active" : ""}
+                          onClick={() => useProductAsBackground(product)}
+                        >
+                          <ProductMedia
+                            src={media}
+                            alt={product.name}
+                            loading="lazy"
+                            decoding="async"
+                          />
+                          <span>{product.name}</span>
+                        </button>
+                      );
+                    })}
+                </div>
+              </section>
+            )}
             <section className="admin-card collection-designer">
               <div className="collection-designer-head">
                 <div>
@@ -4606,7 +4677,7 @@ function AdminV2({
                       "--collection-bg": store.collectionBackgroundColor,
                       "--collection-image":
                         store.collectionBackgroundImage && !collectionVideo
-                          ? `url(${store.collectionBackgroundImage})`
+                          ? `url(${optimizedCatalogImage(store.collectionBackgroundImage)})`
                           : "none",
                       "--collection-overlay": store.collectionBackgroundImage
                         ? store.collectionOverlayStrength
