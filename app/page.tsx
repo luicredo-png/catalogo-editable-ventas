@@ -5582,6 +5582,7 @@ function FlyerStudio({
   const [downloading, setDownloading] = useState(false);
   const [aiGenerating, setAiGenerating] = useState(false);
   const [cutoutStatus, setCutoutStatus] = useState("");
+  const [cutoutEditorOpen, setCutoutEditorOpen] = useState(false);
   const [error, setError] = useState("");
   const flyerPreviewRef = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -5744,35 +5745,33 @@ function FlyerStudio({
       return setError("Primero elige una foto del artículo.");
     setAiGenerating(true);
     setError("");
-    setCutoutStatus("La IA está analizando el producto…");
+    setCutoutStatus("Quitando el fondo sin modificar el producto…");
     try {
-      let png = "";
-      try {
-        setCutoutStatus("La IA está reconstruyendo el producto…");
-        const form = new FormData();
-        form.append("prompt", `Study the reference image carefully and recreate only the exact sellable product: ${subject}. Isolate one complete garment, shirt, shoe or accessory, showing its full silhouette without cropping. Remove every person, face, skin, hair, hand, body, mannequin, hanger, furniture, floor, shadow, scenery and unrelated object. Preserve the product's real shape, proportions, colors, print, logo, lettering, seams and fabric texture exactly; do not redesign it and do not invent details. Center the single product with generous empty padding on a perfectly flat pure white #FFFFFF background. No gradient, no floor, no cast shadow, no reflection, no text outside the product, no watermark and no extra object.`);
-        const reference = await flyerReferenceFile(catalogImages[0], 0);
-        form.append("input_image_0", reference, reference.name);
-        const response = await fetch("/api/ai-flyer", {
-          method: "POST", headers: { "x-flyer-code": "MODA-4827" }, body: form,
-        });
-        const result = await response.json() as { image?: string };
-        if (!response.ok || !result.image) throw new Error("product_isolation_failed");
-        setCutoutStatus("Creando transparencia real…");
-        png = await removeBackgroundByEdgesLocally(result.image);
-      } catch {
-        setCutoutStatus("IA no disponible; probando recorte local…");
-        png = await removeBackgroundByEdgesLocally(catalogImages[0]);
+      const image = await flyerOriginalFile(catalogImages[0]);
+      const form = new FormData();
+      form.append("image_file", image, image.name);
+      const response = await fetch("/api/remove-background", {
+        method: "POST",
+        body: form,
+      });
+      if (!response.ok) {
+        const result = (await response.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        throw new Error(result.error || "cutout_failed");
       }
+      const png = await blobAsDataUrl(await response.blob());
       setProductLayer(png);
       setShowProduct(true);
-      setCutoutStatus("Producto sin fondo listo");
+      setCutoutStatus("Producto recortado sin alterar la foto");
     } catch (cause) {
       const code = cause instanceof Error ? cause.message : "";
       setError(
-        code === "no_person_detected"
-          ? "No detecté el producto completo. Prueba otra foto con el polo o zapatilla visible."
-          : "No se pudo separar el producto en esta foto. Prueba una toma con el producto más visible.",
+        code === "photoroom_not_configured"
+          ? "El recorte profesional necesita activar la clave de PhotoRoom. Mientras tanto puedes usar “Retocar manualmente”."
+          : code === "photoroom_limit_reached"
+            ? "Se agotó el saldo de recortes. Recarga PhotoRoom o usa “Retocar manualmente”."
+            : "No se pudo quitar el fondo automáticamente. Usa “Retocar manualmente” para terminarlo sin alterar la foto.",
       );
       setCutoutStatus("");
     } finally {
@@ -6030,8 +6029,8 @@ function FlyerStudio({
           <header>
             <b>2. Artículo</b>
             <span>
-              Usa una foto del catálogo, sube tu PNG o deja que la IA quite el
-              fondo.
+              Usa una foto del catálogo, sube tu PNG o quita el fondo sin
+              recrear el producto.
             </span>
           </header>
           <div className="flyer-product-visibility" role="group" aria-label="Mostrar artículo">
@@ -6133,13 +6132,20 @@ function FlyerStudio({
             >
               {aiGenerating
                 ? cutoutStatus || "Quitando fondo…"
-                : "✦ IA: generar producto sin fondo"}
+                : "Quitar fondo automáticamente"}
             </button>
             <small>
-              La IA mira la foto, copia únicamente el producto y genera una capa
-              PNG sin el fondo original. El fondo y los textos del flyer no cambian.
+              Recorta la fotografía original y crea un PNG transparente. No
+              vuelve a dibujar la prenda ni modifica sus estampados.
             </small>
             <div className="cutout-alternatives">
+              <button
+                type="button"
+                disabled={aiGenerating || downloading || !catalogImages[0]}
+                onClick={() => setCutoutEditorOpen(true)}
+              >
+                Retocar manualmente
+              </button>
               <button
                 type="button"
                 disabled={aiGenerating || downloading}
@@ -6161,8 +6167,8 @@ function FlyerStudio({
               </button>
             </div>
             <small>
-              Si el recorte automático elimina demasiado, usa el recorte seguro,
-              conserva la foto completa o sube tu propio PNG desde “Subir artículo”.
+              En el retoque manual puedes borrar, recuperar, deshacer y ajustar
+              el tamaño del pincel antes de aplicar el PNG.
             </small>
           </div>
         </section>
@@ -6556,6 +6562,229 @@ function FlyerStudio({
           <small>PRECIO</small>
           <strong>S/ {product?.price || ""}</strong>
         </div>
+      </section>
+      {cutoutEditorOpen && catalogImages[0] && (
+        <CutoutRetouchDialog
+          source={productLayer || catalogImages[0]}
+          originalSource={catalogImages[0]}
+          close={() => setCutoutEditorOpen(false)}
+          apply={(png) => {
+            setProductLayer(png);
+            setShowProduct(true);
+            setCutoutStatus("Retoque aplicado");
+            setError("");
+            setCutoutEditorOpen(false);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function CutoutRetouchDialog({
+  source,
+  originalSource,
+  close,
+  apply,
+}: {
+  source: string;
+  originalSource: string;
+  close: () => void;
+  apply: (png: string) => void;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const originalCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const initialImageRef = useRef<ImageData | null>(null);
+  const historyRef = useRef<ImageData[]>([]);
+  const lastPointRef = useRef<{ x: number; y: number } | null>(null);
+  const [tool, setTool] = useState<"erase" | "restore">("erase");
+  const [brushSize, setBrushSize] = useState(48);
+  const [loading, setLoading] = useState(true);
+  const [editorError, setEditorError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [current, original] = await Promise.all([
+          flyerBitmap(source),
+          flyerBitmap(originalSource),
+        ]);
+        if (cancelled) {
+          current.close();
+          original.close();
+          return;
+        }
+        const canvas = canvasRef.current;
+        if (!canvas) throw new Error("canvas");
+        const limit = 1400;
+        const scale = Math.min(1, limit / Math.max(current.width, current.height));
+        canvas.width = Math.max(1, Math.round(current.width * scale));
+        canvas.height = Math.max(1, Math.round(current.height * scale));
+        const context = canvas.getContext("2d", { willReadFrequently: true });
+        if (!context) throw new Error("canvas");
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(current, 0, 0, canvas.width, canvas.height);
+        const originalCanvas = document.createElement("canvas");
+        originalCanvas.width = canvas.width;
+        originalCanvas.height = canvas.height;
+        originalCanvas
+          .getContext("2d")
+          ?.drawImage(original, 0, 0, canvas.width, canvas.height);
+        originalCanvasRef.current = originalCanvas;
+        initialImageRef.current = context.getImageData(
+          0,
+          0,
+          canvas.width,
+          canvas.height,
+        );
+        historyRef.current = [];
+        current.close();
+        original.close();
+        setLoading(false);
+      } catch {
+        if (!cancelled) {
+          setEditorError("No se pudo abrir esta imagen para retocarla.");
+          setLoading(false);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [source, originalSource]);
+
+  function pointFor(event: React.PointerEvent<HTMLCanvasElement>) {
+    const canvas = event.currentTarget;
+    const bounds = canvas.getBoundingClientRect();
+    return {
+      x: ((event.clientX - bounds.left) * canvas.width) / bounds.width,
+      y: ((event.clientY - bounds.top) * canvas.height) / bounds.height,
+    };
+  }
+
+  function paintBetween(
+    canvas: HTMLCanvasElement,
+    from: { x: number; y: number },
+    to: { x: number; y: number },
+  ) {
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    if (!context) return;
+    const radius = Math.max(3, (brushSize * canvas.width) / 1100 / 2);
+    const distance = Math.hypot(to.x - from.x, to.y - from.y);
+    const steps = Math.max(1, Math.ceil(distance / Math.max(2, radius / 2)));
+    for (let index = 0; index <= steps; index += 1) {
+      const ratio = index / steps;
+      const x = from.x + (to.x - from.x) * ratio;
+      const y = from.y + (to.y - from.y) * ratio;
+      context.save();
+      context.beginPath();
+      context.arc(x, y, radius, 0, Math.PI * 2);
+      context.clip();
+      if (tool === "erase") {
+        context.globalCompositeOperation = "destination-out";
+        context.fillStyle = "#000";
+        context.fillRect(x - radius, y - radius, radius * 2, radius * 2);
+      } else if (originalCanvasRef.current) {
+        context.globalCompositeOperation = "source-over";
+        context.drawImage(originalCanvasRef.current, 0, 0);
+      }
+      context.restore();
+    }
+  }
+
+  function startStroke(event: React.PointerEvent<HTMLCanvasElement>) {
+    if (loading) return;
+    const canvas = event.currentTarget;
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    if (!context) return;
+    historyRef.current = [
+      ...historyRef.current.slice(-4),
+      context.getImageData(0, 0, canvas.width, canvas.height),
+    ];
+    const point = pointFor(event);
+    lastPointRef.current = point;
+    canvas.setPointerCapture(event.pointerId);
+    paintBetween(canvas, point, point);
+  }
+
+  function continueStroke(event: React.PointerEvent<HTMLCanvasElement>) {
+    if (!event.currentTarget.hasPointerCapture(event.pointerId)) return;
+    const point = pointFor(event);
+    if (lastPointRef.current)
+      paintBetween(event.currentTarget, lastPointRef.current, point);
+    lastPointRef.current = point;
+  }
+
+  function finishStroke(event: React.PointerEvent<HTMLCanvasElement>) {
+    lastPointRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId))
+      event.currentTarget.releasePointerCapture(event.pointerId);
+  }
+
+  function undo() {
+    const canvas = canvasRef.current;
+    const previous = historyRef.current.pop();
+    const context = canvas?.getContext("2d");
+    if (canvas && previous && context) context.putImageData(previous, 0, 0);
+  }
+
+  function reset() {
+    const canvas = canvasRef.current;
+    const initial = initialImageRef.current;
+    const context = canvas?.getContext("2d");
+    if (canvas && initial && context) {
+      historyRef.current = [];
+      context.putImageData(initial, 0, 0);
+    }
+  }
+
+  return (
+    <div className="cutout-editor-backdrop" role="dialog" aria-modal="true" aria-label="Retocar fondo del producto">
+      <section className="cutout-editor-dialog">
+        <header>
+          <div>
+            <small>RETOQUE DEL PRODUCTO</small>
+            <h2>Borra o recupera el fondo</h2>
+          </div>
+          <button type="button" onClick={close} aria-label="Cerrar">×</button>
+        </header>
+        <div className="cutout-editor-toolbar">
+          <div role="group" aria-label="Herramienta">
+            <button type="button" className={tool === "erase" ? "active" : ""} onClick={() => setTool("erase")}>Borrar</button>
+            <button type="button" className={tool === "restore" ? "active" : ""} onClick={() => setTool("restore")}>Recuperar</button>
+          </div>
+          <label>
+            Pincel <output>{brushSize}</output>
+            <input type="range" min="12" max="140" value={brushSize} onChange={(event) => setBrushSize(Number(event.target.value))} />
+          </label>
+          <button type="button" onClick={undo}>Deshacer</button>
+          <button type="button" onClick={reset}>Restablecer</button>
+        </div>
+        <div className="cutout-editor-canvas-wrap">
+          {loading && <span>Preparando imagen…</span>}
+          <canvas
+            ref={canvasRef}
+            onPointerDown={startStroke}
+            onPointerMove={continueStroke}
+            onPointerUp={finishStroke}
+            onPointerCancel={finishStroke}
+          />
+        </div>
+        {editorError && <p className="upload-error">{editorError}</p>}
+        <footer>
+          <button type="button" onClick={close}>Cancelar</button>
+          <button
+            type="button"
+            disabled={loading || Boolean(editorError)}
+            onClick={() => {
+              const canvas = canvasRef.current;
+              if (canvas) apply(canvas.toDataURL("image/png"));
+            }}
+          >
+            Aplicar PNG transparente
+          </button>
+        </footer>
       </section>
     </div>
   );
@@ -7127,6 +7356,24 @@ function flyerFileName(value: string) {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "") || "catalogo"
   );
+}
+async function flyerOriginalFile(url: string) {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error("invalid_image");
+  const blob = await response.blob();
+  const type = ["image/png", "image/jpeg", "image/webp"].includes(blob.type)
+    ? blob.type
+    : "image/jpeg";
+  const extension = type === "image/png" ? "png" : type === "image/webp" ? "webp" : "jpg";
+  return new File([blob], `producto.${extension}`, { type });
+}
+function blobAsDataUrl(blob: Blob) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("invalid_image"));
+    reader.readAsDataURL(blob);
+  });
 }
 function downloadFlyerBlob(blob: Blob, name: string) {
   const link = document.createElement("a");
