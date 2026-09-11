@@ -5710,6 +5710,23 @@ function FlyerStudio({
     setBackgroundKind(item.kind);
     setShowColors(false);
   }
+  function removeCustomBackground(url: string) {
+    const next = customBackgrounds.filter((item) => item.url !== url);
+    setCustomBackgrounds(next);
+    localStorage.setItem("flyer-background-library", JSON.stringify(next));
+    if (background === url) {
+      const fallback = flyerBackgroundLibrary[0];
+      setBackground(fallback.url);
+      setBackgroundKind(fallback.kind);
+    }
+  }
+  function chooseProductAsFlyerBackground(product: Product) {
+    const media = productGallery(product)[0]?.image || product.image;
+    if (!media) return;
+    setBackground(media);
+    setBackgroundKind(isVideoMedia(media) ? "video" : "image");
+    setShowColors(false);
+  }
   function applyColorPreset(preset: (typeof flyerColorPresets)[number]) {
     setSolidColor(preset.solid);
     setColorA(preset.a);
@@ -5860,28 +5877,67 @@ function FlyerStudio({
             </button>
           </div>
           <div className="flyer-background-gallery">
-            {allBackgrounds.map((item, index) => (
-              <button
-                type="button"
-                className={
-                  backgroundKind !== "color" && background === item.url
-                    ? "active"
-                    : ""
-                }
-                onClick={() => chooseBackground(item)}
-                key={`${item.url}-${index}`}
-              >
-                <span>
-                  {item.kind === "video" ? (
-                    <video src={item.url} muted loop playsInline />
-                  ) : (
-                    <img src={item.url} alt="" />
+            {allBackgrounds.map((item, index) => {
+              const custom = customBackgrounds.some((saved) => saved.url === item.url);
+              return (
+                <div className="flyer-background-entry" key={`${item.url}-${index}`}>
+                  <button
+                    type="button"
+                    className={`flyer-background-choice${
+                      backgroundKind !== "color" && background === item.url
+                        ? " active"
+                        : ""
+                    }`}
+                    onClick={() => chooseBackground(item)}
+                  >
+                    <span>
+                      {item.kind === "video" ? (
+                        <video src={item.url} muted loop playsInline />
+                      ) : (
+                        <img src={item.url} alt="" loading="lazy" decoding="async" />
+                      )}
+                    </span>
+                    <b>{item.name}</b>
+                    <small>{item.kind === "video" ? "MP4" : "Fondo"}</small>
+                  </button>
+                  {custom && (
+                    <button
+                      type="button"
+                      className="flyer-remove-background"
+                      aria-label={`Eliminar ${item.name}`}
+                      onClick={() => removeCustomBackground(item.url)}
+                    >
+                      ×
+                    </button>
                   )}
-                </span>
-                <b>{item.name}</b>
-                <small>{item.kind === "video" ? "MP4" : "Fondo"}</small>
-              </button>
-            ))}
+                </div>
+              );
+            })}
+          </div>
+          <div className="flyer-product-background-heading">
+            <b>Usar un producto como fondo</b>
+            <span>Escoge una foto ya cargada en tu catálogo.</span>
+          </div>
+          <div className="flyer-product-background-gallery">
+            {activeProducts.map((item) => {
+              const media = productGallery(item)[0]?.image || item.image;
+              if (!media) return null;
+              return (
+                <button
+                  type="button"
+                  key={item.id}
+                  className={
+                    backgroundKind !== "color" && background === media
+                      ? "active"
+                      : ""
+                  }
+                  onClick={() => chooseProductAsFlyerBackground(item)}
+                >
+                  <ProductMedia src={media} alt={item.name} loading="lazy" decoding="async" />
+                  <span>{item.name}</span>
+                </button>
+              );
+            })}
           </div>
           {showColors && (
             <div className="flyer-color-drawer">

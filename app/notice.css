@@ -532,3 +532,14 @@ body main.storefront .store-product-info p>b{display:block;white-space:nowrap;li
 .preview-sizes>small{color:var(--accent);font-size:9px;font-weight:900;letter-spacing:.14em}
 .preview-sizes>div{display:flex;flex-wrap:wrap;gap:6px}
 .preview-sizes span{padding:5px 9px;border:1px solid color-mix(in srgb,var(--accent),transparent 55%);border-radius:999px;color:var(--store-text);font-size:10px;font-weight:800;background:color-mix(in srgb,var(--accent),transparent 88%)}
+
+/* Biblioteca editable de fondos dentro del creador de flyers. */
+.flyer-background-entry{position:relative;min-width:0}
+.flyer-background-entry>.flyer-background-choice{width:100%;height:100%}
+.flyer-background-gallery .flyer-remove-background{position:absolute;z-index:3;top:4px;right:4px;width:23px;height:23px;min-height:0;display:grid;place-items:center;padding:0;border:1px solid #ffb2b8;border-radius:999px;background:#fff1f2;color:#c8202d;font-size:16px;font-weight:900;line-height:1;box-shadow:0 4px 10px #38101633}
+.flyer-product-background-heading{display:grid;gap:2px;padding-top:4px}.flyer-product-background-heading b{font-size:10px}.flyer-product-background-heading span{color:#718094;font-size:8px}
+.flyer-product-background-gallery{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px;scrollbar-width:thin}
+.flyer-product-background-gallery button{flex:0 0 104px;display:grid;gap:6px;padding:6px;border:1px solid #d4deea;border-radius:10px;background:#fff;color:#263548;text-align:left}
+.flyer-product-background-gallery button.active{border-color:#168cff;box-shadow:0 0 0 3px #168cff24;background:#eef7ff}
+.flyer-product-background-gallery img,.flyer-product-background-gallery video{width:100%;height:72px;object-fit:cover;border-radius:7px!important;background:#0d1520}
+.flyer-product-background-gallery span{overflow:hidden;font-size:8px;font-weight:850;text-overflow:ellipsis;white-space:nowrap}
