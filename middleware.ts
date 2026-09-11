@@ -15,7 +15,16 @@ export async function middleware(request: NextRequest) {
   const privateRoute = (pathname.startsWith('/api/') && !publicRead && !selfAuthorizedApi) ||
     pathname === '/inventario' || pathname.startsWith('/inventario/') ||
     (hostname === 'creador.xn--micatlogo-41a.shop' && pathname === '/');
-  if (!privateRoute) return NextResponse.next();
+  if (!privateRoute) {
+    const response = NextResponse.next();
+    if (hostname === 'gmpaonyx.xn--micatlogo-41a.shop' && pathname === '/') {
+      response.headers.set('Link','</gmpaonyx-collection-background.webp>; rel=preload; as=image; type=image/webp; fetchpriority=high');
+    }
+    if (pathname === '/gmpaonyx-collection-background.webp') {
+      response.headers.set('Cache-Control','public, max-age=31536000, immutable');
+    }
+    return response;
+  }
   const admin = await authorize(request, env);
   if (admin instanceof Response) {
     if (!pathname.startsWith('/api/') && admin.status === 401) return NextResponse.redirect(new URL('/login',request.url));

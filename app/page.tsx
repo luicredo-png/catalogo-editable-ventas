@@ -204,6 +204,8 @@ export default function Home({
     setCatalogLoading(true);
     const tenantSlug = customerSubdomain(location.hostname);
     setSingleCatalog(Boolean(tenantSlug));
+    if (tenantSlug === "gmpaonyx")
+      prioritizeImage("/gmpaonyx-collection-background.webp");
     const slug =
       tenantSlug ||
       new URLSearchParams(location.search).get("tienda") ||
@@ -752,7 +754,7 @@ export default function Home({
               product={p}
               isFood={isFood}
               template={activeTemplate}
-              priority={index < 4}
+              priority={index === 0}
               open={() => setSelected(p)}
               cartEnabled={cartEnabled}
               addToCart={() => addToCart(p)}
@@ -1799,13 +1801,23 @@ function ProductOrderModal({
     .map((g) => `${g.name}: ${optionLabel(choices[g.name] || "Sin selección")}`)
     .join("\n");
   const fallbackMessage = `Hola, quiero pedir {producto}.\n{opciones}\nPrecio: S/ {precio}\nCatálogo: {catalogo}`;
+  const clothingMessage = `Hola 👋🔥 quiero pedir {producto}. Mi talla es: {talla} ✅\nDeseo confirmar disponibilidad y realizar mi compra.\nCatálogo: {catalogo}`;
+  const sizeGroup = visibleGroups.find((group) =>
+    group.name.toLowerCase().includes("talla"),
+  );
+  const selectedSize = sizeGroup
+    ? optionLabel(choices[sizeGroup.name] || "Sin selección")
+    : "Sin selección";
   const catalogUrl = readableCatalogUrl(template);
   const message = (
-    store.whatsappMessage?.trim() ||
-    product.whatsappMessage?.trim() ||
-    fallbackMessage
+    template === "ropa"
+      ? clothingMessage
+      : store.whatsappMessage?.trim() ||
+        product.whatsappMessage?.trim() ||
+        fallbackMessage
   )
     .replaceAll("{producto}", product.name)
+    .replaceAll("{talla}", selectedSize)
     .replaceAll("{precio}", String(product.price))
     .replaceAll("{opciones}", details)
     .replaceAll("{catalogo}", catalogUrl);
@@ -4997,7 +5009,7 @@ function AdminV2({
                 placeholder="Hola, quiero pedir {producto}."
               />
               <small>
-                Puedes usar: {"{producto}"}, {"{opciones}"}, {"{precio}"} y{" "}
+                Puedes usar: {"{producto}"}, {"{talla}"}, {"{opciones}"}, {"{precio}"} y{" "}
                 {"{catalogo}"}.
               </small>
             </label>
