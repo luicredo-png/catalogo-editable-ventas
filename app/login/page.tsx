@@ -1,16 +1,17 @@
 'use client';
-import {useState,type FormEvent} from 'react';
+import {useEffect,useState,type FormEvent} from 'react';
 export default function Login(){
- const [error,setError]=useState(''),[busy,setBusy]=useState(false);
- async function submit(event:FormEvent<HTMLFormElement>){event.preventDefault();setBusy(true);setError('');const form=new FormData(event.currentTarget);try{const response=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({identifier:form.get('identifier'),password:form.get('password')})});if(!response.ok){setError(response.status===503?'Falta configurar el acceso seguro. Contacta al propietario.':response.status===429?'Demasiados intentos. Espera 15 minutos.':'Usuario o contraseña incorrectos.');return}const requested=new URLSearchParams(location.search).get('next')||'/admin';const next=requested.startsWith('/')&&!requested.startsWith('//')?requested:'/admin';location.replace(next)}catch{setError('No se pudo conectar. Inténtalo nuevamente.')}finally{setBusy(false)}}
+ const [error,setError]=useState(''),[busy,setBusy]=useState(false),[tenantSlug,setTenantSlug]=useState('');
+ useEffect(()=>{const match=location.hostname.toLowerCase().match(/^([a-z0-9][a-z0-9-]{1,43}[a-z0-9])\.xn--micatlogo-41a\.shop$/);if(match&&!['www','creador'].includes(match[1]))setTenantSlug(match[1])},[]);
+ async function submit(event:FormEvent<HTMLFormElement>){event.preventDefault();setBusy(true);setError('');const form=new FormData(event.currentTarget);try{const response=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({identifier:tenantSlug||form.get('identifier'),password:form.get('password')})});if(!response.ok){setError(response.status===503?'Falta configurar el acceso seguro. Contacta al propietario.':response.status===429?'Demasiados intentos. Espera 15 minutos.':'Contraseña incorrecta.');return}const requested=new URLSearchParams(location.search).get('next')||'/admin';const next=requested.startsWith('/')&&!requested.startsWith('//')?requested:'/admin';location.replace(next)}catch{setError('No se pudo conectar. Inténtalo nuevamente.')}finally{setBusy(false)}}
  return <main className="login-page">
   <form className="shine-login-card" onSubmit={submit}>
    <div className="login-heading">
     <small>ACCESO SEGURO</small>
     <h1>Administrar mi catálogo</h1>
-    <p>Ingresa con el usuario y la contraseña de tu catálogo.</p>
+    <p>{tenantSlug?'Ingresa con la contraseña creada para este catálogo.':'Ingresa con el usuario y la contraseña de tu catálogo.'}</p>
    </div>
-   <label>Usuario<input name="identifier" type="text" autoComplete="username" placeholder="Tu usuario" required /></label>
+   {tenantSlug?<input name="identifier" type="hidden" value={tenantSlug}/>:<label>Usuario<input name="identifier" type="text" autoComplete="username" placeholder="Tu usuario" required /></label>}
    <label>Contraseña<input name="password" type="password" autoComplete="current-password" placeholder="Tu contraseña" required maxLength={128}/></label>
    <p className="login-error" role="alert">{error}</p>
    <button disabled={busy}>{busy?'Ingresando…':'Iniciar sesión'}</button>
