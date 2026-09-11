@@ -7,7 +7,11 @@ export async function POST(request: Request) {
   const admin = await authorize(request, env);
   if (admin instanceof Response) return admin;
 
-  const apiKey = String(env.PHOTOROOM_API_KEY || "").trim();
+  // Keep compatibility with the label already used in the production
+  // Cloudflare dashboard while preferring the documented variable name.
+  const apiKey = String(
+    env.PHOTOROOM_API_KEY || env.CLAVE_API_DE_FOTOROOM || "",
+  ).trim();
   if (!apiKey) return privateError(503, "photoroom_not_configured");
 
   try {

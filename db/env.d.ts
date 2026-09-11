@@ -6,5 +6,6 @@ declare namespace Cloudflare {
     CLOUDFLARE_FLYER_SECRET: string;
     FLYER_ACCESS_CODE: string;
     PHOTOROOM_API_KEY: string;
+    CLAVE_API_DE_FOTOROOM: string;
   }
 }
