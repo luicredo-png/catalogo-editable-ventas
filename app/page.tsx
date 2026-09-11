@@ -5774,6 +5774,7 @@ function FlyerStudio({
             : "No se pudo quitar el fondo automáticamente. Usa “Retocar manualmente” para terminarlo sin alterar la foto.",
       );
       setCutoutStatus("");
+      setCutoutEditorOpen(true);
     } finally {
       setAiGenerating(false);
     }
@@ -5850,7 +5851,7 @@ function FlyerStudio({
           <small>CREADOR DE FLYERS POR CAPAS</small>
           <h2>Fondo + artículo PNG + texto</h2>
           <p>
-            La IA solo prepara el artículo del catálogo como PNG. El diseño
+            El recorte conserva la fotografía original como PNG. El diseño
             completo lo controlas tú.
           </p>
         </div>
@@ -6533,7 +6534,7 @@ function FlyerStudio({
         {(productImage || aiGenerating) && (
           <div className="flyer-product-layer">
             {productImage && <img src={productImage} alt={subject} />}
-            {aiGenerating && <span>GENERANDO PRODUCTO SIN FONDO…</span>}
+            {aiGenerating && <span>QUITANDO FONDO DEL PRODUCTO…</span>}
           </div>
         )}
         {frameStyle === "uploaded" && frameImage && (
