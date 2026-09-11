@@ -18,6 +18,9 @@ const catalogMenuItems: { key: TemplateKey; label: string }[] = [
   { key: "accesorios", label: "Accesorios" },
 ];
 
+const CLOTHING_WHATSAPP_MESSAGE =
+  "Hola 👋🔥 quiero pedir {producto}. Mi talla es: {talla} ✅\nDeseo confirmar disponibilidad y realizar mi compra.\nCatálogo: {catalogo}";
+
 function customerSubdomain(hostname: string) {
   const host = hostname.toLowerCase().replace(/:\d+$/, "");
   const base = host.endsWith(".xn--micatlogo-41a.shop") ? "xn--micatlogo-41a.shop" : "micatalago.shop";
@@ -34,6 +37,11 @@ function readableCatalogUrl(template: TemplateKey) {
   if (typeof location === "undefined") return catalogPath(template);
   const path = customerSubdomain(location.hostname) ? "/" : catalogPath(template);
   return `${readableCatalogOrigin(location.origin)}${path}`;
+}
+
+function whatsappOrderUrl(phone: string, message: string) {
+  const digits = phone.replace(/\D/g, "");
+  return `https://api.whatsapp.com/send?phone=${digits}&text=${encodeURIComponent(message)}`;
 }
 
 function optimizedCatalogImage(src: string) {
@@ -831,11 +839,14 @@ function normalizeStore(s: Record<string, unknown>): Store {
     templateKey,
     name: String(s.name || "MODO"),
     whatsapp: String(s.whatsapp || "51999999999"),
-    whatsappMessage: String(
-      s.whatsapp_message ||
-        s.whatsappMessage ||
-        "Hola, quiero pedir {producto}.\n{opciones}\nPrecio: S/ {precio}\nCatálogo: {catalogo}",
-    ),
+    whatsappMessage:
+      templateKey === "ropa"
+        ? CLOTHING_WHATSAPP_MESSAGE
+        : String(
+            s.whatsapp_message ||
+              s.whatsappMessage ||
+              "Hola, quiero pedir {producto}.\n{opciones}\nPrecio: S/ {precio}\nCatálogo: {catalogo}",
+          ),
     instagram: String(s.instagram || ""),
     facebook: String(s.facebook || ""),
     slug: String(s.slug || ""),
@@ -1660,7 +1671,7 @@ function CartModal({ items, store, close, change }: { items: CartItem[]; store: 
         <button className="cart-remove" onClick={() => change(items.filter((entry) => entry.product.id !== item.product.id))}>×</button>
       </div>)}
       <strong className="cart-total">Total: S/ {total.toFixed(2)}</strong>
-      {!!items.length && <a className="whatsapp-glow" href={`https://wa.me/${store.whatsapp}?text=${encodeURIComponent(message)}`} target="_blank" rel="noreferrer"><img src="/whatsapp.png" alt="" /><span>FINALIZAR POR WHATSAPP</span></a>}
+      {!!items.length && <a className="whatsapp-glow" href={whatsappOrderUrl(store.whatsapp, message)} target="_blank" rel="noreferrer"><img src="/whatsapp.png" alt="" /><span>FINALIZAR POR WHATSAPP</span></a>}
     </aside>
   </div>;
 }
@@ -1801,7 +1812,6 @@ function ProductOrderModal({
     .map((g) => `${g.name}: ${optionLabel(choices[g.name] || "Sin selección")}`)
     .join("\n");
   const fallbackMessage = `Hola, quiero pedir {producto}.\n{opciones}\nPrecio: S/ {precio}\nCatálogo: {catalogo}`;
-  const clothingMessage = `Hola 👋🔥 quiero pedir {producto}. Mi talla es: {talla} ✅\nDeseo confirmar disponibilidad y realizar mi compra.\nCatálogo: {catalogo}`;
   const sizeGroup = visibleGroups.find((group) =>
     group.name.toLowerCase().includes("talla"),
   );
@@ -1811,7 +1821,7 @@ function ProductOrderModal({
   const catalogUrl = readableCatalogUrl(template);
   const message = (
     template === "ropa"
-      ? clothingMessage
+      ? CLOTHING_WHATSAPP_MESSAGE
       : store.whatsappMessage?.trim() ||
         product.whatsappMessage?.trim() ||
         fallbackMessage
@@ -1916,7 +1926,7 @@ function ProductOrderModal({
           </div>}
           <a
             className="whatsapp-glow"
-            href={`https://wa.me/${store.whatsapp}?text=${encodeURIComponent(message)}`}
+            href={whatsappOrderUrl(store.whatsapp, message)}
             target="_blank"
           >
             <img src={template === "ropa" ? "/whatsapp-revolt.svg" : "/whatsapp.png"} alt="" />
