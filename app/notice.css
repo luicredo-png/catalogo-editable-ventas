@@ -346,7 +346,7 @@ body main.storefront .collection-stage img.collection-background,body main.store
    imagen o el overlay al desplazarse por una grilla larga. */
 .has-collection-image{clip-path:inset(0)}
 .collection-background-image,.collection-image-overlay{position:fixed;inset:0;display:block;width:100vw;height:100vh;pointer-events:none}
-.collection-background-image{z-index:0;background-position:center center;background-size:cover;background-repeat:no-repeat;transform:translateZ(0)}
+.collection-background-image{z-index:0;object-fit:cover;object-position:center center;transform:translateZ(0)}
 .collection-image-overlay{z-index:1;background:rgba(3,7,12,var(--collection-overlay))}
 
 /* Todos los diseños del botón respetan el color elegido, incluso plata y oscuro. */

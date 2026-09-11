@@ -26,6 +26,30 @@ function customerSubdomain(hostname: string) {
   return subdomain && subdomain !== "www" && subdomain !== "creador" ? subdomain : "";
 }
 
+function readableCatalogOrigin(origin: string) {
+  return origin.replace(/xn--micatlogo-41a\.shop/gi, "micatálogo.shop");
+}
+
+function readableCatalogUrl(template: TemplateKey) {
+  if (typeof location === "undefined") return catalogPath(template);
+  const path = customerSubdomain(location.hostname) ? "/" : catalogPath(template);
+  return `${readableCatalogOrigin(location.origin)}${path}`;
+}
+
+function optimizedCatalogImage(src: string) {
+  return src === "/api/media/asset-public-53f33276-cfee-4884-b3a1-402b280d1c4e.png"
+    ? "/gmpaonyx-collection-background.webp"
+    : src;
+}
+
+function prioritizeImage(src: string) {
+  if (!src || isVideoMedia(src) || typeof Image === "undefined") return;
+  const image = new Image();
+  image.fetchPriority = "high";
+  image.decoding = "async";
+  image.src = optimizedCatalogImage(src);
+}
+
 type OptionGroup = { name: string; values: string[] };
 type Product = {
   id: number;
@@ -198,6 +222,7 @@ export default function Home({
         Date.now() - Number(cached.savedAt || 0) < 5 * 60 * 1000
       ) {
         const next = normalizeStore(cached.store);
+        prioritizeImage(next.collectionBackgroundImage);
         setProducts(cached.products);
         setStore(next);
         setActiveTemplate(next.templateKey);
@@ -214,8 +239,9 @@ export default function Home({
       .then((d) => {
         if (!mounted) return;
         if (previewOverrideRef.current) return;
-        setProducts(d.products);
         const next = normalizeStore(d.store);
+        prioritizeImage(next.collectionBackgroundImage);
+        setProducts(d.products);
         setStore(next);
         setActiveTemplate(next.templateKey);
         try {
@@ -368,7 +394,7 @@ export default function Home({
     "--collection-bg": store.collectionBackgroundColor,
     "--collection-image":
       store.collectionBackgroundImage && !collectionVideo
-        ? `url(${store.collectionBackgroundImage})`
+        ? `url(${optimizedCatalogImage(store.collectionBackgroundImage)})`
         : "none",
     "--collection-overlay": store.collectionBackgroundImage
       ? store.collectionOverlayStrength
@@ -686,11 +712,15 @@ export default function Home({
       >
         {!collectionVideo && store.collectionBackgroundImage && (
           <>
-            <span
+            <img
               className="collection-background-image"
-              style={{ backgroundImage: `url(${store.collectionBackgroundImage})` }}
+              src={optimizedCatalogImage(store.collectionBackgroundImage)}
+              alt=""
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
               aria-hidden="true"
-            ></span>
+            />
             <span className="collection-image-overlay" aria-hidden="true"></span>
           </>
         )}
@@ -1769,10 +1799,7 @@ function ProductOrderModal({
     .map((g) => `${g.name}: ${optionLabel(choices[g.name] || "Sin selección")}`)
     .join("\n");
   const fallbackMessage = `Hola, quiero pedir {producto}.\n{opciones}\nPrecio: S/ {precio}\nCatálogo: {catalogo}`;
-  const catalogUrl =
-    typeof location === "undefined"
-      ? catalogPath(template)
-      : `${location.origin}${catalogPath(template)}`;
+  const catalogUrl = readableCatalogUrl(template);
   const message = (
     store.whatsappMessage?.trim() ||
     product.whatsappMessage?.trim() ||
@@ -2721,7 +2748,7 @@ function Admin({
                   type="button"
                   onClick={() =>
                     navigator.clipboard.writeText(
-                      `${location.origin}/admin?catalogo=${template}`,
+                      `${readableCatalogOrigin(location.origin)}/admin?catalogo=${template}`,
                     )
                   }
                 >
@@ -3208,14 +3235,14 @@ function Admin({
                 Link fijo del catálogo
                 <input
                   readOnly
-                  value={`${location.origin}${catalogPath(template)}`}
+                  value={readableCatalogUrl(template)}
                 />
               </label>
               <button
                 type="button"
                 onClick={() =>
                   navigator.clipboard.writeText(
-                    `${location.origin}${catalogPath(template)}`,
+                    readableCatalogUrl(template),
                   )
                 }
               >
@@ -3225,7 +3252,7 @@ function Admin({
                 Link fijo del administrador
                 <input
                   readOnly
-                  value={`${location.origin}/admin?catalogo=${template}`}
+                  value={`${readableCatalogOrigin(location.origin)}/admin?catalogo=${template}`}
                 />
                 <small className="field-help">
                   Editar no cambia ninguno de estos enlaces.
@@ -3235,7 +3262,7 @@ function Admin({
                 type="button"
                 onClick={() =>
                   navigator.clipboard.writeText(
-                    `${location.origin}/admin?catalogo=${template}`,
+                    `${readableCatalogOrigin(location.origin)}/admin?catalogo=${template}`,
                   )
                 }
               >
@@ -3384,10 +3411,7 @@ function AdminV2({
     });
   };
   const collectionVideo = isVideoMedia(store.collectionBackgroundImage);
-  const catalogUrl =
-    typeof window === "undefined"
-      ? catalogPath(template)
-      : `${location.origin}${catalogPath(template)}`;
+  const catalogUrl = readableCatalogUrl(template);
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=14&data=${encodeURIComponent(catalogUrl)}`;
   const typeItems = catalogTypes(
     products,
@@ -4183,7 +4207,7 @@ function AdminV2({
               <button className="admin-primary" disabled={creatingClient}>{creatingClient ? "Creando…" : "Crear cliente y subdominio"}</button>
               {clientCreateError && <p className="tenant-create-error" role="alert">{clientCreateError}</p>}
             </form>
-            <section className="admin-card tenant-list"><h2>Clientes creados</h2>{clients.map((client) => <article key={client.id}><div><b>{client.name}</b><span>{client.slug}.micatálogo.shop · {templates[client.templateKey as TemplateKey]?.label || client.templateKey}</span></div><a href={`https://${client.slug}.xn--micatlogo-41a.shop`} target="_blank">Ver catálogo</a><a href={`https://${client.slug}.xn--micatlogo-41a.shop/admin`} target="_blank">Abrir administrador</a><button type="button" className="tenant-delete" onClick={() => removeClient(client)}>Eliminar</button></article>)}</section>
+            <section className="admin-card tenant-list"><h2>Clientes creados</h2>{clients.map((client) => <article key={client.id}><div><b>{client.name}</b><span>{client.slug}.micatálogo.shop · {templates[client.templateKey as TemplateKey]?.label || client.templateKey}</span></div><a href={`https://${client.slug}.micatálogo.shop`} target="_blank">Ver catálogo</a><a href={`https://${client.slug}.micatálogo.shop/admin`} target="_blank">Abrir administrador</a><button type="button" className="tenant-delete" onClick={() => removeClient(client)}>Eliminar</button></article>)}</section>
           </section>
         )}
 

@@ -25,7 +25,7 @@ export async function POST(request:Request){
   ]);
   const row=await env.DB.prepare('SELECT id FROM stores WHERE slug=?').bind(slug).first<{id:number}>();
   if(!row?.id)return privateError(503,'creation_incomplete');
-  return Response.json({client:{id:row.id,slug,name,username,templateKey,createdAt,catalogUrl:'https://'+slug+'.xn--micatlogo-41a.shop',adminUrl:'https://'+slug+'.xn--micatlogo-41a.shop/login'}},{status:201,headers:{'Cache-Control':'no-store'}});
+  return Response.json({client:{id:row.id,slug,name,username,templateKey,createdAt,catalogUrl:'https://'+slug+'.micatálogo.shop',adminUrl:'https://'+slug+'.micatálogo.shop/login'}},{status:201,headers:{'Cache-Control':'no-store'}});
  }catch(error){
   console.error(JSON.stringify({event:'tenant_creation_failed',slug,reason:error instanceof Error?error.message:'unknown'}));
   if(String(error).includes('UNIQUE'))return privateError(409,'slug_exists');
