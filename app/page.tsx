@@ -5562,6 +5562,7 @@ function FlyerStudio({
   const [frameStyle, setFrameStyle] = useState<FlyerFrame>("none");
   const [frameImage, setFrameImage] = useState("");
   const [productLayer, setProductLayer] = useState("");
+  const [showProduct, setShowProduct] = useState(true);
   const [productScale, setProductScale] = useState(100);
   const [productX, setProductX] = useState(0);
   const [productY, setProductY] = useState(0);
@@ -5608,7 +5609,9 @@ function FlyerStudio({
         : gallery[photoIndex]?.image
           ? [gallery[photoIndex].image]
           : [];
-  const productImage = productLayer || catalogImages[0] || "";
+  const productImage = showProduct
+    ? productLayer || catalogImages[0] || ""
+    : "";
   const subject =
     scope === "category"
       ? clothingCategoryLabel(category)
@@ -5684,6 +5687,7 @@ function FlyerStudio({
     if (!url) return setError("El archivo no devolvió una dirección válida.");
     if (kind === "product") {
       setProductLayer(url);
+      setShowProduct(true);
       return;
     }
     if (kind === "frame") {
@@ -5740,16 +5744,16 @@ function FlyerStudio({
       return setError("Primero elige una foto del artículo.");
     setAiGenerating(true);
     setError("");
-    setCutoutStatus("Cargando recortador gratuito…");
+    setCutoutStatus("La IA está analizando el producto…");
     try {
       let png = "";
       try {
-        setCutoutStatus("Separando solo el producto…");
+        setCutoutStatus("La IA está reconstruyendo el producto…");
         const form = new FormData();
-        form.append("prompt", `Extract only the sellable product: ${subject}. Return the complete garment, polo, shoe or accessory by itself. Remove the human, face, skin, hair, hands, body, mannequin, hanger, floor, shadows, scenery, text and every other object. Preserve the exact product shape, print, logo, seams, texture and colors. Center the single product on a uniform pure white #FFFFFF background with generous padding.`);
+        form.append("prompt", `Study the reference image carefully and recreate only the exact sellable product: ${subject}. Isolate one complete garment, shirt, shoe or accessory, showing its full silhouette without cropping. Remove every person, face, skin, hair, hand, body, mannequin, hanger, furniture, floor, shadow, scenery and unrelated object. Preserve the product's real shape, proportions, colors, print, logo, lettering, seams and fabric texture exactly; do not redesign it and do not invent details. Center the single product with generous empty padding on a perfectly flat pure white #FFFFFF background. No gradient, no floor, no cast shadow, no reflection, no text outside the product, no watermark and no extra object.`);
         const reference = await flyerReferenceFile(catalogImages[0], 0);
         form.append("input_image_0", reference, reference.name);
-        const response = await fetch("https://catalogo-flyer-ai.luicredo.workers.dev/generate", {
+        const response = await fetch("/api/ai-flyer", {
           method: "POST", headers: { "x-flyer-code": "MODA-4827" }, body: form,
         });
         const result = await response.json() as { image?: string };
@@ -5757,11 +5761,12 @@ function FlyerStudio({
         setCutoutStatus("Creando transparencia real…");
         png = await removeBackgroundByEdgesLocally(result.image);
       } catch {
-        setCutoutStatus("Recortando directamente en tu navegador…");
+        setCutoutStatus("IA no disponible; probando recorte local…");
         png = await removeBackgroundByEdgesLocally(catalogImages[0]);
       }
       setProductLayer(png);
-      setCutoutStatus("PNG listo");
+      setShowProduct(true);
+      setCutoutStatus("Producto sin fondo listo");
     } catch (cause) {
       const code = cause instanceof Error ? cause.message : "";
       setError(
@@ -5784,6 +5789,7 @@ function FlyerStudio({
         setCutoutStatus,
       );
       setProductLayer(png);
+      setShowProduct(true);
       setCutoutStatus("PNG seguro listo");
     } catch {
       setError("No se detectó correctamente la persona. Puedes conservar la foto completa o subir un PNG.");
@@ -5793,8 +5799,6 @@ function FlyerStudio({
     }
   }
   async function exportJpg() {
-    if (!productImage)
-      return setError("Primero selecciona o sube el artículo.");
     setDownloading(true);
     setError("");
     try {
@@ -5817,8 +5821,6 @@ function FlyerStudio({
     }
   }
   async function exportMp4() {
-    if (!productImage)
-      return setError("Primero selecciona o sube el artículo.");
     setDownloading(true);
     setError("");
     try {
@@ -6032,6 +6034,22 @@ function FlyerStudio({
               fondo.
             </span>
           </header>
+          <div className="flyer-product-visibility" role="group" aria-label="Mostrar artículo">
+            <button
+              type="button"
+              className={showProduct ? "active" : ""}
+              onClick={() => setShowProduct(true)}
+            >
+              Mostrar artículo
+            </button>
+            <button
+              type="button"
+              className={!showProduct ? "active" : ""}
+              onClick={() => setShowProduct(false)}
+            >
+              Quitar artículo y usar solo el fondo
+            </button>
+          </div>
           {scope !== "category" && (
             <label>
               Modelo
@@ -6115,12 +6133,11 @@ function FlyerStudio({
             >
               {aiGenerating
                 ? cutoutStatus || "Quitando fondo…"
-                : "✦ Quitar fondo y convertir a PNG"}
+                : "✦ IA: generar producto sin fondo"}
             </button>
             <small>
-              Gratis y privado: la foto se procesa en este navegador. El fondo,
-              y los textos del flyer no cambian. La primera vez puede tardar
-              mientras carga el recortador.
+              La IA mira la foto, copia únicamente el producto y genera una capa
+              PNG sin el fondo original. El fondo y los textos del flyer no cambian.
             </small>
             <div className="cutout-alternatives">
               <button
@@ -6135,6 +6152,7 @@ function FlyerStudio({
                 disabled={aiGenerating || downloading}
                 onClick={() => {
                   setProductLayer(catalogImages[0] || "");
+                  setShowProduct(true);
                   setCutoutStatus("Foto completa conservada");
                   setError("");
                 }}
@@ -6506,10 +6524,12 @@ function FlyerStudio({
           <h2 style={{ fontFamily: headlineFont }}>{headline}</h2>
           <em style={{ fontFamily: extraFont }}>{extraText}</em>
         </div>
-        <div className="flyer-product-layer">
-          <img src={productImage} alt={subject} />
-          {aiGenerating && <span>QUITANDO FONDO…</span>}
-        </div>
+        {(productImage || aiGenerating) && (
+          <div className="flyer-product-layer">
+            {productImage && <img src={productImage} alt={subject} />}
+            {aiGenerating && <span>GENERANDO PRODUCTO SIN FONDO…</span>}
+          </div>
+        )}
         {frameStyle === "uploaded" && frameImage && (
           <img
             className="flyer-uploaded-frame"

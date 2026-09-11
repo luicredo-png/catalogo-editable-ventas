@@ -543,3 +543,7 @@ body main.storefront .store-product-info p>b{display:block;white-space:nowrap;li
 .flyer-product-background-gallery button.active{border-color:#168cff;box-shadow:0 0 0 3px #168cff24;background:#eef7ff}
 .flyer-product-background-gallery img,.flyer-product-background-gallery video{width:100%;height:72px;object-fit:cover;border-radius:7px!important;background:#0d1520}
 .flyer-product-background-gallery span{overflow:hidden;font-size:8px;font-weight:850;text-overflow:ellipsis;white-space:nowrap}
+.flyer-product-visibility{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:6px;border:1px solid #cbd9e8;border-radius:12px;background:#eef4fa}
+.flyer-product-visibility button{min-height:39px;border:1px solid transparent;border-radius:9px;background:transparent;color:#536477;font-size:9px;font-weight:900}
+.flyer-product-visibility button.active{border-color:#168cff;background:#168cff;color:#fff;box-shadow:0 7px 16px #168cff30}
+@media(max-width:520px){.flyer-product-visibility{grid-template-columns:1fr}.flyer-product-visibility button{min-height:42px}}
