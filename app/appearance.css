@@ -64,3 +64,11 @@ body main.storefront .catalog-footer-socials svg{width:24px;height:24px;display:
 }
 body main.storefront :is(.store-hero,.clothing-entry)>.store-social-links a[aria-label="Instagram"]{background:linear-gradient(135deg,#833ab4,#fd1d1d 58%,#fcb045)!important;color:#fff!important}
 body main.storefront :is(.store-hero,.clothing-entry)>.store-social-links a[aria-label="Facebook"]{background:linear-gradient(145deg,#4b9dff,#1264d9)!important;color:#fff!important}
+
+/* Opciones generales del producto y galería fluida. */
+.product-display-admin{display:grid;grid-template-columns:minmax(260px,1fr) minmax(260px,1fr);gap:14px;margin:16px 0;padding:16px;border:1px solid #bed4ee;border-radius:18px;background:#f7fbff}.product-display-admin>label{display:grid;align-content:center;gap:7px;margin:0;font-weight:800}.product-display-admin small{display:block;color:#6a7b91;font-size:11px;font-weight:500}.product-display-admin input[type="text"],.product-display-admin>label>input:not([type]){width:100%}.product-display-admin .catalog-option-toggle{grid-template-columns:1fr auto;align-items:center}.catalog-option-toggle span{display:grid;gap:5px}.catalog-option-toggle input{width:48px;height:26px;accent-color:#168cff;cursor:pointer}
+.storefront .store-photo>.catalog-gallery-media,.order-image>.order-gallery-media{animation:catalogGalleryArrive .46s cubic-bezier(.22,.72,.2,1) both;will-change:transform,opacity,filter}
+@keyframes catalogGalleryArrive{from{opacity:.08;transform:translateX(18px) scale(1.025);filter:blur(3px)}to{opacity:1;transform:translateX(0) scale(1);filter:blur(0)}}
+.visual-category-tabs{background-repeat:no-repeat!important;background-size:cover!important;background-position:center!important}
+@media(max-width:700px){.product-display-admin{grid-template-columns:1fr;padding:13px}}
+@media(prefers-reduced-motion:reduce){.storefront .store-photo>.catalog-gallery-media,.order-image>.order-gallery-media{animation:none}}

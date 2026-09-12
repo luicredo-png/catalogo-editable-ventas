@@ -231,9 +231,10 @@ export default function Home({
       if (
         cached?.store &&
         Array.isArray(cached.products) &&
-        Date.now() - Number(cached.savedAt || 0) < 5 * 60 * 1000
+        Date.now() - Number(cached.savedAt || 0) < 24 * 60 * 60 * 1000
       ) {
         const next = normalizeStore(cached.store);
+        prioritizeImage(next.heroImage.split("|||")[0] || "");
         prioritizeImage(next.collectionBackgroundImage);
         setProducts(cached.products);
         setStore(next);
@@ -252,6 +253,7 @@ export default function Home({
         if (!mounted) return;
         if (previewOverrideRef.current) return;
         const next = normalizeStore(d.store);
+        prioritizeImage(next.heroImage.split("|||")[0] || "");
         prioritizeImage(next.collectionBackgroundImage);
         setProducts(d.products);
         setStore(next);
@@ -484,7 +486,11 @@ export default function Home({
         saveProduct={saveProduct}
         removeProduct={removeProduct}
         saveSettings={saveSettings}
-        close={() => (location.href = catalogPath(activeTemplate))}
+        close={() =>
+          (location.href = customerSubdomain(location.hostname)
+            ? "/"
+            : catalogPath(activeTemplate))
+        }
         notice={notice}
       />
     );
@@ -501,6 +507,7 @@ export default function Home({
   const promoAppearance = promoSettings(store.categorySettings);
   const visualEffects = visualEffectsSettings(store.categorySettings, template);
   const cartEnabled = cartSettings(store.categorySettings).enabled;
+  const productDisplay = productDisplaySettings(store.categorySettings);
   const addToCart = (product: Product) => {
     setCart((current) => {
       const found = current.find((item) => item.product.id === product.id);
@@ -697,7 +704,19 @@ export default function Home({
               />
             </label>
           </section>
-          <nav className="category-tabs visual-category-tabs" id="categorias" aria-label="Categorías">
+          <nav
+            className="category-tabs visual-category-tabs"
+            id="categorias"
+            aria-label="Categorías"
+            style={{
+              backgroundColor: categoryBackgroundColor(store.categorySettings) || undefined,
+              backgroundImage: categoryBackground(store.categorySettings)
+                ? `linear-gradient(#05080d99,#05080d99),url(${categoryBackground(store.categorySettings)})`
+                : undefined,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }}
+          >
             {catalogTypes(products, store, currentHero).map((c) => (
               <button
                 className={filter === c.key ? "active" : ""}
@@ -717,6 +736,7 @@ export default function Home({
         <PromoTicker text={store.promoText} settings={promoAppearance} store={store} />
       )}
       <section
+        id="coleccion"
         className={`collection-stage collection-motion-${store.collectionMotion} ${collectionVideo ? "has-collection-video" : store.collectionBackgroundImage ? "has-collection-image" : ""}`}
         style={{
           backgroundColor: store.collectionBackgroundColor,
@@ -768,6 +788,8 @@ export default function Home({
               open={() => setSelected(p)}
               cartEnabled={cartEnabled}
               addToCart={() => addToCart(p)}
+              sizesEnabled={productDisplay.sizesEnabled}
+              galleryButtonLabel={productDisplay.galleryButtonLabel}
             />
           ))}
         </section>
@@ -1440,13 +1462,9 @@ function stringifyCategorySettings(
   categoryBackgroundColorValue = "",
   previousValue = "",
 ) {
-  const layout = parseCategorySettings(previousValue).find(
-    (item) => item.key === "__HOME_LAYOUT__",
+  const specialSettings = parseCategorySettings(previousValue).filter(
+    (item) => item.key.startsWith("__") && item.key !== "__CATEGORY_BACKGROUND__",
   );
-  const promo = parseCategorySettings(previousValue).find(
-    (item) => item.key === "__PROMO_SETTINGS__",
-  );
-  const cart = parseCategorySettings(previousValue).find((item) => item.key === "__CART_SETTINGS__");
   return JSON.stringify(
     items.filter((item) => item.key !== "__CATEGORY_BACKGROUND__").map((item) => ({
       key: item.key.trim().toUpperCase() || "NUEVO",
@@ -1458,7 +1476,7 @@ function stringifyCategorySettings(
       label: "",
       image: categoryBackgroundImage,
       color: categoryBackgroundColorValue,
-    }] : []).concat(layout ? [layout] : []).concat(promo ? [promo] : []).concat(cart ? [cart] : []),
+    }] : []).concat(specialSettings),
   );
 }
 function cartSettings(value: string) {
@@ -1494,6 +1512,8 @@ function StoreProductCard({
   open,
   cartEnabled,
   addToCart,
+  sizesEnabled,
+  galleryButtonLabel,
 }: {
   product: Product;
   isFood: boolean;
@@ -1502,6 +1522,8 @@ function StoreProductCard({
   open: () => void;
   cartEnabled: boolean;
   addToCart: () => void;
+  sizesEnabled: boolean;
+  galleryButtonLabel: string;
 }) {
   const colorGroup = product.options?.find((group) => group.name.toLowerCase().includes("color"));
   const colorLabels = template === "ropa"
@@ -1544,10 +1566,15 @@ function StoreProductCard({
                 gallery.length
             ].image,
         ),
-      4200,
+      5200,
     );
     return () => clearInterval(timer);
   }, [product.id, activeCardColor, cardVisible, gallery.map((item) => item.image).join("|")]);
+  useEffect(() => {
+    if (!cardVisible || gallery.length < 2) return;
+    const currentIndex = Math.max(0, gallery.findIndex((item) => item.image === preview));
+    prioritizeImage(gallery[(currentIndex + 1) % gallery.length]?.image || "");
+  }, [cardVisible, preview, gallery.map((item) => item.image).join("|")]);
   useEffect(() => {
     const card = cardRef.current;
     if (!card || !("IntersectionObserver" in window)) {
@@ -1583,6 +1610,8 @@ function StoreProductCard({
     >
       <div className="store-photo clickable-product-photo" onClick={open} role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") open(); }} aria-label={`Ver opciones de ${product.name}`}>
         <ProductMedia
+          key={preview}
+          className="catalog-gallery-media"
           src={preview}
           alt={product.name}
           loading={priority ? "eager" : "lazy"}
@@ -1637,7 +1666,7 @@ function StoreProductCard({
       ) : template === "ropa" ? (
         <div className="photo-gallery-strip">
           <button onClick={open}>
-            Ver colores <b>→</b>
+            {galleryButtonLabel} <b>→</b>
           </button>
         </div>
       ) : (
@@ -1665,7 +1694,7 @@ function StoreProductCard({
         </p>
         {(() => {
           const sizes = product.options?.find((group) => group.name.toLowerCase().includes("talla"))?.values || [];
-          return sizes.length ? <div className="preview-sizes" aria-label="Tallas disponibles">
+          return sizesEnabled && sizes.length ? <div className="preview-sizes" aria-label="Tallas disponibles">
             <small>TALLAS</small>
             <div>{sizes.map((size) => <span key={size}>{optionLabel(size)}</span>)}</div>
           </div> : null;
@@ -1749,6 +1778,7 @@ function ProductOrderModal({
   close: () => void;
 }) {
   const food = template === "restaurantes" || template === "comida-rapida";
+  const sizesEnabled = productDisplaySettings(store.categorySettings).sizesEnabled;
   const fallback: OptionGroup[] =
     template === "restaurantes"
       ? [
@@ -1780,7 +1810,10 @@ function ProductOrderModal({
               { name: "Color", values: ["Negro", "Beige", "Rosa"] },
               { name: "Talla", values: ["S", "M", "L"] },
             ];
-  const groups = product.options?.length ? product.options : fallback;
+  const rawGroups = product.options?.length ? product.options : fallback;
+  const groups = sizesEnabled
+    ? rawGroups
+    : rawGroups.filter((group) => !group.name.toLowerCase().includes("talla"));
   const colorGroup = groups.find((group) =>
     group.name.toLowerCase().includes("color"),
   );
@@ -1833,7 +1866,7 @@ function ProductOrderModal({
   }, [product.id, template, selectedColorLabel]);
   useEffect(() => {
     if (template !== "ropa" || selectedColorGallery.length < 2 || selectedColorGallery.some((item) => isVideoMedia(item.image))) return;
-    const timer = setInterval(() => rotateGallery(1), 4200);
+    const timer = setInterval(() => rotateGallery(1), 5200);
     return () => clearInterval(timer);
   }, [template, selectedColorLabel, selectedColorGallery.map((item) => item.image).join("|")]);
   const visibleGroups =
@@ -1856,8 +1889,10 @@ function ProductOrderModal({
     : "Sin selección";
   const catalogUrl = readableCatalogUrl(template);
   const message = (
-    template === "ropa"
+    template === "ropa" && sizesEnabled
       ? CLOTHING_WHATSAPP_MESSAGE
+      : template === "ropa"
+        ? "Hola 👋🔥 quiero pedir {producto}. ✅\nDeseo confirmar disponibilidad y realizar mi compra.\nCatálogo: {catalogo}"
       : store.whatsappMessage?.trim() ||
         product.whatsappMessage?.trim() ||
         fallbackMessage
@@ -1884,7 +1919,14 @@ function ProductOrderModal({
             if (Math.abs(distance) > 45) rotateGallery(distance < 0 ? 1 : -1);
           }}
         >
-          <ProductMedia src={displayImage} alt={product.name} controls />
+          <ProductMedia
+            key={displayImage}
+            className="catalog-gallery-media order-gallery-media"
+            src={displayImage}
+            alt={product.name}
+            controls
+            decoding="async"
+          />
           <span>{food ? "ARMA TU PEDIDO" : "ELIGE TU FAVORITO"}</span>
           {template === "ropa" && selectedColorGallery.length > 1 && (
             <div className="order-gallery-arrows">
@@ -3497,19 +3539,35 @@ function AdminV2({
   const categoryBackgroundColorValue = categoryBackgroundColor(store.categorySettings);
   const homeLayout = homeLayoutSettings(store.categorySettings);
   const promoAppearance = promoSettings(store.categorySettings);
+  const productDisplay = productDisplaySettings(store.categorySettings);
+  const updateProductDisplay = (patch: Partial<ProductDisplaySettings>) =>
+    update(
+      "categorySettings",
+      setProductDisplaySettings(store.categorySettings, {
+        ...productDisplay,
+        ...patch,
+      }),
+    );
   const heroColors = heroColorSettings(store.categorySettings, store);
   const visualEffects = visualEffectsSettings(store.categorySettings, template);
   const applyCategoryBackgroundPreview = (image: string, color: string) => {
     requestAnimationFrame(() => {
-      const panel = catalogPreviewRef.current?.contentDocument?.querySelector(
-        ".clothing-category-panel",
-      ) as HTMLElement | null;
-      if (!panel) return;
-      panel.style.setProperty("--category-panel-bg", color || store.collectionBackgroundColor);
-      panel.style.setProperty(
-        "--category-panel-image",
-        image ? `linear-gradient(#05080d99,#05080d99),url(${image})` : "none",
-      );
+      const document = catalogPreviewRef.current?.contentDocument;
+      const panel = document?.querySelector(".clothing-category-panel") as HTMLElement | null;
+      const tabs = document?.querySelector(".visual-category-tabs") as HTMLElement | null;
+      if (panel) {
+        panel.style.setProperty("--category-panel-bg", color || store.collectionBackgroundColor);
+        panel.style.setProperty(
+          "--category-panel-image",
+          image ? `linear-gradient(#05080d99,#05080d99),url(${image})` : "none",
+        );
+      }
+      if (tabs) {
+        tabs.style.backgroundColor = color || store.collectionBackgroundColor;
+        tabs.style.backgroundImage = image
+          ? `linear-gradient(#05080d99,#05080d99),url(${image})`
+          : "none";
+      }
     });
   };
   const applyPromoPreview = (settings: PromoSettings, text = store.promoText) => {
@@ -3777,7 +3835,7 @@ function AdminV2({
     try {
       const form = new FormData();
       form.append("file", file);
-      const response = await fetch("/api/upload", {
+      const response = await fetch("/api/upload?template=" + encodeURIComponent(template), {
         method: "POST",
         body: form,
       });
@@ -3817,7 +3875,7 @@ function AdminV2({
     try {
       const form = new FormData();
       form.append("file", file);
-      const response = await fetch("/api/upload", { method: "POST", body: form });
+      const response = await fetch("/api/upload?template=" + encodeURIComponent(template), { method: "POST", body: form });
       if (!response.ok) return alert("No se pudo subir el fondo de categorías.");
       const result = await response.json() as { url?: string };
       if (!result.url) return;
@@ -4450,6 +4508,33 @@ function AdminV2({
                   + Agregar tipo
                 </button>
               </div>
+              <div className="product-display-admin">
+                <label className="catalog-option-toggle">
+                  <span>
+                    <b>Mostrar tallas en el catálogo</b>
+                    <small>Desactívalo para motos, servicios y productos sin talla.</small>
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={productDisplay.sizesEnabled}
+                    onChange={(event) =>
+                      updateProductDisplay({ sizesEnabled: event.target.checked })
+                    }
+                  />
+                </label>
+                <label>
+                  Texto del botón de galería
+                  <input
+                    value={productDisplay.galleryButtonLabel}
+                    maxLength={32}
+                    placeholder="Ver colores"
+                    onChange={(event) =>
+                      updateProductDisplay({ galleryButtonLabel: event.target.value })
+                    }
+                  />
+                  <small>Ejemplos: Ver modelos, Ver versiones o Ver fotos.</small>
+                </label>
+              </div>
               <div className="category-background-editor">
                 <div
                   className="category-background-preview"
@@ -4760,7 +4845,7 @@ function AdminV2({
                           color: contrastText(store.secondaryColor),
                         } as React.CSSProperties}
                       >
-                        Ver colores
+                        {productDisplay.galleryButtonLabel || "Ver colores"}
                       </button>
                     </div>
                     <b>Vista del modelo</b>
@@ -5194,6 +5279,7 @@ function AdminV2({
         <ProductEditor
           p={editing}
           template={template}
+          sizesEnabled={productDisplay.sizesEnabled}
           categories={typeItems
             .filter((item) => item.key !== "TODOS")
             .map((item) => ({ key: item.key, label: item.label }))}
@@ -6637,6 +6723,27 @@ function FlyerStudio({
       )}
     </div>
   );
+}
+type ProductDisplaySettings = { sizesEnabled: boolean; galleryButtonLabel: string };
+function productDisplaySettings(value: string): ProductDisplaySettings {
+  const item = parseCategorySettings(value).find((entry) => entry.key === "__PRODUCT_DISPLAY__");
+  try {
+    const saved = JSON.parse(item?.image || "{}");
+    return {
+      sizesEnabled: saved.sizesEnabled !== false,
+      galleryButtonLabel: String(saved.galleryButtonLabel || "Ver colores").trim().slice(0, 32) || "Ver colores",
+    };
+  } catch {
+    return { sizesEnabled: true, galleryButtonLabel: "Ver colores" };
+  }
+}
+function setProductDisplaySettings(value: string, settings: ProductDisplaySettings) {
+  let items: CatalogType[] = [];
+  try { const parsed = JSON.parse(value || "[]"); if (Array.isArray(parsed)) items = parsed; } catch {}
+  return JSON.stringify([
+    ...items.filter((item) => item?.key !== "__PRODUCT_DISPLAY__"),
+    { key: "__PRODUCT_DISPLAY__", label: "", image: JSON.stringify(settings), color: "" },
+  ]);
 }
 
 function CutoutRetouchDialog({
@@ -8141,12 +8248,14 @@ function drawFlyerText(
 function ProductEditor({
   p,
   template = "ropa",
+  sizesEnabled = true,
   categories = [],
   close,
   save,
 }: {
   p: Product;
   template?: TemplateKey;
+  sizesEnabled?: boolean;
   categories?: { key: string; label: string }[];
   close: () => void;
   save: (p: Product) => void;
@@ -8266,7 +8375,7 @@ function ProductEditor({
             />
           </label>
         </div>
-        {!foodVariants && <fieldset className="size-selector">
+        {!foodVariants && sizesEnabled && <fieldset className="size-selector">
           <legend>Tallas disponibles</legend>
           <div>
             {sizeChoices.map((size) => (
