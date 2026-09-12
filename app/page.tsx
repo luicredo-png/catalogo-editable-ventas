@@ -79,6 +79,8 @@ type Store = {
   whatsappMessage: string;
   instagram: string;
   facebook: string;
+  locationUrl: string;
+  tiktokUrl: string;
   slug: string;
   accent: string;
   backgroundColor: string;
@@ -797,8 +799,10 @@ export default function Home({
             <span>© {new Date().getFullYear()} {store.name}</span>
             <div className="catalog-footer-socials" aria-label="Redes sociales">
               <a href={`https://wa.me/${store.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noreferrer" aria-label="WhatsApp"><img src="/whatsapp-revolt.svg" alt="" /></a>
-              {store.facebook ? <a href={socialUrl(store.facebook, "facebook")} target="_blank" rel="noreferrer" aria-label="Facebook"><img src="/social/facebook.svg" alt="" /></a> : <span className="footer-social-disabled" title="Configura Facebook en el administrador" aria-label="Facebook no configurado"><img src="/social/facebook.svg" alt="" /></span>}
-              {store.instagram ? <a href={socialUrl(store.instagram, "instagram")} target="_blank" rel="noreferrer" aria-label="Instagram"><img src="/social/instagram.svg" alt="" /></a> : <span className="footer-social-disabled" title="Configura Instagram en el administrador" aria-label="Instagram no configurado"><img src="/social/instagram.svg" alt="" /></span>}
+              {store.facebook && <a href={socialUrl(store.facebook, "facebook")} target="_blank" rel="noreferrer" aria-label="Facebook"><img src="/social/facebook.svg" alt="" /></a>}
+              {store.instagram && <a href={socialUrl(store.instagram, "instagram")} target="_blank" rel="noreferrer" aria-label="Instagram"><img src="/social/instagram.svg" alt="" /></a>}
+              {store.locationUrl && <a href={externalUrl(store.locationUrl)} target="_blank" rel="noreferrer" aria-label="Ubicación"><LocationIcon /></a>}
+              {store.tiktokUrl && <a href={externalUrl(store.tiktokUrl)} target="_blank" rel="noreferrer" aria-label="TikTok"><TikTokIcon /></a>}
             </div>
           </div>
         </div>
@@ -849,6 +853,8 @@ function normalizeStore(s: Record<string, unknown>): Store {
           ),
     instagram: String(s.instagram || ""),
     facebook: String(s.facebook || ""),
+    locationUrl: String(s.location_url || s.locationUrl || ""),
+    tiktokUrl: String(s.tiktok_url || s.tiktokUrl || ""),
     slug: String(s.slug || ""),
     accent: String(s.accent || "#168cff"),
     backgroundColor,
@@ -1094,11 +1100,22 @@ function socialUrl(value: string, network: "instagram" | "facebook") {
     ? `https://instagram.com/${handle}`
     : `https://facebook.com/${handle}`;
 }
+function externalUrl(value: string) {
+  const clean = value.trim();
+  if (!clean) return "";
+  return /^https?:\/\//i.test(clean) ? clean : `https://${clean}`;
+}
 function InstagramIcon() {
   return <img src="/social/instagram.svg" alt="" aria-hidden="true" />;
 }
 function FacebookIcon() {
   return <img src="/social/facebook.svg" alt="" aria-hidden="true" />;
+}
+function LocationIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12Z" fill="none" stroke="currentColor" strokeWidth="2"/><circle cx="12" cy="9" r="2.3" fill="currentColor" /></svg>;
+}
+function TikTokIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.2 3h3c.3 1.8 1.4 3 3.1 3.5v3a8.2 8.2 0 0 1-3.1-1v6.1a5.4 5.4 0 1 1-4.7-5.3v3.1a2.3 2.3 0 1 0 1.7 2.2V3Z" fill="currentColor" /></svg>;
 }
 function WhatsAppIcon() {
   return (
@@ -1109,8 +1126,10 @@ function WhatsAppIcon() {
 }
 function SocialLinks({ store }: { store: Store }) {
   const instagram = socialUrl(store.instagram, "instagram"),
-    facebook = socialUrl(store.facebook, "facebook");
-  if (!instagram && !facebook) return null;
+    facebook = socialUrl(store.facebook, "facebook"),
+    location = externalUrl(store.locationUrl),
+    tiktok = externalUrl(store.tiktokUrl);
+  if (!instagram && !facebook && !location && !tiktok) return null;
   return (
     <nav className="store-social-links" aria-label="Redes sociales">
       {instagram && (
@@ -1133,6 +1152,18 @@ function SocialLinks({ store }: { store: Store }) {
         >
           <FacebookIcon />
           <span>Facebook</span>
+        </a>
+      )}
+      {location && (
+        <a href={location} target="_blank" rel="noreferrer" aria-label="Ubicación">
+          <LocationIcon />
+          <span>Ubicación</span>
+        </a>
+      )}
+      {tiktok && (
+        <a href={tiktok} target="_blank" rel="noreferrer" aria-label="TikTok">
+          <TikTokIcon />
+          <span>TikTok</span>
         </a>
       )}
     </nav>
@@ -5046,7 +5077,7 @@ function AdminV2({
           >
             <div>
               <small>REDES</small>
-              <h2>WhatsApp, Instagram y Facebook</h2>
+              <h2>WhatsApp, Instagram, Facebook y más</h2>
               <p>
                 Coloca aquí tus enlaces. Los botones con los logos oficiales
                 aparecerán en la portada.
@@ -5074,6 +5105,30 @@ function AdminV2({
                   placeholder="https://facebook.com/tu_marca"
                 />
                 <small>Pega el enlace completo o el nombre de tu página.</small>
+              </label>
+              <label>
+                <span className="social-field-title location-social-title">
+                  <LocationIcon /> Ubicación
+                </span>
+                <input
+                  type="url"
+                  value={store.locationUrl}
+                  onChange={(e) => update("locationUrl", e.target.value)}
+                  placeholder="https://maps.google.com/..."
+                />
+                <small>Opcional. Si está vacío, el botón no aparece.</small>
+              </label>
+              <label>
+                <span className="social-field-title tiktok-social-title">
+                  <TikTokIcon /> TikTok
+                </span>
+                <input
+                  type="url"
+                  value={store.tiktokUrl}
+                  onChange={(e) => update("tiktokUrl", e.target.value)}
+                  placeholder="https://www.tiktok.com/@tu_marca"
+                />
+                <small>Opcional. Si está vacío, el botón no aparece.</small>
               </label>
             </div>
             <label>

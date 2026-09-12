@@ -19,3 +19,48 @@ body main.storefront.clothing-store .clothing-category-panel{background-color:va
 /* Los marcos del flyer son únicamente líneas finas */
 .frame-polaroid .flyer-product-layer,.frame-dark .flyer-product-layer,.frame-glass .flyer-product-layer{padding:0!important;background:transparent!important;box-shadow:none!important;backdrop-filter:none!important;transform:none!important}.frame-polaroid .flyer-product-layer{border:1px solid #f4f0e8!important;border-radius:8px!important}.frame-polaroid .flyer-product-layer img{background:transparent!important}.frame-dark .flyer-product-layer{border:1px solid var(--flyer-accent)!important;border-radius:16px!important}.frame-glass .flyer-product-layer{border:1px solid #ffffffa8!important;border-radius:22px!important}
 
+/* Redes opcionales: fila independiente, táctil y sin cubrir el buscador. */
+body main.storefront :is(.store-hero,.clothing-entry)>.store-social-links{
+  top:18px!important;
+  bottom:auto!important;
+  right:clamp(14px,3vw,42px)!important;
+  display:flex!important;
+  flex-wrap:wrap!important;
+  justify-content:flex-end!important;
+  gap:10px!important;
+  max-width:min(224px,calc(100% - 28px));
+}
+body main.storefront :is(.store-hero,.clothing-entry)>.store-social-links a{
+  position:relative!important;
+  display:grid!important;
+  place-items:center!important;
+  width:46px!important;
+  height:46px!important;
+  min-width:46px!important;
+  padding:9px!important;
+  border:1px solid #ffffff75!important;
+  border-radius:14px!important;
+  box-sizing:border-box!important;
+  box-shadow:inset 0 2px 2px #fff8,inset 0 -4px 6px #0004,0 10px 22px #0008!important;
+  transition:transform .16s ease,filter .16s ease,box-shadow .16s ease!important;
+  -webkit-tap-highlight-color:transparent;
+}
+body main.storefront :is(.store-hero,.clothing-entry)>.store-social-links a:hover{transform:translateY(-2px)!important;filter:brightness(1.12)!important}
+body main.storefront :is(.store-hero,.clothing-entry)>.store-social-links a:active{transform:translateY(2px) scale(.96)!important;filter:brightness(.94)!important;box-shadow:inset 0 4px 8px #0006,0 3px 8px #0007!important}
+body main.storefront :is(.store-hero,.clothing-entry)>.store-social-links a[aria-label="Ubicación"]{background:linear-gradient(145deg,#f44336,#b71c1c)!important;color:#fff!important}
+body main.storefront :is(.store-hero,.clothing-entry)>.store-social-links a[aria-label="TikTok"]{background:linear-gradient(145deg,#252525,#050505)!important;color:#fff!important}
+body main.storefront :is(.store-hero,.clothing-entry)>.store-social-links svg{width:27px!important;height:27px!important;display:block!important}
+body main.storefront :is(.store-hero,.clothing-entry)>.store-social-links img{width:27px!important;height:27px!important;border-radius:7px!important;object-fit:contain!important}
+body main.storefront :is(.store-hero,.clothing-entry)>.store-social-links span{display:none!important}
+body main.storefront .catalog-footer-socials a:active{transform:translateY(2px) scale(.95)!important;box-shadow:inset 0 3px 7px #0008!important}
+body main.storefront .catalog-footer-socials svg{width:24px;height:24px;display:block;color:#fff}
+@media(max-width:700px){
+  body main.storefront .store-hero:has(.store-social-links){padding-top:112px!important}
+  body main.storefront :is(.store-hero,.clothing-entry)>.store-social-links{top:14px!important;right:12px!important;max-width:calc(100% - 24px);gap:8px!important}
+  body main.storefront.clothing-store .clothing-entry:has(.store-social-links){min-height:620px!important;padding-top:170px!important}
+  body main.storefront.clothing-store .clothing-entry:has(.store-social-links)>.store-social-links{top:112px!important}
+  body main.storefront :is(.store-hero,.clothing-entry)>.store-social-links a{width:42px!important;height:42px!important;min-width:42px!important;padding:8px!important;border-radius:12px!important}
+  body main.storefront :is(.store-hero,.clothing-entry)>.store-social-links svg,body main.storefront :is(.store-hero,.clothing-entry)>.store-social-links img{width:25px!important;height:25px!important}
+}
+body main.storefront :is(.store-hero,.clothing-entry)>.store-social-links a[aria-label="Instagram"]{background:linear-gradient(135deg,#833ab4,#fd1d1d 58%,#fcb045)!important;color:#fff!important}
+body main.storefront :is(.store-hero,.clothing-entry)>.store-social-links a[aria-label="Facebook"]{background:linear-gradient(145deg,#4b9dff,#1264d9)!important;color:#fff!important}

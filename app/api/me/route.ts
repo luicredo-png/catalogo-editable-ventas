@@ -2,6 +2,7 @@ import { env } from 'cloudflare:workers';
 import { authorize, privateError } from '@/lib/admin-auth';
 import { templates, type TemplateKey } from '../../../lib/catalog-templates';
 import {generatedBusinessHeroDefaults,isGeneratedBusinessKey} from '../../../lib/generated-business-catalogs';
+import {ensureSocialLinkColumns} from '../../../lib/social-links-db';
 
 const PUBLIC_OWNER='public:catalog-demo';
 
@@ -21,6 +22,7 @@ function productRow(p:Record<string,unknown>){let options=[];try{options=JSON.pa
 export async function GET(request:Request){
  const admin=await authorize(request,env);
  if(admin instanceof Response)return admin;
+ await ensureSocialLinkColumns(env.DB);
  const user={userId:PUBLIC_OWNER};
  const url=new URL(request.url);
  const tenantSlug=String(url.searchParams.get('slug')||'');
@@ -44,7 +46,7 @@ export async function GET(request:Request){
   await env.DB.batch([
    env.DB.prepare('DELETE FROM products WHERE store_id=?').bind(sharedId),
    env.DB.prepare('UPDATE products SET store_id=? WHERE store_id=?').bind(sharedId,personalId),
-   env.DB.prepare('UPDATE stores SET name=?,whatsapp=?,accent=?,background_color=?,background_image=?,collection_background_color=?,collection_background_image=?,collection_motion=?,collection_overlay_strength=?,mobile_columns=?,promo_text=?,category_settings=?,font_family=?,heading_font=?,hero_font=?,product_font=?,price_font=?,button_font=?,button_color=?,secondary_color=?,hero_button_color=?,text_color=?,surface_color=?,surface_style=?,surface_background_image=?,overlay_strength=?,catalog_title=?,logo_url=?,hero_image=?,hero_eyebrow=?,hero_description=?,hero_highlight=?,hero_cta_label=? WHERE id=?').bind(personal.name,personal.whatsapp,personal.accent,personal.background_color,personal.background_image,personal.collection_background_color||personal.background_color,personal.collection_background_image||'',personal.collection_motion||'none',personal.collection_overlay_strength??.35,Number(personal.mobile_columns)===2?2:1,String(personal.promo_text||'🔥 OFERTA ESPECIAL · PIDE HOY POR WHATSAPP · NUEVOS MODELOS DISPONIBLES'),String(personal.category_settings||''),personal.font_family,personal.heading_font,personal.hero_font||personal.heading_font,personal.product_font||personal.font_family,personal.price_font||personal.heading_font,personal.button_font||personal.font_family,personal.button_color,personal.secondary_color,personal.hero_button_color||personal.secondary_color,personal.text_color,personal.surface_color,personal.surface_style||'solid',personal.surface_background_image||'',personal.overlay_strength,personal.catalog_title,personal.logo_url,personal.hero_image,personal.hero_eyebrow,personal.hero_description,personal.hero_highlight,personal.hero_cta_label,sharedId),
+   env.DB.prepare('UPDATE stores SET name=?,whatsapp=?,accent=?,background_color=?,background_image=?,collection_background_color=?,collection_background_image=?,collection_motion=?,collection_overlay_strength=?,mobile_columns=?,promo_text=?,category_settings=?,font_family=?,heading_font=?,hero_font=?,product_font=?,price_font=?,button_font=?,button_color=?,secondary_color=?,hero_button_color=?,text_color=?,surface_color=?,surface_style=?,surface_background_image=?,overlay_strength=?,catalog_title=?,logo_url=?,hero_image=?,hero_eyebrow=?,hero_description=?,hero_highlight=?,hero_cta_label=?,instagram=?,facebook=?,location_url=?,tiktok_url=? WHERE id=?').bind(personal.name,personal.whatsapp,personal.accent,personal.background_color,personal.background_image,personal.collection_background_color||personal.background_color,personal.collection_background_image||'',personal.collection_motion||'none',personal.collection_overlay_strength??.35,Number(personal.mobile_columns)===2?2:1,String(personal.promo_text||'🔥 OFERTA ESPECIAL · PIDE HOY POR WHATSAPP · NUEVOS MODELOS DISPONIBLES'),String(personal.category_settings||''),personal.font_family,personal.heading_font,personal.hero_font||personal.heading_font,personal.product_font||personal.font_family,personal.price_font||personal.heading_font,personal.button_font||personal.font_family,personal.button_color,personal.secondary_color,personal.hero_button_color||personal.secondary_color,personal.text_color,personal.surface_color,personal.surface_style||'solid',personal.surface_background_image||'',personal.overlay_strength,personal.catalog_title,personal.logo_url,personal.hero_image,personal.hero_eyebrow,personal.hero_description,personal.hero_highlight,personal.hero_cta_label,personal.instagram||'',personal.facebook||'',personal.location_url||'',personal.tiktok_url||'',sharedId),
    env.DB.prepare('DELETE FROM stores WHERE id=?').bind(personalId)
   ]);
   store=await env.DB.prepare('SELECT * FROM stores WHERE id=?').bind(sharedId).first<Record<string,unknown>>();

@@ -1,4 +1,5 @@
 import { env } from 'cloudflare:workers';
+import { ensureSocialLinkColumns } from '@/lib/social-links-db';
 
 const GMPAONYX_PRODUCTS = [
  ['03','DULCINEA'],['04','HEROE'],['05','MODELO'],['06','LANZA'],
@@ -27,9 +28,10 @@ async function ensureGmpaonyxProducts(storeId:number){
 }
 
 export async function GET(request:Request){
+ await ensureSocialLinkColumns(env.DB);
  const slug=new URL(request.url).searchParams.get('slug');
  if(!slug)return Response.json({error:'slug_required'},{status:400});
- const store=await env.DB.prepare('SELECT id,template_key,slug,name,whatsapp,whatsapp_message,instagram,facebook,accent,background_color,background_image,collection_background_color,collection_background_image,collection_motion,collection_overlay_strength,mobile_columns,promo_text,category_settings,font_family,heading_font,hero_font,store_name_font,hero_eyebrow_font,hero_highlight_font,hero_description_font,hero_cta_font,product_font,price_font,button_font,button_color,secondary_color,hero_button_color,button_style,secondary_button_style,hero_button_style,store_appearance,text_color,surface_color,surface_style,surface_background_image,overlay_strength,catalog_title,logo_url,hero_image,hero_eyebrow,hero_description,hero_highlight,hero_cta_label FROM stores WHERE slug=?').bind(slug).first<Record<string,unknown>>();
+ const store=await env.DB.prepare('SELECT id,template_key,slug,name,whatsapp,whatsapp_message,instagram,facebook,location_url,tiktok_url,accent,background_color,background_image,collection_background_color,collection_background_image,collection_motion,collection_overlay_strength,mobile_columns,promo_text,category_settings,font_family,heading_font,hero_font,store_name_font,hero_eyebrow_font,hero_highlight_font,hero_description_font,hero_cta_font,product_font,price_font,button_font,button_color,secondary_color,hero_button_color,button_style,secondary_button_style,hero_button_style,store_appearance,text_color,surface_color,surface_style,surface_background_image,overlay_strength,catalog_title,logo_url,hero_image,hero_eyebrow,hero_description,hero_highlight,hero_cta_label FROM stores WHERE slug=?').bind(slug).first<Record<string,unknown>>();
  if(!store)return Response.json({error:'not_found'},{status:404});
  // The one-time ZIP import is only needed if a product is missing. Previously
  // every storefront request executed 24 idempotent writes, which slowed down
