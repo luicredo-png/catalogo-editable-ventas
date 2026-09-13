@@ -56,6 +56,40 @@ function optimizedCatalogImage(src: string) {
   return optimized[src] || src;
 }
 
+async function optimizeImageBeforeUpload(file: File) {
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) return file;
+  try {
+    const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+    const maxSide = 2000;
+    const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+    const width = Math.max(1, Math.round(bitmap.width * scale));
+    const height = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext('2d', { alpha: true });
+    if (!context) {
+      bitmap.close();
+      return file;
+    }
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = 'high';
+    context.drawImage(bitmap, 0, 0, width, height);
+    bitmap.close();
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, 'image/webp', 0.8),
+    );
+    if (!blob || (scale === 1 && blob.size >= file.size * 0.95)) return file;
+    const basename = file.name.replace(/\.[^.]+$/, '') || 'imagen';
+    return new File([blob], `${basename}.webp`, {
+      type: 'image/webp',
+      lastModified: file.lastModified,
+    });
+  } catch {
+    return file;
+  }
+}
+
 function prioritizeImage(src: string) {
   if (!src || isVideoMedia(src) || typeof Image === "undefined") return;
   const image = new Image();
@@ -2254,7 +2288,7 @@ function Admin({
     setUploading(true);
     try {
       const form = new FormData();
-      form.append("file", file);
+      form.append("file", await optimizeImageBeforeUpload(file));
       const r = await fetch("/api/upload?template=" + encodeURIComponent(new URLSearchParams(location.search).get("catalogo") || "ropa"), { method: "POST", body: form });
       if (!r.ok) {
         alert(
@@ -2283,7 +2317,7 @@ function Admin({
     if(horizontal.length!==selected.length)alert(horizontalHeroMessage);
     if(!horizontal.length)return;
     setUploading(true);
-    try{const urls:string[]=[];for(const file of horizontal){const form=new FormData();form.append("file",file);const response=await fetch("/api/upload?template=" + encodeURIComponent(new URLSearchParams(location.search).get("catalogo") || "ropa"),{method:"POST",body:form});if(response.ok){const result=await response.json();urls.push(String(result.url))}}if(urls.length)setStore({...store,heroImage:urls.join("|||")});else alert("No se pudo subir la portada.")}
+    try{const urls:string[]=[];for(const file of horizontal){const form=new FormData();form.append("file",await optimizeImageBeforeUpload(file));const response=await fetch("/api/upload?template=" + encodeURIComponent(new URLSearchParams(location.search).get("catalogo") || "ropa"),{method:"POST",body:form});if(response.ok){const result=await response.json();urls.push(String(result.url))}}if(urls.length)setStore({...store,heroImage:urls.join("|||")});else alert("No se pudo subir la portada.")}
     finally{setUploading(false)}
   }
   const typeItems = catalogTypes(
@@ -2346,7 +2380,7 @@ function Admin({
     setUploading(true);
     try {
       const form = new FormData();
-      form.append("file", file);
+      form.append("file", await optimizeImageBeforeUpload(file));
       const r = await fetch("/api/upload", { method: "POST", body: form });
       if (!r.ok) return alert("No se pudo subir la foto del tipo.");
       const d = await r.json();
@@ -2360,7 +2394,7 @@ function Admin({
     setUploading(true);
     try {
       const form = new FormData();
-      form.append("file", file);
+      form.append("file", await optimizeImageBeforeUpload(file));
       const response = await fetch("/api/upload?template=" + encodeURIComponent(new URLSearchParams(location.search).get("catalogo") || "ropa"), { method: "POST", body: form });
       if (!response.ok) return alert("No se pudo subir el fondo de categorías.");
       const result = await response.json() as { url?: string };
@@ -3813,7 +3847,7 @@ function AdminV2({
     setUploading(true);
     try {
       const form = new FormData();
-      form.append("file", file);
+      form.append("file", await optimizeImageBeforeUpload(file));
       const response = await fetch("/api/upload?template=" + encodeURIComponent(new URLSearchParams(location.search).get("catalogo") || "ropa"), {
         method: "POST",
         body: form,
@@ -3840,7 +3874,7 @@ function AdminV2({
     setUploading(true);
     try {
       const form = new FormData();
-      form.append("file", file);
+      form.append("file", await optimizeImageBeforeUpload(file));
       const response = await fetch("/api/upload?template=" + encodeURIComponent(template), {
         method: "POST",
         body: form,
@@ -3863,7 +3897,7 @@ function AdminV2({
       const urls: string[] = [];
       for (const file of horizontal) {
         const form = new FormData();
-        form.append("file", file);
+        form.append("file", await optimizeImageBeforeUpload(file));
         const response = await fetch("/api/upload?template=" + encodeURIComponent(new URLSearchParams(location.search).get("catalogo") || "ropa"), { method: "POST", body: form });
         if (!response.ok) continue;
         const result = await response.json() as { url?: string };
@@ -3880,7 +3914,7 @@ function AdminV2({
     setUploading(true);
     try {
       const form = new FormData();
-      form.append("file", file);
+      form.append("file", await optimizeImageBeforeUpload(file));
       const response = await fetch("/api/upload?template=" + encodeURIComponent(template), { method: "POST", body: form });
       if (!response.ok) return alert("No se pudo subir el fondo de categorías.");
       const result = await response.json() as { url?: string };
@@ -5822,7 +5856,7 @@ function FlyerStudio({
     if (!file) return;
     setError("");
     const form = new FormData();
-    form.append("file", file);
+    form.append("file", await optimizeImageBeforeUpload(file));
     const response = await fetch("/api/upload?template=" + encodeURIComponent(new URLSearchParams(location.search).get("catalogo") || "ropa"), { method: "POST", body: form });
     if (!response.ok)
       return setError(
@@ -8499,7 +8533,7 @@ function OptionGroupEditor({
     setUploadingIndex(index);
     setPhotoError("");
     const form = new FormData();
-    form.append("file", file);
+    form.append("file", await optimizeImageBeforeUpload(file));
     const response = await fetch("/api/upload", { method: "POST", body: form });
     if (response.ok) {
       const result = await response.json();
@@ -8518,7 +8552,7 @@ function OptionGroupEditor({
     setUploadingIndex(index);setPhotoError("");
     const parsed=parseOptionValue(group.values[index]);
     const uploaded:string[]=[];
-    for(const file of Array.from(files)){const form=new FormData();form.append("file",file);const response=await fetch("/api/upload?template=" + encodeURIComponent(new URLSearchParams(location.search).get("catalogo") || "ropa"),{method:"POST",body:form});if(response.ok){const result=await response.json();uploaded.push(String(result.url))}}
+    for(const file of Array.from(files)){const form=new FormData();form.append("file",await optimizeImageBeforeUpload(file));const response=await fetch("/api/upload?template=" + encodeURIComponent(new URLSearchParams(location.search).get("catalogo") || "ropa"),{method:"POST",body:form});if(response.ok){const result=await response.json();uploaded.push(String(result.url))}}
     if(uploaded.length){const replacePlaceholder=!parsed.image;const base=group.values.map((value,i)=>i===index&&replacePlaceholder?colorValue(parsed.label,parsed.color||colorSwatch(value),uploaded[0]):value);const extras=(replacePlaceholder?uploaded.slice(1):uploaded).map(url=>colorValue(parsed.label,parsed.color||colorSwatch(group.values[index]),url));updateValues([...base,...extras])}else setPhotoError("No se pudieron subir las fotos.");
     setUploadingIndex(null);
   }
