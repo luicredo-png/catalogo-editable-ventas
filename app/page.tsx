@@ -45,9 +45,15 @@ function whatsappOrderUrl(phone: string, message: string) {
 }
 
 function optimizedCatalogImage(src: string) {
-  return src === "/api/media/asset-public-53f33276-cfee-4884-b3a1-402b280d1c4e.png"
-    ? "/gmpaonyx-collection-background.webp"
-    : src;
+  const optimized: Record<string, string> = {
+    "/api/media/asset-public-53f33276-cfee-4884-b3a1-402b280d1c4e.png": "/gmpaonyx-collection-background.webp",
+    "/api/media/asset-public-92bac58b-6626-4efe-a3b6-ccf5ff4b49e5.png": "/gmpaonyx-hero.webp",
+    "/api/media/asset-public-639dfca1-7c81-4fa0-bdfb-5f7fef85e89d.png": "/gmpaonyx-collection.webp",
+    "/api/media/asset-public-eb3e8468-eb0c-41da-8a21-f6ffa1c8593f.png": "/gmpaonyx-surface.webp",
+    "/api/media/asset-public-863b27f6-cf32-4f67-a0de-4ff93b37eda9.jpg": "/gmpaonyx-products/GMP-01_VIENTO.webp",
+    "/api/media/asset-public-08272056-7c28-40ce-8a94-7ae6e255d365.jpg": "/gmpaonyx-products/GMP-02_BLANCA_LUNA.webp",
+  };
+  return optimized[src] || src;
 }
 
 function prioritizeImage(src: string) {
@@ -403,7 +409,7 @@ export default function Home({
     "--accent": store.accent,
     "--store-bg": store.backgroundColor,
     "--store-image": store.backgroundImage
-      ? `url(${store.backgroundImage})`
+      ? `url(${optimizedCatalogImage(store.backgroundImage)})`
       : "none",
     "--collection-bg": store.collectionBackgroundColor,
     "--collection-image":
@@ -414,7 +420,7 @@ export default function Home({
       ? store.collectionOverlayStrength
       : 0,
     "--surface-image": store.surfaceBackgroundImage
-      ? `url(${store.surfaceBackgroundImage})`
+      ? `url(${optimizedCatalogImage(store.surfaceBackgroundImage)})`
       : "none",
     "--heading-font": store.headingFont,
     "--hero-font": store.heroFont,
@@ -557,7 +563,7 @@ export default function Home({
             className="clothing-entry"
             id="top"
             style={{
-              backgroundImage: `linear-gradient(90deg,rgba(2,5,10,.92) 0%,rgba(2,5,10,.62) 43%,rgba(2,5,10,.1) 76%),url(${clothingHero})`,
+              backgroundImage: `linear-gradient(90deg,rgba(2,5,10,.92) 0%,rgba(2,5,10,.62) 43%,rgba(2,5,10,.1) 76%),url(${optimizedCatalogImage(clothingHero)})`,
             }}
           >
             <SocialLinks store={store} />
@@ -612,7 +618,7 @@ export default function Home({
                 categoryBackgroundColor(store.categorySettings) ||
                 store.collectionBackgroundColor,
               "--category-panel-image": categoryBackground(store.categorySettings)
-                ? `linear-gradient(#05080d99,#05080d99),url(${categoryBackground(store.categorySettings)})`
+                ? `linear-gradient(#05080d99,#05080d99),url(${optimizedCatalogImage(categoryBackground(store.categorySettings))})`
                 : "none",
               backgroundSize: "cover",
               backgroundPosition: "center",
@@ -626,7 +632,7 @@ export default function Home({
                   key={c.key}
                 >
                   <span style={{ backgroundColor: c.color || undefined }}>
-                    {c.image ? <img src={c.image} alt="" /> : <i></i>}
+                    {c.image ? <img src={optimizedCatalogImage(c.image)} alt="" loading="lazy" decoding="async" /> : <i></i>}
                   </span>
                   <b>{c.label}</b>
                 </button>
@@ -656,7 +662,7 @@ export default function Home({
             style={
               currentHero && !isVideoMedia(currentHero)
                 ? {
-                    backgroundImage: `linear-gradient(90deg,rgba(3,7,12,.9),rgba(3,7,12,.58) 55%,rgba(3,7,12,.18)),url(${currentHero})`,
+                    backgroundImage: `linear-gradient(90deg,rgba(3,7,12,.9),rgba(3,7,12,.58) 55%,rgba(3,7,12,.18)),url(${optimizedCatalogImage(currentHero)})`,
                     backgroundSize: "cover",
                     backgroundPosition: "center",
                   }
@@ -711,7 +717,7 @@ export default function Home({
             style={{
               backgroundColor: categoryBackgroundColor(store.categorySettings) || undefined,
               backgroundImage: categoryBackground(store.categorySettings)
-                ? `linear-gradient(#05080d99,#05080d99),url(${categoryBackground(store.categorySettings)})`
+                ? `linear-gradient(#05080d99,#05080d99),url(${optimizedCatalogImage(categoryBackground(store.categorySettings))})`
                 : undefined,
               backgroundSize: "cover",
               backgroundPosition: "center",
@@ -724,7 +730,7 @@ export default function Home({
                 key={c.key}
               >
                 <span style={{ backgroundColor: c.color || undefined }}>
-                  {c.image ? <img src={c.image} alt="" loading="lazy" decoding="async" /> : <i />}
+                  {c.image ? <img src={optimizedCatalogImage(c.image)} alt="" loading="lazy" decoding="async" /> : <i />}
                 </span>
                 <b>{c.label}</b>
               </button>
@@ -1501,7 +1507,7 @@ function ProductMedia({ src, alt, className, controls = false, loading, decoding
 }) {
   return isVideoMedia(src)
     ? <video className={className} src={src} aria-label={alt || "Video del producto"} controls={controls} muted playsInline preload="metadata" />
-    : <img className={className} src={src} alt={alt} loading={loading} decoding={decoding} />;
+    : <img className={className} src={optimizedCatalogImage(src)} alt={alt} loading={loading} decoding={decoding} />;
 }
 
 function StoreProductCard({
