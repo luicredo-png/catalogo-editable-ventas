@@ -1,5 +1,5 @@
 import { env } from 'cloudflare:workers';
-import { authConfigured, isDemoHost, privateError, SESSION_COOKIE, tenantFromHost } from '@/lib/admin-auth';
+import { authConfigured, DEMO_PASSWORD_HASH, isDemoHost, privateError, SESSION_COOKIE, tenantFromHost } from '@/lib/admin-auth';
 import { verifyPassword, randomSession, sessionDigest } from '@/lib/passwords';
 export async function POST(request:Request){
  if(!authConfigured(env))return privateError(503,'admin_auth_not_configured');const url=new URL(request.url);if(url.protocol!=='https:'||request.headers.get('origin')!==url.origin)return privateError(403,'invalid_origin');
@@ -11,6 +11,7 @@ export async function POST(request:Request){
  // a recordar una variante exacta de su nombre de usuario para usar la contraseña
  // creada o restablecida desde el panel maestro.
  const user=!owner&&!demo&&slug?await env.DB.prepare('SELECT u.id,u.password_hash FROM catalog_admins u JOIN stores s ON s.id=u.store_id WHERE s.slug=? AND u.active=1 ORDER BY u.created_at DESC LIMIT 1').bind(slug).first<{id:string;password_hash:string}>():null;
- const valid=await verifyPassword(password,owner||demo?env.OWNER_PASSWORD_HASH!:user?.password_hash||env.OWNER_PASSWORD_HASH!);if(!valid||(!owner&&!demo&&!user))return privateError(401,'invalid_credentials');
- const token=randomSession();await env.DB.batch([env.DB.prepare('DELETE FROM catalog_sessions WHERE expires_at<=?').bind(now),env.DB.prepare('DELETE FROM catalog_login_limits WHERE resets_at<=?').bind(now),env.DB.prepare('INSERT INTO catalog_sessions(token_hash,user_id,owner_email,owner_version,host,expires_at) VALUES (?,?,?,?,?,?)').bind(sessionDigest(token,env.AUTH_SECRET!),user?.id||null,demo?'demo':owner?identifier:null,(owner||demo)?sessionDigest(env.OWNER_PASSWORD_HASH!,env.AUTH_SECRET!):null,url.hostname,now+28800000)]);return Response.json({ok:true},{headers:{'Cache-Control':'no-store','Set-Cookie':SESSION_COOKIE+'='+token+'; Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age=28800'}})
+ const passwordHash=demo?DEMO_PASSWORD_HASH:owner?env.OWNER_PASSWORD_HASH!:user?.password_hash||env.OWNER_PASSWORD_HASH!;
+ const valid=await verifyPassword(password,passwordHash);if(!valid||(!owner&&! demo&&!user))return privateError(401,'invalid_credentials');
+ const token=randomSession();await env.DB.batch([env.DB.prepare('DELETE FROM catalog_sessions WHERE expires_at<=?').bind(now),env.DB.prepare('DELETE FROM catalog_login_limits WHERE resets_at<=?').bind(now),env.DB.prepare('INSERT INTO catalog_sessions(token_hash,user_id,owner_email,owner_version,host,expires_at) VALUES (?,?,?,?,?,?)').bind(sessionDigest(token,env.AUTH_SECRET!),user?.id||null,demo?'demo':owner?identifier:null,(owner||demo)?sessionDigest(passwordHash,env.AUTH_SECRET!):null,url.hostname,now+28800000)]);return Response.json({ok:true},{headers:{'Cache-Control':'no-store','Set-Cookie':SESSION_COOKIE+'='+token+'; Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age=28800'}})
 }

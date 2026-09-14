@@ -548,3 +548,64 @@ body main.storefront .store-product-info p>b{display:block;white-space:nowrap;li
 .flyer-product-visibility button{min-height:39px;border:1px solid transparent;border-radius:9px;background:transparent;color:#536477;font-size:9px;font-weight:900}
 .flyer-product-visibility button.active{border-color:#168cff;background:#168cff;color:#fff;box-shadow:0 7px 16px #168cff30}
 @media(max-width:520px){.flyer-product-visibility{grid-template-columns:1fr}.flyer-product-visibility button{min-height:42px}}
+
+/* Selector uniforme de demos y buscador editable. */
+.demo-mobile-switcher{display:none}
+body main.storefront .store-search{color:var(--search-color,#9aa5b5)!important}
+body main.storefront .store-search input::placeholder{color:var(--search-color,#9aa5b5)!important;opacity:1}
+.search-editor-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,.7fr);gap:14px;padding:16px;border:1px solid #d9e3ef;border-radius:16px;background:#f7faff}
+.search-editor-fields>label{display:grid;align-content:start;gap:9px}
+@media(min-width:761px){
+ body main.storefront:not(.home-hide-hero) .store-header:has(.template-links),
+ body main.storefront.clothing-store:not(.home-hide-hero) .store-header:has(.template-links){
+  position:sticky!important;top:0!important;display:grid!important;
+  grid-template-columns:minmax(150px,1fr) auto minmax(150px,1fr)!important;grid-template-rows:1fr!important;
+  width:100%!important;height:86px!important;min-height:86px!important;padding:10px 4vw!important;gap:22px!important
+ }
+ body main.storefront:not(.home-hide-hero) .store-header:has(.template-links) .store-logo{
+  position:static!important;grid-column:1!important;grid-row:1!important;justify-self:start!important;transform:none!important;max-width:220px!important
+ }
+ body main.storefront:not(.home-hide-hero) .store-header:has(.template-links) .template-links{
+  position:static!important;grid-column:2!important;grid-row:1!important;align-self:center!important;justify-self:center!important;
+  display:flex!important;gap:8px!important;margin:0!important;padding:6px!important;max-width:none!important;border:0!important;background:transparent!important
+ }
+ body main.storefront .store-header .template-links a{
+  padding:10px 13px!important;border:1px solid color-mix(in srgb,var(--store-text),transparent 84%)!important;
+  border-radius:12px!important;background:color-mix(in srgb,var(--surface),transparent 7%)!important;text-decoration:none!important;
+  text-underline-offset:0!important;box-shadow:0 7px 18px #0003!important;transition:transform .18s,border-color .18s,background .18s!important
+ }
+ body main.storefront .store-header .template-links a:hover,
+ body main.storefront .store-header .template-links a[aria-current="page"]{
+  transform:translateY(-2px)!important;border-color:var(--accent)!important;background:color-mix(in srgb,var(--accent),transparent 76%)!important
+ }
+ body main.storefront:not(.home-hide-hero) .store-header:has(.template-links)>button{
+  position:static!important;grid-column:3!important;grid-row:1!important;justify-self:end!important
+ }
+ body main.storefront:not(.home-hide-hero) .store-header:has(.template-links)+:is(.store-hero,.clothing-entry){padding-top:clamp(48px,6vw,92px)!important}
+}
+@media(max-width:760px){
+ .search-editor-fields{grid-template-columns:1fr}
+ body main.storefront:not(.home-hide-hero) .store-header:has(.template-links),
+ body main.storefront.clothing-store:not(.home-hide-hero) .store-header:has(.template-links){
+  position:relative!important;display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;grid-template-rows:58px 62px!important;
+  width:100%!important;height:132px!important;min-height:132px!important;padding:6px 14px 12px!important;gap:4px 12px!important
+ }
+ body main.storefront:not(.home-hide-hero) .store-header:has(.template-links) .store-logo{
+  position:static!important;grid-column:1!important;grid-row:1!important;justify-self:start!important;transform:none!important;margin:0!important;max-width:150px!important
+ }
+ body main.storefront:not(.home-hide-hero) .store-header:has(.template-links)>button{
+  position:static!important;display:block!important;grid-column:2!important;grid-row:1!important;justify-self:end!important;align-self:center!important;font-size:7px!important;padding:9px 11px!important
+ }
+ body main.storefront .store-header .template-links{display:none!important}
+ body main.storefront .store-header .demo-mobile-switcher{
+  display:grid!important;grid-column:1/-1!important;grid-row:2!important;grid-template-columns:auto minmax(0,1fr)!important;
+  align-items:center!important;gap:10px!important;width:100%!important;padding:7px 8px 7px 13px!important;
+  border:1px solid color-mix(in srgb,var(--accent),transparent 40%)!important;border-radius:15px!important;background:color-mix(in srgb,var(--surface),transparent 5%)!important
+ }
+ .demo-mobile-switcher span{font-size:8px;font-weight:950;letter-spacing:.11em;color:var(--accent)}
+ .demo-mobile-switcher select{width:100%;min-height:42px;padding:0 12px;border:1px solid color-mix(in srgb,var(--store-text),transparent 76%);border-radius:11px;background:var(--store-bg);color:var(--store-text);font-size:13px;font-weight:850}
+ body main.storefront .store-hero>.store-search{margin-bottom:64px!important}
+ body main.storefront.clothing-store .clothing-entry{padding-bottom:160px!important}
+ body main.storefront.clothing-store .clothing-hero-search{left:18px!important;right:18px!important;bottom:76px!important;width:auto!important;margin:0!important}
+ body main.storefront :is(.store-hero,.clothing-entry)>.store-social-links{right:12px!important;bottom:16px!important}
+}

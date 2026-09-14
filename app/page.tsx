@@ -439,6 +439,7 @@ export default function Home({
   const collectionVideo = isVideoMedia(store.collectionBackgroundImage);
   const coverPreviewMedia=store.heroImage.split("|||").filter(Boolean)[0]||"";
   const heroColors = heroColorSettings(store.categorySettings, store);
+  const catalogSearch = searchSettings(store.categorySettings, activeTemplate);
   const style = {
     "--accent": store.accent,
     "--store-bg": store.backgroundColor,
@@ -480,6 +481,7 @@ export default function Home({
     "--logo-strip-bg": heroColors.logoStripBackground,
     "--logo-filter": heroColors.logoGlow ? `drop-shadow(0 0 18px ${store.accent})` : "none",
     "--surface": store.surfaceColor,
+    "--search-color": catalogSearch.color,
     "--overlay": store.backgroundImage ? store.overlayStrength : 0,
     fontFamily: `${store.fontFamily}, Arial, sans-serif`,
     color: store.textColor,
@@ -583,6 +585,16 @@ export default function Home({
                 <a href={`/${item.key}`} key={item.key} aria-current={activeTemplate === item.key ? "page" : undefined}>{item.label}</a>
               ))}
             </div>
+            <label className="demo-mobile-switcher">
+              <span>CAMBIAR DEMO</span>
+              <select
+                value={activeTemplate}
+                onChange={(event) => (location.href = `/${event.target.value}`)}
+                aria-label="Cambiar de demo"
+              >
+                {catalogMenuItems.map((item) => <option value={item.key} key={item.key}>{item.label}</option>)}
+              </select>
+            </label>
             {<button
               onClick={() => (location.href = `/admin?catalogo=${activeTemplate}`)}
             >
@@ -627,11 +639,7 @@ export default function Home({
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder={
-                  activeTemplate === "zapatos-mujer"
-                    ? "Buscar zapato..."
-                    : "Buscar prenda..."
-                }
+                placeholder={catalogSearch.text}
               />
             </label>
             <div className="clothing-entry-tag">
@@ -740,7 +748,7 @@ export default function Home({
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder={isFood ? "Buscar plato..." : "Buscar modelo..."}
+                placeholder={catalogSearch.text}
               />
             </label>
           </section>
@@ -905,14 +913,13 @@ function normalizeStore(s: Record<string, unknown>): Store {
     templateKey,
     name: String(s.name || "MODO"),
     whatsapp: String(s.whatsapp || "51999999999"),
-    whatsappMessage:
-      templateKey === "ropa"
-        ? CLOTHING_WHATSAPP_MESSAGE
-        : String(
-            s.whatsapp_message ||
-              s.whatsappMessage ||
-              "Hola, quiero pedir {producto}.\n{opciones}\nPrecio: S/ {precio}\nCatálogo: {catalogo}",
-          ),
+    whatsappMessage: String(
+      s.whatsapp_message ||
+        s.whatsappMessage ||
+        (templateKey === "ropa"
+          ? CLOTHING_WHATSAPP_MESSAGE
+          : "Hola, quiero pedir {producto}.\n{opciones}\nPrecio: S/ {precio}\nCatálogo: {catalogo}"),
+    ),
     instagram: String(s.instagram || ""),
     facebook: String(s.facebook || ""),
     locationUrl: String(s.location_url || s.locationUrl || ""),
@@ -1543,6 +1550,28 @@ function ProductMedia({ src, alt, className, controls = false, loading, decoding
     ? <video className={className} src={src} aria-label={alt || "Video del producto"} controls={controls} muted playsInline preload="metadata" />
     : <img className={className} src={optimizedCatalogImage(src)} alt={alt} loading={loading} decoding={decoding} />;
 }
+function searchSettings(value: string, template: TemplateKey) {
+  const item = parseCategorySettings(value).find((entry) => entry.key === "__SEARCH_SETTINGS__");
+  const fallback = template === "zapatos-mujer"
+    ? "Buscar zapato..."
+    : template === "ropa" || template === "mujer"
+      ? "Buscar prenda..."
+      : template === "restaurantes" || template === "comida-rapida"
+        ? "Buscar plato..."
+        : "Buscar modelo...";
+  return {
+    text: item?.label?.trim() || fallback,
+    color: /^#[0-9a-f]{6}$/i.test(item?.color || "") ? String(item?.color) : "#9aa5b5",
+  };
+}
+function setSearchSettings(value: string, settings: { text: string; color: string }) {
+  let items: CatalogType[] = [];
+  try { const parsed = JSON.parse(value || "[]"); if (Array.isArray(parsed)) items = parsed; } catch {}
+  return JSON.stringify([
+    ...items.filter((item) => item?.key !== "__SEARCH_SETTINGS__"),
+    { key: "__SEARCH_SETTINGS__", label: settings.text.slice(0, 80), image: "", color: settings.color },
+  ]);
+}
 
 function StoreProductCard({
   product,
@@ -1928,14 +1957,13 @@ function ProductOrderModal({
     ? optionLabel(choices[sizeGroup.name] || "Sin selección")
     : "Sin selección";
   const catalogUrl = readableCatalogUrl(template);
+  const clothingFallback = sizesEnabled
+    ? CLOTHING_WHATSAPP_MESSAGE
+    : "Hola 👋🔥 quiero pedir {producto}. ✅\nDeseo confirmar disponibilidad y realizar mi compra.\nCatálogo: {catalogo}";
   const message = (
-    template === "ropa" && sizesEnabled
-      ? CLOTHING_WHATSAPP_MESSAGE
-      : template === "ropa"
-        ? "Hola 👋🔥 quiero pedir {producto}. ✅\nDeseo confirmar disponibilidad y realizar mi compra.\nCatálogo: {catalogo}"
-      : store.whatsappMessage?.trim() ||
-        product.whatsappMessage?.trim() ||
-        fallbackMessage
+    product.whatsappMessage?.trim() ||
+    store.whatsappMessage?.trim() ||
+    (template === "ropa" ? clothingFallback : fallbackMessage)
   )
     .replaceAll("{producto}", product.name)
     .replaceAll("{talla}", selectedSize)
@@ -3580,6 +3608,9 @@ function AdminV2({
   const homeLayout = homeLayoutSettings(store.categorySettings);
   const promoAppearance = promoSettings(store.categorySettings);
   const productDisplay = productDisplaySettings(store.categorySettings);
+  const catalogSearch = searchSettings(store.categorySettings, template);
+  const updateSearch = (patch: Partial<typeof catalogSearch>) =>
+    update("categorySettings", setSearchSettings(store.categorySettings, { ...catalogSearch, ...patch }));
   const updateProductDisplay = (patch: Partial<ProductDisplaySettings>) =>
     update(
       "categorySettings",
@@ -4480,6 +4511,22 @@ function AdminV2({
                     }}
                   />
                 </label>
+              </div>
+              <div className="search-editor-fields">
+                <label>
+                  Texto dentro del buscador
+                  <input
+                    value={catalogSearch.text}
+                    maxLength={80}
+                    onChange={(event) => updateSearch({ text: event.target.value })}
+                    placeholder="Buscar producto..."
+                  />
+                </label>
+                <ColorField
+                  label="Color del texto del buscador"
+                  value={catalogSearch.color}
+                  change={(color) => updateSearch({ color })}
+                />
               </div>
               {homeLayout.hidden.includes("hero") && (
                 <ColorField

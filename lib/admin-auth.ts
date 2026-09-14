@@ -2,6 +2,7 @@ import { sessionDigest } from './passwords';
 export type AuthConfig = { AUTH_SECRET?: string; OWNER_EMAIL?: string; OWNER_PASSWORD_HASH?: string; DB: D1Database };
 export type Administrator = { email: string; subject: string; owner: boolean; demo: boolean; tenant: string; storeId: number | null };
 export const SESSION_COOKIE = '__Host-catalog_session';
+export const DEMO_PASSWORD_HASH = 'pbkdf2-v1$100000$b7392d278c9f795625f73d264cac5a87$b0668e1a3b0aeb6af140da89437e337a2225289471d85623044585282149f84a';
 export function authConfigured(config: AuthConfig) {
  return Boolean(config.AUTH_SECRET && config.AUTH_SECRET.length >= 32 && config.OWNER_EMAIL && /^scrypt-v1\$[a-f0-9]{32}\$[a-f0-9]{64}$/.test(config.OWNER_PASSWORD_HASH || ''));
 }
@@ -25,7 +26,7 @@ export async function authenticate(request: Request, config: AuthConfig): Promis
  if (!row) return null;
  if (row.owner_email) {
   if (row.owner_email === 'demo') {
-   if (!isDemoHost(host) || row.owner_version !== sessionDigest(config.OWNER_PASSWORD_HASH!, config.AUTH_SECRET!)) return null;
+   if (!isDemoHost(host) || row.owner_version !== sessionDigest(DEMO_PASSWORD_HASH, config.AUTH_SECRET!)) return null;
    return {email:'demo',subject:'demo',owner:false,demo:true,tenant:'',storeId:null};
   }
   if (row.owner_email !== config.OWNER_EMAIL!.toLowerCase() || row.owner_version !== sessionDigest(config.OWNER_PASSWORD_HASH!, config.AUTH_SECRET!)) return null;
