@@ -3,6 +3,6 @@
 import Catalog from "../page";
 
 export default function Page() {
-  return <Catalog template="detalles-romanticos" />;
+  return <Catalog template="detalles-romanticos" instantDemo />;
 }
 

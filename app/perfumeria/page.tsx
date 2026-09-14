@@ -3,6 +3,6 @@
 import Catalog from "../page";
 
 export default function Page() {
-  return <Catalog template="perfumeria" />;
+  return <Catalog template="perfumeria" instantDemo />;
 }
 

@@ -8,6 +8,6 @@ export async function GET(request:Request){
  const rows=await env.DB.prepare('SELECT id,name,category,description,price,old_price AS oldPrice,image,options_json AS optionsJson,whatsapp_message AS whatsappMessage,active FROM products WHERE store_id=? AND active=1 ORDER BY sort_order,id').bind(store.id).all();
  return Response.json(
   {store,products:rows.results.map(p=>{let options=[];try{options=JSON.parse(String((p as Record<string,unknown>).optionsJson||'[]'))}catch{}return{...p,options,active:Boolean(p.active)}})},
-  {headers:{'Cache-Control':'public, max-age=15, stale-while-revalidate=300'}},
+  {headers:{'Cache-Control':'public, max-age=30, s-maxage=120, stale-while-revalidate=3600'}},
  );
 }

@@ -1,1 +1,1 @@
-"use client"; import Catalog from "../page"; export default function Page(){return <Catalog template="accesorios"/>}
+"use client"; import Catalog from "../page"; export default function Page(){return <Catalog template="accesorios" instantDemo/>}

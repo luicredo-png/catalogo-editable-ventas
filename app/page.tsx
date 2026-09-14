@@ -177,9 +177,11 @@ type CartItem = { product: Product; quantity: number };
 export default function Home({
   template = "ropa",
   startAdmin = false,
+  instantDemo = false,
 }: {
   template?: TemplateKey;
   startAdmin?: boolean;
+  instantDemo?: boolean;
 }) {
   const selectedTemplate = templates[template];
   const [products, setProducts] = useState<Product[]>(
@@ -197,7 +199,7 @@ export default function Home({
     [activeTemplate, setActiveTemplate] = useState<TemplateKey>(template),
     [query, setQuery] = useState(""),
     [filter, setFilter] = useState("TODOS"),
-    [catalogLoading, setCatalogLoading] = useState(!startAdmin),
+    [catalogLoading, setCatalogLoading] = useState(!startAdmin && !instantDemo),
     [singleCatalog, setSingleCatalog] = useState(false),
     [adminLoading, setAdminLoading] = useState(startAdmin),
     [adminError, setAdminError] = useState(""),
@@ -287,7 +289,7 @@ export default function Home({
     if (!showedCachedCatalog && !tenantSlug && slug === template) {
       setCatalogLoading(false);
     }
-    fetch(`/api/catalog?slug=${encodeURIComponent(slug)}`)
+    const refreshCatalog = () => fetch(`/api/catalog?slug=${encodeURIComponent(slug)}`)
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((d) => {
         if (!mounted) return;
@@ -309,8 +311,13 @@ export default function Home({
       .finally(() => {
         if (mounted) setCatalogLoading(false);
       });
+    // The demo already ships with its complete catalog. Let its visible images
+    // start downloading first, then refresh saved customizations quietly.
+    const refreshDelay = !tenantSlug && slug === template ? 1200 : 0;
+    const refreshTimer = window.setTimeout(refreshCatalog, refreshDelay);
     return () => {
       mounted = false;
+      window.clearTimeout(refreshTimer);
     };
   }, [template, startAdmin]);
   useEffect(() => {
@@ -489,7 +496,7 @@ export default function Home({
   // Keep the Worker response deliberately small. The complete catalog is built
   // in the visitor's browser after hydration, avoiding CPU-limit failures when
   // a tenant has many products or images.
-  if (!hydrated)
+  if (!hydrated && !instantDemo)
     return (
       <main className="app-boot-screen" aria-label="Abriendo catálogo">
         <div className="admin-gate-spinner" />
