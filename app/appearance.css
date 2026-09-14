@@ -65,6 +65,42 @@ body main.storefront .catalog-footer-socials svg{width:24px;height:24px;display:
 body main.storefront :is(.store-hero,.clothing-entry)>.store-social-links a[aria-label="Instagram"]{background:linear-gradient(135deg,#833ab4,#fd1d1d 58%,#fcb045)!important;color:#fff!important}
 body main.storefront :is(.store-hero,.clothing-entry)>.store-social-links a[aria-label="Facebook"]{background:linear-gradient(145deg,#4b9dff,#1264d9)!important;color:#fff!important}
 
+/* Orden móvil definitivo: selector visible, CTA contrastado y redes debajo del buscador. */
+@media(max-width:760px){
+ body main.storefront .demo-mobile-switcher{position:relative!important;padding-right:8px!important}
+ body main.storefront .demo-mobile-switcher::after{
+  content:"⌄";position:absolute;z-index:3;right:22px;top:50%;transform:translateY(-45%);
+  color:var(--accent);font-size:24px;font-weight:950;line-height:1;pointer-events:none
+ }
+ body main.storefront .demo-mobile-switcher select{
+  appearance:none!important;-webkit-appearance:none!important;padding-right:46px!important;
+  border-color:color-mix(in srgb,var(--accent),#fff 12%)!important
+ }
+ body main.storefront :is(.hero-cta,.clothing-entry-copy>a){
+  position:relative!important;z-index:8!important;display:inline-flex!important;visibility:visible!important;opacity:1!important;
+  min-width:158px!important;min-height:50px!important;padding:0 22px!important;
+  border:2px solid color-mix(in srgb,var(--hero-button),#fff 35%)!important;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--hero-button),#fff 24%),var(--hero-button))!important;
+  color:var(--hero-button-text)!important;text-shadow:none!important;
+  box-shadow:0 10px 26px color-mix(in srgb,var(--hero-button),transparent 42%),inset 0 1px 0 #ffffff70!important
+ }
+ body main.storefront .store-hero>.hero-copy{order:1!important}
+ body main.storefront .store-hero>.store-search{order:2!important;margin-bottom:0!important}
+ body main.storefront .store-hero>.store-social-links{
+  position:static!important;order:3!important;justify-self:start!important;align-self:start!important;
+  display:flex!important;width:max-content!important;max-width:100%!important;margin-top:12px!important;
+  inset:auto!important;transform:none!important
+ }
+ body main.storefront.clothing-store .clothing-entry{padding-bottom:160px!important}
+ body main.storefront.clothing-store .clothing-entry>.clothing-hero-search{
+  left:18px!important;right:18px!important;bottom:78px!important;width:auto!important;margin:0!important
+ }
+ body main.storefront.clothing-store .clothing-entry>.store-social-links{
+  position:absolute!important;left:18px!important;right:auto!important;top:auto!important;bottom:18px!important;
+  margin:0!important;transform:none!important
+ }
+}
+
 /* Opciones generales del producto y galería fluida. */
 .product-display-admin{display:grid;grid-template-columns:minmax(260px,1fr) minmax(260px,1fr);gap:14px;margin:16px 0;padding:16px;border:1px solid #bed4ee;border-radius:18px;background:#f7fbff}.product-display-admin>label{display:grid;align-content:center;gap:7px;margin:0;font-weight:800}.product-display-admin small{display:block;color:#6a7b91;font-size:11px;font-weight:500}.product-display-admin input[type="text"],.product-display-admin>label>input:not([type]){width:100%}.product-display-admin .catalog-option-toggle{grid-template-columns:1fr auto;align-items:center}.catalog-option-toggle span{display:grid;gap:5px}.catalog-option-toggle input{width:48px;height:26px;accent-color:#168cff;cursor:pointer}
 .storefront .store-photo>.catalog-gallery-media,.order-image>.order-gallery-media{animation:catalogGalleryArrive .46s cubic-bezier(.22,.72,.2,1) both;will-change:transform,opacity,filter}
