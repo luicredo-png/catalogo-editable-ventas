@@ -1245,11 +1245,6 @@ function isVideoMedia(url: string) {
   );
 }
 function PromoTicker({ text, settings, store }: { text: string; settings: PromoSettings; store: Store }) {
-  const href = settings.network === "facebook"
-    ? store.facebook
-    : settings.network === "whatsapp"
-      ? `https://wa.me/${store.whatsapp}`
-      : store.instagram;
   return (
     <aside
       className="promo-ticker"
@@ -1262,12 +1257,6 @@ function PromoTicker({ text, settings, store }: { text: string; settings: PromoS
         <span aria-hidden="true">{text}</span>
         <i aria-hidden="true">✦</i>
       </div>
-      {settings.buttonEnabled && href && (
-        <a className="promo-social-button" href={href} target="_blank" rel="noreferrer">
-          {settings.network === "facebook" ? <FacebookIcon /> : settings.network === "whatsapp" ? <WhatsAppIcon /> : <InstagramIcon />}
-          {settings.buttonLabel}
-        </a>
-      )}
     </aside>
   );
 }
@@ -3651,21 +3640,6 @@ function AdminV2({
       ticker.style.setProperty("--promo-height", `${settings.height}px`);
       ticker.querySelectorAll("div > span").forEach((item) => { item.textContent = text; });
       ticker.querySelector(".promo-social-button")?.remove();
-      const href = settings.network === "facebook"
-        ? socialUrl(store.facebook, "facebook")
-        : settings.network === "whatsapp"
-          ? (store.whatsapp ? `https://wa.me/${store.whatsapp.replace(/\D/g, "")}` : "")
-          : socialUrl(store.instagram, "instagram");
-      if (settings.buttonEnabled && href) {
-        const button = ticker.ownerDocument.createElement("a");
-        button.className = `promo-social-button promo-network-${settings.network}`;
-        button.href = href;
-        button.target = "_blank";
-        button.rel = "noreferrer";
-        const icon = settings.network === "facebook" ? "/social/facebook.svg" : settings.network === "instagram" ? "/social/instagram.svg" : "";
-        button.innerHTML = icon ? `<img src="${icon}" alt=""><span>${settings.buttonLabel}</span>` : `<span>☎</span><span>${settings.buttonLabel}</span>`;
-        ticker.appendChild(button);
-      }
     });
   };
   const updatePromoAppearance = (patch: Partial<PromoSettings>) => {
@@ -4313,19 +4287,19 @@ function AdminV2({
                   change={(v) => update("heroCtaFont", v)}
                 />
               </div>
-              <label className="cover-promo-control">
-                Texto de la barra en movimiento
-                <input
-                  value={store.promoText}
-                  maxLength={180}
-                  onChange={(e) => {
-                    update("promoText", e.target.value);
-                    applyPromoPreview(promoAppearance, e.target.value);
-                  }}
-                  placeholder="Ejemplo: Oferta especial · Pide hoy por WhatsApp"
-                />
-              </label>
               <section className="promo-appearance-editor">
+                <label className="promo-text-editor">
+                  Editar texto de la barra
+                  <input
+                    value={store.promoText}
+                    maxLength={180}
+                    onChange={(e) => {
+                      update("promoText", e.target.value);
+                      applyPromoPreview(promoAppearance, e.target.value);
+                    }}
+                    placeholder="Ejemplo: Oferta especial · Pide hoy por WhatsApp"
+                  />
+                </label>
                 <FontSelect
                   label="Tipografía de la barra"
                   value={promoAppearance.font}
@@ -4355,30 +4329,6 @@ function AdminV2({
                   value={promoAppearance.background}
                   change={(background) => updatePromoAppearance({ background })}
                 />
-                <label className="promo-button-toggle">
-                  <input
-                    type="checkbox"
-                    checked={promoAppearance.buttonEnabled}
-                    onChange={(event) => updatePromoAppearance({ buttonEnabled: event.target.checked })}
-                  />
-                  Agregar botón hacia una red social
-                </label>
-                {promoAppearance.buttonEnabled && (
-                  <>
-                    <div className="promo-network-field">
-                      <b>Red social del botón</b>
-                      <div className="promo-network-options">
-                        <button type="button" className={promoAppearance.network === "instagram" ? "selected instagram" : "instagram"} onClick={() => updatePromoAppearance({ network: "instagram" })}><InstagramIcon /><span>Instagram</span></button>
-                        <button type="button" className={promoAppearance.network === "facebook" ? "selected facebook" : "facebook"} onClick={() => updatePromoAppearance({ network: "facebook" })}><FacebookIcon /><span>Facebook</span></button>
-                        <button type="button" className={promoAppearance.network === "whatsapp" ? "selected whatsapp" : "whatsapp"} onClick={() => updatePromoAppearance({ network: "whatsapp" })}><WhatsAppIcon /><span>WhatsApp</span></button>
-                      </div>
-                    </div>
-                    <label>
-                      Texto del botón
-                      <input value={promoAppearance.buttonLabel} onChange={(event) => updatePromoAppearance({ buttonLabel: event.target.value })} />
-                    </label>
-                  </>
-                )}
               </section>
               <div className="cover-cta-editor">
                 <ButtonStyleSelect
