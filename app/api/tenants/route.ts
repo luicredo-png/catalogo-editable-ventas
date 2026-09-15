@@ -1,7 +1,7 @@
 import { env } from 'cloudflare:workers';
 import { authorize, privateError } from '@/lib/admin-auth';
 import { hashPassword } from '@/lib/passwords';
-const RUBROS=['restaurantes','comida-rapida','detalles-romanticos','ropa','mujer','zapatos-mujer','perfumeria','postres','accesorios'];
+const RUBROS=['restaurantes','comida-rapida','detalles-romanticos','ropa','mujer','zapatos-mujer','perfumeria','postres','accesorios','estudio-contable'];
 function usernameFromBusiness(name:string){return name.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,48)}
 async function owner(request:Request){const admin=await authorize(request,env);return admin instanceof Response?admin:!admin.owner?privateError(403,'owner_required'):null}
 export async function GET(request:Request){const denied=await owner(request);if(denied)return denied;const rows=await env.DB.prepare("SELECT s.id,s.slug,s.name,s.template_key AS templateKey,s.created_at AS createdAt,(SELECT a.email FROM catalog_admins a WHERE a.store_id=s.id AND a.active=1 LIMIT 1) AS username FROM stores s WHERE s.owner_id LIKE 'tenant:%' ORDER BY s.id DESC LIMIT 1000").all();return Response.json({clients:rows.results},{headers:{'Cache-Control':'private, no-store'}})}

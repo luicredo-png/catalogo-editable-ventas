@@ -16,6 +16,7 @@ const catalogMenuItems: { key: TemplateKey; label: string }[] = [
   { key: "perfumeria", label: "Perfumería" },
   { key: "postres", label: "Postres" },
   { key: "accesorios", label: "Accesorios" },
+  { key: "estudio-contable", label: "Estudio contable" },
 ];
 
 const CLOTHING_WHATSAPP_MESSAGE =
@@ -427,6 +428,7 @@ export default function Home({
     activeTemplate === "restaurantes" || activeTemplate === "comida-rapida";
   const isClothing =
     activeTemplate === "ropa" || activeTemplate === "zapatos-mujer";
+  const isAccounting = activeTemplate === "estudio-contable";
   const isDemoHost = typeof window !== "undefined" && ["micatalago.shop", "www.micatalago.shop", "micatalogo.shop", "www.micatalogo.shop"].includes(location.hostname.toLowerCase());
   const heroSlides = store.heroImage.split("|||").filter(Boolean);
   const currentHero = heroSlides[heroSlideIndex % Math.max(1, heroSlides.length)] || "";
@@ -568,7 +570,7 @@ export default function Home({
   };
   return (
     <main
-      className={`storefront template-${activeTemplate} ${visualEffects.card3d ? "catalog-3d" : ""} ${visualEffects.heroReveal ? "dia-hero" : ""} ${visualEffects.productSparkles ? "sparkle-products" : ""} appearance-${activeAppearance} hero-size-${homeLayout.heroSize} ${homeLayout.hidden.map((item) => `home-hide-${item}`).join(" ")} ${isFood ? "food-store" : ""} ${isClothing ? "clothing-store" : ""} mobile-cols-${store.mobileColumns} surface-${store.surfaceStyle} whatsapp-button-${store.buttonStyle} secondary-button-${store.secondaryButtonStyle} hero-button-${store.heroButtonStyle}`}
+       className={`storefront template-${activeTemplate} ${visualEffects.card3d ? "catalog-3d" : ""} ${visualEffects.heroReveal ? "dia-hero" : ""} ${visualEffects.productSparkles ? "sparkle-products" : ""} appearance-${activeAppearance} hero-size-${homeLayout.heroSize} ${homeLayout.hidden.map((item) => `home-hide-${item}`).join(" ")} ${isFood ? "food-store" : ""} ${isClothing ? "clothing-store" : ""} ${isAccounting ? "accounting-store" : ""} mobile-cols-${store.mobileColumns} surface-${store.surfaceStyle} whatsapp-button-${store.buttonStyle} secondary-button-${store.secondaryButtonStyle} hero-button-${store.heroButtonStyle}`}
       style={style}
     >
       {notice && <div className="toast">{notice}</div>}
@@ -1554,6 +1556,8 @@ function searchSettings(value: string, template: TemplateKey) {
       ? "Buscar prenda..."
       : template === "restaurantes" || template === "comida-rapida"
         ? "Buscar plato..."
+        : template === "estudio-contable"
+          ? "Buscar servicio contable..."
         : "Buscar modelo...";
   return {
     text: item?.label?.trim() || fallback,
