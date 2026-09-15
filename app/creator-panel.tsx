@@ -4,7 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 
 type Client = { id: number; slug: string; name: string; username?: string; templateKey: string; createdAt: string };
 type ApiPayload = { clients?: Client[]; client?: Client };
-const rubros = [["restaurantes","Restaurante"],["comida-rapida","Fast food"],["detalles-romanticos","Detalles"],["ropa","Ropa"],["mujer","Mujer"],["zapatos-mujer","Zapatos"],["perfumeria","Perfumería"],["postres","Postres"],["accesorios","Accesorios"],["estudio-contable","Estudio contable"]];
+const rubros = [["restaurantes","Restaurante"],["comida-rapida","Fast food"],["detalles-romanticos","Detalles"],["ropa","Ropa"],["mujer","Mujer"],["zapatos-mujer","Zapatos"],["perfumeria","Perfumería"],["postres","Postres"],["accesorios","Accesorios"]];
 
 async function readApiPayload(response: Response): Promise<ApiPayload | null> {
   if (!(response.headers.get("content-type") || "").includes("application/json")) return null;

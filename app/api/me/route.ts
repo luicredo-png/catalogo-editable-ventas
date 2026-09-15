@@ -13,7 +13,6 @@ function defaultOptions(key:TemplateKey){
  if(key==='perfumeria')return [{name:'Tamaño',values:['30 ml','50 ml','100 ml']},{name:'Presentación',values:['Perfume','Perfume + caja de regalo']}];
  if(key==='postres')return [{name:'Tamaño',values:['Personal','Mediano','Grande']},{name:'Dedicatoria',values:['Sin dedicatoria','Con dedicatoria']}];
  if(key==='accesorios')return [{name:'Color',values:['Rosa','Dorado','Negro']}];
- if(key==='estudio-contable')return [];
  if(key==='zapatos-mujer')return [{name:'Color',values:['Negro','Nude','Rosa']},{name:'Talla',values:['35','36','37','38','39','40']}];
  return [{name:'Color',values:['Negro','Beige','Rosa']},{name:'Talla',values:['S','M','L']}];
 }
@@ -77,7 +76,6 @@ function designDefaults(key:TemplateKey){
  if(key==='comida-rapida')return{fontFamily:'var(--font-outfit)',headingFont:'var(--font-space)',buttonColor:'#25d366',secondaryColor:'#ffcf24',textColor:'#ffffff',surfaceColor:'#250d09',overlayStrength:.42};
  if(key==='mujer'||key==='zapatos-mujer')return{fontFamily:'var(--font-outfit)',headingFont:'var(--font-playfair)',buttonColor:'#25d366',secondaryColor:'#ff74a6',textColor:'#fff7fb',surfaceColor:'#351826',overlayStrength:.42};
  if(key==='accesorios')return{fontFamily:'var(--font-outfit)',headingFont:'var(--font-cormorant)',buttonColor:'#25d366',secondaryColor:'#ff74a6',textColor:'#fff7fb',surfaceColor:'#351826',overlayStrength:.38};
- if(key==='estudio-contable')return{fontFamily:'var(--font-inter)',headingFont:'var(--font-space)',buttonColor:'#d7ad68',secondaryColor:'#5ed0c3',textColor:'#edf6f3',surfaceColor:'#0b2025',overlayStrength:.58};
  return{fontFamily:'var(--font-outfit)',headingFont:'var(--font-space)',buttonColor:'#25d366',secondaryColor:'#8fa7ff',textColor:'#ffffff',surfaceColor:'#10131c',overlayStrength:.56};
 }
 
@@ -88,7 +86,6 @@ function heroDefaults(key:TemplateKey){
  if(key==='mujer')return{image:'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1800&q=88',eyebrow:'NUEVA TEMPORADA',description:'Prendas que celebran tu estilo y tu personalidad.',highlight:'2026',cta:'Ver colección'};
  if(key==='zapatos-mujer')return{image:'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=1800&q=88',eyebrow:'NUEVA TEMPORADA',description:'Tacones, zapatillas, botines y sandalias para vender por WhatsApp.',highlight:'2026',cta:'Ver zapatos'};
  if(key==='accesorios')return{image:'https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?auto=format&fit=crop&w=1800&q=88',eyebrow:'DETALLES ÚNICOS',description:'Accesorios elegidos para transformar cada look.',highlight:'NUEVOS FAVORITOS',cta:'Descubrir accesorios'};
- if(key==='estudio-contable')return{image:'https://images.unsplash.com/photo-1556761175-4b46a572b786?auto=format&fit=crop&w=1800&q=88',eyebrow:'ESTUDIO CONTABLE · LIMA',description:'Ordenamos tus números para que puedas decidir con seguridad y crecer con respaldo.',highlight:'TU TRANQUILIDAD FINANCIERA',cta:'Conoce nuestros servicios'};
  return{image:'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1800&q=88',eyebrow:'NUEVA TEMPORADA',description:'Estilo, comodidad y tendencia en cada prenda.',highlight:'2026',cta:'Ver colección'};
 }
 
