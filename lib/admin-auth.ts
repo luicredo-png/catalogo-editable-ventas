@@ -7,9 +7,11 @@ export function authConfigured(config: AuthConfig) {
  return Boolean(config.AUTH_SECRET && config.AUTH_SECRET.length >= 32 && config.OWNER_EMAIL && /^scrypt-v1\$[a-f0-9]{32}\$[a-f0-9]{64}$/.test(config.OWNER_PASSWORD_HASH || ''));
 }
 export function tenantFromHost(host: string) {
- if (host === 'xn--micatlogo-41a.shop' || host === 'www.xn--micatlogo-41a.shop' || host === 'creador.xn--micatlogo-41a.shop') return '';
- const match = host.match(/^([a-z0-9][a-z0-9-]{1,43}[a-z0-9])\.xn--micatlogo-41a\.shop$/);
- return match?.[1] || '';
+ const normalized=host.toLowerCase();
+ if (['xn--micatlogo-41a.shop','www.xn--micatlogo-41a.shop','creador.xn--micatlogo-41a.shop','sitioweb.shop','www.sitioweb.shop','creador.sitioweb.shop'].includes(normalized)) return '';
+ const catalog=normalized.match(/^([a-z0-9][a-z0-9-]{1,43}[a-z0-9])\.xn--micatlogo-41a\.shop$/);
+ const website=normalized.match(/^([a-z0-9][a-z0-9-]{1,43}[a-z0-9])\.sitioweb\.shop$/);
+ return catalog?.[1] || website?.[1] || '';
 }
 export function isDemoHost(host: string) {
  return host === 'xn--micatlogo-41a.shop' || host === 'www.xn--micatlogo-41a.shop';

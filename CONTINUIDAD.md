@@ -11,6 +11,16 @@ Este archivo permite reanudar el trabajo desde otra cuenta o una nueva tarea sin
 
 La dirección `*.chatgpt.site` es únicamente una copia de respaldo. Las siguientes cuentas deben continuar sobre el repositorio y el dominio `luicredo.workers.dev` indicados arriba.
 
+## Plataforma de sitios web
+
+- Dominio comercial: `https://sitioweb.shop`
+- Creador maestro: `https://creador.sitioweb.shop`
+- Primer sitio: `https://estudiocontableforchlau.sitioweb.shop`
+- Los sitios web se guardan en la misma D1 y usan el prefijo `site-tenant:` en `stores.owner_id`.
+- El creador usa `/api/site-tenants`; cada cliente recibe contraseña independiente y administra su landing desde `/admin`.
+- El dominio y el comodín `*.sitioweb.shop` deben apuntar al mismo Worker `catalogo-editable-ventas`.
+- Todo cambio continúa respaldado en `https://github.com/luicredo-png/catalogo-editable-ventas` y se publica desde la rama `main`.
+
 ## Si aparece una cuenta distinta
 
 El enlace `austin-mckinney.chatgpt.site` pertenece a otra cuenta de Sites y no sincroniza automáticamente con Cloudflare. Para que las ediciones aparezcan en `luicredo.workers.dev`, entra en la cuenta de Cloudflare propietaria de ese dominio, abre **Workers y Pages → catálogo-editable-ventas → Despliegues** y vuelve a desplegar desde el repositorio `luicredo-png/catalogo-editable-ventas`, usando la rama `principal` (o `main` si esa cuenta la configuró así). Verifica que el proyecto conserve las vinculaciones D1 `DB` y R2 `FILES`. Después abre el administrador en el dominio `luicredo.workers.dev`; no uses el enlace `chatgpt.site` como URL de producción.
