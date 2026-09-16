@@ -14,7 +14,7 @@ export type AccountingLanding={
 export const accountingIconKeys=['ledger','chart','growth','shield','balance','people','briefcase','target','folder','calculator','check','building'];
 
 export const defaultAccountingLanding:AccountingLanding={
- brand:'FORCHLU',logoImage:'/forchlu-logo-premium.webp',whatsapp:'51999999999',
+ brand:'FORCH LAU',logoImage:'/forchlu-logo-premium.webp',whatsapp:'51999999999',
  topNotice:'Decisiones claras empiezan con números bien ordenados.',brochureLabel:'SOLICITAR PRESENTACIÓN',
  heroEyebrow:'ESTUDIO CONTABLE · LIMA',heroTitle:'Transformamos tu contabilidad en una herramienta estratégica',heroDescription:'Acompañamos a empresas y emprendedores con servicios contables, tributarios y financieros que convierten la información en mejores decisiones.',heroButton:'AGENDA UNA CONSULTA',heroImage:'https://images.unsplash.com/photo-1556761175-4b46a572b786?auto=format&fit=crop&w=1800&q=84',heroTextEffect:'classic',
  pillars:[
