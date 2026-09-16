@@ -24,6 +24,7 @@
 .client-marquee-track>div{display:flex;align-items:center;gap:22px;padding-right:22px}
 .client-marquee-track span{width:190px;height:82px;display:grid;place-items:center;padding:13px 20px;border:1px solid #ffffff19;border-radius:12px;background:#ffffffef}
 .client-marquee-track img{max-width:100%;max-height:100%;object-fit:contain}
+.client-marquee-empty>div{width:min(760px,calc(100% - 32px));display:grid;gap:5px;margin:auto;padding:20px;border:1px dashed #637890;border-radius:12px;text-align:center;color:#cbd8e5}.client-marquee-empty>div span{color:#7f94aa;font-size:13px}
 @keyframes client-logo-marquee{to{transform:translateX(-50%)}}
 
 /* Editor con vista previa fija */
