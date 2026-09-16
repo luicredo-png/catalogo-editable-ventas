@@ -1,5 +1,5 @@
 'use client';
-import {useEffect,useState,type ChangeEvent} from 'react';
+import {useEffect,useRef,useState,type ChangeEvent} from 'react';
 import {accountingIconKeys,defaultAccountingLanding,normalizeAccountingLanding,type AccountingLanding,type LandingItem} from '@/lib/accounting-landing';
 
 const iconNames:Record<string,string>={ledger:'Documento',chart:'Gráfico',growth:'Crecimiento',shield:'Escudo',balance:'Balanza',people:'Equipo',briefcase:'Maletín',target:'Objetivo',folder:'Carpeta',calculator:'Calculadora',check:'Check',building:'Empresa'};
@@ -22,7 +22,25 @@ function Icon({name}:{name:string}){const common={fill:'none',stroke:'currentCol
 function wa(content:AccountingLanding,text:string){return `https://api.whatsapp.com/send?phone=${content.whatsapp.replace(/\D/g,'')}&text=${encodeURIComponent(text)}`}
 function BrandLogo({content}:{content:AccountingLanding}){return <img className="accounting-logo" src={content.logoImage} alt={`Logo de ${content.brand}`}/>}
 
-export function LandingView({content,preview=false}:{content:AccountingLanding;preview?:boolean}){return <main className={`accounting-landing${preview?' is-preview':''}`}>
+export function LandingView({content,preview=false}:{content:AccountingLanding;preview?:boolean}){
+ const landingRef=useRef<HTMLElement>(null);
+ useEffect(()=>{
+  const root=landingRef.current;
+  if(!root||preview||!('IntersectionObserver' in window))return;
+  const motion=window.matchMedia('(prefers-reduced-motion: reduce)');
+  if(motion.matches)return;
+  const elements=Array.from(root.querySelectorAll<HTMLElement>('.accounting-hero h1,.accounting-hero p,.accounting-copy>small,.accounting-copy>h2,.accounting-copy>p,.section-heading>small,.section-heading>h2,.section-heading>p,.accounting-pillars article>div,.approach-list article>div,.accounting-services article>div,.reason-grid article>div,.accounting-cta>h2,.accounting-cta>p,.accounting-footer>div'));
+  const observer=new IntersectionObserver(entries=>{
+   entries.forEach(entry=>{
+    if(entry.isIntersecting){entry.target.classList.add('text-revealed');observer.unobserve(entry.target)}
+   });
+  },{threshold:0.08,rootMargin:'0px 0px -24px 0px'});
+  elements.forEach(element=>{element.classList.add('text-reveal');observer.observe(element)});
+  const showAll=()=>{if(motion.matches){observer.disconnect();elements.forEach(element=>element.classList.add('text-revealed'))}};
+  motion.addEventListener('change',showAll);
+  return ()=>{observer.disconnect();motion.removeEventListener('change',showAll);elements.forEach(element=>element.classList.remove('text-reveal','text-revealed'))};
+ },[preview]);
+ return <main ref={landingRef} className={`accounting-landing${preview?' is-preview':''}`}>
  <div className="accounting-notice"><span>{content.topNotice}</span><a href={wa(content,'Hola, deseo recibir información sobre sus servicios contables.')} target="_blank" rel="noreferrer">{content.brochureLabel} <b>→</b></a></div>
  <header className="accounting-nav"><a className="accounting-brand" href="#inicio"><BrandLogo content={content}/></a><nav><a href="#nosotros">Nosotros</a><a href="#servicios">Servicios</a><a href="#beneficios">Beneficios</a><a href="#contacto">Contacto</a></nav><a className="nav-cta" href={wa(content,'Hola, deseo agendar una consulta contable.')} target="_blank" rel="noreferrer">CONSULTA GRATIS</a>{!preview&&<a className="landing-admin-link" href="/estudio-contable/admin">Administrar</a>}</header>
  <section id="inicio" className="accounting-hero" style={{backgroundImage:`linear-gradient(90deg,rgba(3,6,12,.98),rgba(8,26,58,.82) 55%,rgba(186,4,17,.24)),url(${content.heroImage})`}}><div><span>{content.heroEyebrow}</span><h1>{content.heroTitle}</h1><p>{content.heroDescription}</p><a href={wa(content,'Hola, deseo agendar una consulta para mi empresa.')} target="_blank" rel="noreferrer">{content.heroButton} <b>→</b></a></div></section>
