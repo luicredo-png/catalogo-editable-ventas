@@ -29,16 +29,21 @@ export function LandingView({content,preview=false}:{content:AccountingLanding;p
   if(!root||preview||!('IntersectionObserver' in window))return;
   const motion=window.matchMedia('(prefers-reduced-motion: reduce)');
   if(motion.matches)return;
-  const elements=Array.from(root.querySelectorAll<HTMLElement>('.accounting-hero h1,.accounting-hero p,.accounting-copy>small,.accounting-copy>h2,.accounting-copy>p,.section-heading>small,.section-heading>h2,.section-heading>p,.accounting-pillars article>div,.approach-list article>div,.accounting-services article>div,.reason-grid article>div,.accounting-cta>h2,.accounting-cta>p,.accounting-footer>div'));
+  const elements=Array.from(root.querySelectorAll<HTMLElement>('.accounting-hero>div>span,.accounting-hero h1,.accounting-hero p,.accounting-hero>div>a,.accounting-copy>small,.accounting-copy>h2,.accounting-copy>p,.section-heading>small,.section-heading>h2,.section-heading>p,.accounting-pillars article>div,.approach-list article>div,.accounting-services article>div,.reason-grid article>div,.accounting-cta>h2,.accounting-cta>p,.accounting-footer>div'));
   const observer=new IntersectionObserver(entries=>{
    entries.forEach(entry=>{
     if(entry.isIntersecting){entry.target.classList.add('text-revealed');observer.unobserve(entry.target)}
    });
   },{threshold:0.08,rootMargin:'0px 0px -24px 0px'});
-  elements.forEach(element=>{element.classList.add('text-reveal');observer.observe(element)});
+  elements.forEach(element=>{
+   const siblings=elements.filter(item=>item.parentElement===element.parentElement);
+   const delay=Math.min(siblings.indexOf(element),3)*140+(element.closest('.accounting-hero')?220:0);
+   element.style.setProperty('--reveal-delay',`${delay}ms`);
+   element.classList.add('text-reveal');observer.observe(element);
+  });
   const showAll=()=>{if(motion.matches){observer.disconnect();elements.forEach(element=>element.classList.add('text-revealed'))}};
   motion.addEventListener('change',showAll);
-  return ()=>{observer.disconnect();motion.removeEventListener('change',showAll);elements.forEach(element=>element.classList.remove('text-reveal','text-revealed'))};
+  return ()=>{observer.disconnect();motion.removeEventListener('change',showAll);elements.forEach(element=>{element.classList.remove('text-reveal','text-revealed');element.style.removeProperty('--reveal-delay')})};
  },[preview]);
  return <main ref={landingRef} className={`accounting-landing${preview?' is-preview':''}`}>
  <div className="accounting-notice"><span>{content.topNotice}</span><a href={wa(content,'Hola, deseo recibir información sobre sus servicios contables.')} target="_blank" rel="noreferrer">{content.brochureLabel} <b>→</b></a></div>
