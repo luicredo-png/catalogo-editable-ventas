@@ -7,7 +7,8 @@ export default function AdminPage(){
  const [ready,setReady]=useState(false);
  useEffect(()=>setReady(true),[]);
  if(!ready)return <main style={{minHeight:'100vh',background:'#081831'}}/>;
- if(['creador.xn--micatlogo-41a.shop','creador.sitioweb.shop'].includes(location.hostname))return <CreatorPanel/>;
+ if(location.hostname==='creador.sitioweb.shop')return <CreatorPanel sitesOnly/>;
+ if(location.hostname==='creador.xn--micatlogo-41a.shop')return <CreatorPanel/>;
  const raw=new URLSearchParams(location.search).get('catalogo')||'ropa';
  const template=(raw in templates?raw:'ropa') as TemplateKey;
  return <Catalog template={template} startAdmin/>;
