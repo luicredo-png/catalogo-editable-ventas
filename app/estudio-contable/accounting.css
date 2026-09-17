@@ -49,8 +49,8 @@
 /* Marca protagonista opcional; el diseño anterior permanece como predeterminado. */
 .header-layout-control{display:grid;gap:8px;margin:-5px 0 22px;padding:16px;border:1px solid #d6e2e8;border-radius:12px;background:#f7f9fb}.header-layout-control span{font-size:14px;font-weight:850}.header-layout-control select{width:100%;padding:12px 14px;border:1px solid #bbccd5;border-radius:10px;background:#fff;color:#1c1c1c;font:inherit}
 .logo-led-header .accounting-nav{height:222px;display:grid;grid-template-columns:minmax(0,1fr) auto auto;grid-template-rows:142px 64px;column-gap:28px;row-gap:0;align-items:center;padding:0 7vw 10px;background:linear-gradient(180deg,#08090def,#11151de8)}
-.logo-led-header .accounting-nav>.accounting-brand{grid-column:1/-1;grid-row:1;justify-self:start;width:min(530px,100%);max-width:none;flex:none}
-.logo-led-header .accounting-nav .accounting-logo{height:132px;object-position:left center}
+.logo-led-header .accounting-nav>.accounting-brand{grid-column:1/-1;grid-row:1;justify-self:center;width:min(530px,100%);max-width:none;flex:none}
+.logo-led-header .accounting-nav .accounting-logo{height:132px;object-position:center center}
 .logo-led-header .accounting-nav nav{grid-column:1;grid-row:2;display:flex;align-items:center;gap:clamp(18px,3vw,42px);min-width:0;margin:0}
 .logo-led-header .accounting-nav .nav-cta{grid-column:2;grid-row:2;white-space:nowrap}
 .logo-led-header .accounting-nav .landing-admin-link{grid-column:3;grid-row:2;white-space:nowrap}
