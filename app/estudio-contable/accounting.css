@@ -84,3 +84,16 @@
 @keyframes accounting-image-enter{from{opacity:0;transform:translate3d(52px,28px,0) scale(1.035);filter:blur(6px)}to{opacity:1;transform:translate3d(0,0,0) scale(1);filter:blur(0)}}
 @media(max-width:680px){.accounting-hero h1{font-size:calc(43px*var(--landing-hero-scale,1))}.accounting-copy h2,.section-heading h2,.accounting-cta h2{font-size:calc(37px*var(--landing-heading-scale,1))}.accounting-hero p{font-size:calc(16px*var(--landing-body-scale,1))}.landing-type-controls{grid-template-columns:1fr}.landing-qr-layout{flex-direction:column;align-items:flex-start}}
 @media(prefers-reduced-motion:reduce){.accounting-landing .image-reveal{opacity:1;transform:none;filter:none}}
+
+/* Redes del catálogo, integradas en contacto sin botones flotantes. */
+.accounting-footer .accounting-social-links{display:flex;flex-wrap:wrap;gap:10px;margin-top:13px}
+.accounting-footer .accounting-social-links a{display:grid;place-items:center;flex:none;width:46px;height:46px;min-height:46px;padding:9px;border:1px solid #ffffff70;border-radius:14px;box-shadow:inset 0 2px 2px #fff7,inset 0 -4px 6px #0004,0 10px 22px #0008;transition:transform .16s ease,filter .16s ease,box-shadow .16s ease}
+.accounting-footer .accounting-social-links a[aria-label="Instagram"]{background:linear-gradient(135deg,#833ab4,#fd1d1d 58%,#fcb045)}
+.accounting-footer .accounting-social-links a[aria-label="Facebook"]{background:linear-gradient(145deg,#4b9dff,#1264d9)}
+.accounting-footer .accounting-social-links a[aria-label="TikTok"]{background:linear-gradient(145deg,#252525,#050505)}
+.accounting-footer .accounting-social-links a[aria-label="Ubicación"]{background:linear-gradient(145deg,#f44336,#b71c1c)}
+.accounting-footer .accounting-social-links :is(img,svg){display:block;width:27px;height:27px;object-fit:contain}
+.accounting-footer .accounting-social-links img{border-radius:7px}
+.accounting-footer .accounting-social-links a:hover{transform:translateY(-2px);filter:brightness(1.12)}
+.accounting-footer .accounting-social-links a:active{transform:translateY(2px) scale(.96);filter:brightness(.94);box-shadow:inset 0 4px 8px #0006,0 3px 8px #0007}
+.accounting-footer .accounting-social-links a:focus-visible{outline:2px solid #fff;outline-offset:3px}
