@@ -8,7 +8,7 @@ export async function middleware(request: NextRequest) {
   const siteCreator=hostname==='creador.sitioweb.shop';
   const siteMatch=hostname.match(/^([a-z0-9][a-z0-9-]{1,43}[a-z0-9])\.sitioweb\.shop$/);
   const siteTenant=siteMatch&&!['www','creador'].includes(siteMatch[1])?siteMatch[1]:'';
-  const siteAdminRoot=Boolean(siteTenant)&&(pathname==='/admin'||pathname.startsWith('/admin/'));
+  const siteAdminRoot=Boolean(siteTenant)&&siteTenant!=='demo'&&(pathname==='/admin'||pathname.startsWith('/admin/'));
   if (pathname === '/api/auth/login' || pathname === '/api/auth/logout') return NextResponse.next();
   // Only catalog and media reads are anonymous. New APIs are private by default.
   const publicRead = ['GET','HEAD'].includes(request.method) &&
@@ -23,7 +23,7 @@ export async function middleware(request: NextRequest) {
     (hostname === 'creador.xn--micatlogo-41a.shop' && pathname === '/') ||
     (siteCreator && pathname === '/') || siteAdminRoot;
   if (!privateRoute) {
-    const response = siteRoot&&pathname==='/'?NextResponse.rewrite(new URL('/sitios-web',request.url)):siteTenant&&pathname==='/'?NextResponse.rewrite(new URL('/estudio-contable',request.url)):NextResponse.next();
+    const response = siteRoot&&pathname==='/'?NextResponse.rewrite(new URL('/sitios-web',request.url)):siteTenant==='demo'&&pathname==='/'?NextResponse.rewrite(new URL('/demo-sitios',request.url)):siteTenant&&pathname==='/'?NextResponse.rewrite(new URL('/estudio-contable',request.url)):NextResponse.next();
     if (hostname === 'gmpaonyx.xn--micatlogo-41a.shop' && pathname === '/') {
       response.headers.set('Link','</gmpaonyx-collection-background.webp>; rel=preload; as=image; type=image/webp; fetchpriority=high');
     }
