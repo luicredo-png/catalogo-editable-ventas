@@ -8,11 +8,11 @@ export async function middleware(request: NextRequest) {
   const siteCreator=hostname==='creador.sitioweb.shop';
   const siteMatch=hostname.match(/^([a-z0-9][a-z0-9-]{1,43}[a-z0-9])\.sitioweb\.shop$/);
   const siteTenant=siteMatch&&!['www','creador'].includes(siteMatch[1])?siteMatch[1]:'';
-  const siteAdminRoot=Boolean(siteTenant)&&siteTenant!=='demo'&&(pathname==='/admin'||pathname.startsWith('/admin/'));
+  const siteAdminRoot=Boolean(siteTenant)&&(pathname==='/admin'||pathname.startsWith('/admin/'));
   if (pathname === '/api/auth/login' || pathname === '/api/auth/logout') return NextResponse.next();
   // Only catalog and media reads are anonymous. New APIs are private by default.
   const publicRead = ['GET','HEAD'].includes(request.method) &&
-    (pathname === '/api/catalog' || pathname === '/api/accounting-landing' || pathname.startsWith('/api/media/'));
+    (pathname === '/api/catalog' || pathname === '/api/accounting-landing' || pathname === '/api/demo-sites' || pathname.startsWith('/api/media/'));
   // /admin is a static client shell. Its data and every mutation remain protected
   // by /api/me and the private API middleware. Avoiding a D1 lookup while serving
   // the shell keeps the Worker below the 10 ms CPU limit.
@@ -40,7 +40,7 @@ export async function middleware(request: NextRequest) {
     return admin;
   }
   if (!admin.owner && (pathname.startsWith('/api/tenants') || pathname.startsWith('/api/site-tenants') || pathname.startsWith('/api/inventory') || pathname.startsWith('/inventario'))) return privateError(403, 'owner_required');
-  const response = siteAdminRoot?NextResponse.rewrite(new URL('/estudio-contable/admin',request.url)):NextResponse.next();
+  const response = siteAdminRoot?NextResponse.rewrite(new URL(siteTenant==='demo'?'/demo-sitios/admin':'/estudio-contable/admin',request.url)):NextResponse.next();
   if ((hostname === 'creador.xn--micatlogo-41a.shop'||siteCreator) && pathname === '/') return NextResponse.redirect(new URL('/admin',request.url));
   response.headers.set('Cache-Control', 'private, no-store');
   response.headers.set('Referrer-Policy', 'no-referrer');

@@ -14,7 +14,7 @@ export function tenantFromHost(host: string) {
  return catalog?.[1] || website?.[1] || '';
 }
 export function isDemoHost(host: string) {
- return host === 'xn--micatlogo-41a.shop' || host === 'www.xn--micatlogo-41a.shop';
+ return host === 'xn--micatlogo-41a.shop' || host === 'www.xn--micatlogo-41a.shop' || host === 'demo.sitioweb.shop';
 }
 export function privateError(status: number, error: string) {
  return Response.json({error},{status,headers:{'Cache-Control':'private, no-store','Referrer-Policy':'no-referrer'}});
