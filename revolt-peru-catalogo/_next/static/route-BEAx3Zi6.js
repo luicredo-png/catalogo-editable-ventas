@@ -1,0 +1,1 @@
+function e(){return Response.json({service:`revolt-peru-catalogo`,deployment:`cloudflare-worker`,status:`ok`})}export{e as GET};

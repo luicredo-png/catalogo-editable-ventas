@@ -1,0 +1,1 @@
+import{t as e}from"./admin-auth-DfVHZnWK.js";async function t(t){let n=await e();return n.error?n.error:Response.json({error:`Pega una URL pública de imagen en el formulario.`},{status:501})}export{t as POST};

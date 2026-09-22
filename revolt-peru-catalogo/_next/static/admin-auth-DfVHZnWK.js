@@ -1,0 +1,1 @@
+async function e(){return{userId:`shared-editor`,email:`Edición compartida`,displayName:`Edición compartida`,fullName:null}}async function t(){return{error:null,user:await e()}}export{t};

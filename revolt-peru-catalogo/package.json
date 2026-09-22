@@ -1,0 +1,12 @@
+{
+  "name": "revolt-peru-catalogo",
+  "private": true,
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
+  },
+  "devDependencies": {
+    "wrangler": "^4.92.0"
+  }
+}
+

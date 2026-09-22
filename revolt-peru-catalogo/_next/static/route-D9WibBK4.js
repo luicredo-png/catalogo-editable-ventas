@@ -1,0 +1,1 @@
+import{t as e}from"./catalog-store-Cr-Eundi.js";var t=`force-dynamic`;async function n(){try{return Response.json(await e(),{headers:{"Cache-Control":`no-store`}})}catch(e){return Response.json({error:e instanceof Error?e.message:`No se pudo cargar el catálogo.`},{status:500})}}export{n as GET,t as dynamic};

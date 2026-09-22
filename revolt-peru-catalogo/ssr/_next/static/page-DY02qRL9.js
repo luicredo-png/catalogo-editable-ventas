@@ -1,0 +1,1 @@
+import{f as e}from"../../index.js";import t from"./page-D716eumA.js";var n=e();function r(){return(0,n.jsx)(t,{initialGender:`MUJER`})}export{r as default};
