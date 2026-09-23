@@ -1538,12 +1538,12 @@ function categoryBackgroundColor(value: string) {
   return parseCategorySettings(value).find((item) => item.key === "__CATEGORY_BACKGROUND__")?.color || "";
 }
 
-function ProductMedia({ src, alt, className, controls = false, loading, decoding }: {
-  src: string; alt: string; className?: string; controls?: boolean;
+function ProductMedia({ src, alt, className, controls = false, autoPlay = false, loading, decoding }: {
+  src: string; alt: string; className?: string; controls?: boolean; autoPlay?: boolean;
   loading?: "lazy" | "eager"; decoding?: "async" | "sync" | "auto";
 }) {
   return isVideoMedia(src)
-    ? <video className={className} src={src} aria-label={alt || "Video del producto"} controls={controls} muted playsInline preload="metadata" />
+    ? <video className={className} src={src} aria-label={alt || "Video del producto"} controls={controls} autoPlay={autoPlay} muted playsInline loop preload="metadata" />
     : <img className={className} src={optimizedCatalogImage(src)} alt={alt} loading={loading} decoding={decoding} />;
 }
 function searchSettings(value: string, template: TemplateKey) {
@@ -1888,6 +1888,7 @@ function ProductOrderModal({
     ),
   );
   const [galleryPreview, setGalleryPreview] = useState(product.image);
+  const [showColorVideo, setShowColorVideo] = useState(false);
   const swipeStartX = useRef<number | null>(null);
   const selectedColor = colorGroup ? choices[colorGroup.name] : "";
   const selectedColorLabel = optionLabel(selectedColor || "");
@@ -1896,10 +1897,6 @@ function ProductOrderModal({
         new Map(colorGroup.values.map((value) => [optionLabel(value), value])).values(),
       )
     : [];
-  const displayImage =
-    template === "ropa"
-      ? galleryPreview
-      : parseOptionValue(selectedColor || "").image || product.image;
   const colorPhotos = colorGroup?.values.filter(
     (value) =>
       parseOptionValue(value).image && optionLabel(value) === selectedColorLabel,
@@ -1908,6 +1905,12 @@ function ProductOrderModal({
     const parsed = parseOptionValue(value);
     return { label: parsed.label, image: parsed.image, value };
   });
+  const selectedColorVideo = colorGroup?.values
+    .map(parseOptionValue)
+    .find((value) => value.label === selectedColorLabel && value.video)?.video || "";
+  const displayImage = template === "ropa"
+    ? (showColorVideo && selectedColorVideo ? selectedColorVideo : galleryPreview)
+    : (showColorVideo && selectedColorVideo ? selectedColorVideo : parseOptionValue(selectedColor || "").image || product.image);
   const visibleGallery = template === "ropa"
     ? uniqueColorValues.map((value) => {
         const label = optionLabel(value);
@@ -1928,7 +1931,13 @@ function ProductOrderModal({
   useEffect(() => {
     if (template !== "ropa" || !selectedColorGallery.length) return;
     setGalleryPreview(selectedColorGallery[0].image);
+    setShowColorVideo(false);
   }, [product.id, template, selectedColorLabel]);
+  useEffect(() => {
+    if (!selectedColorVideo) { setShowColorVideo(false); return; }
+    const timer = setInterval(() => setShowColorVideo((current) => !current), 4200);
+    return () => clearInterval(timer);
+  }, [selectedColorVideo, selectedColorLabel]);
   useEffect(() => {
     if (template !== "ropa" || selectedColorGallery.length < 2 || selectedColorGallery.some((item) => isVideoMedia(item.image))) return;
     const timer = setInterval(() => rotateGallery(1), 5200);
@@ -1989,8 +1998,10 @@ function ProductOrderModal({
             src={displayImage}
             alt={product.name}
             controls
+            autoPlay={showColorVideo}
             decoding="async"
           />
+          {selectedColorVideo && <button type="button" className="gallery-video-toggle" onClick={() => setShowColorVideo((current) => !current)}>{showColorVideo ? "Ver foto" : "Ver video"}</button>}
           <span>{food ? "ARMA TU PEDIDO" : "ELIGE TU FAVORITO"}</span>
           {template === "ropa" && selectedColorGallery.length > 1 && (
             <div className="order-gallery-arrows">
@@ -2005,7 +2016,7 @@ function ProductOrderModal({
                   type="button"
                   className={displayImage === item.image ? "active" : ""}
                   key={`angle-${item.image}-${index}`}
-                  onClick={() => setGalleryPreview(item.image)}
+                  onClick={() => { setGalleryPreview(item.image); setShowColorVideo(false); }}
                   title={`Ángulo ${index + 1}`}
                 >
                   <ProductMedia src={item.image} alt={`Ángulo ${index + 1} de ${product.name}`} />
@@ -2024,6 +2035,7 @@ function ProductOrderModal({
                     if (template === "ropa" && colorGroup) {
                       setChoices((current) => ({ ...current, [colorGroup.name]: item.value }));
                       setGalleryPreview(item.image);
+                      setShowColorVideo(false);
                     } else if ("value" in item && colorGroup)
                       setChoices((current) => ({
                         ...current,
@@ -2143,17 +2155,19 @@ function clothingCategoryLabel(category: string) {
 }
 function parseOptionValue(value: string) {
   const match = value.match(/^(.*?)::(#[0-9a-f]{6})(?:::(.*))?$/i);
+  const media = match?.[3] ? String(match[3]).split("::") : [];
   return {
     label: (match?.[1] || value).trim(),
     color: match?.[2] || "",
-    image: match?.[3] || "",
+    image: media[0] || "",
+    video: media[1] || "",
   };
 }
 function optionLabel(value: string) {
   return parseOptionValue(value).label;
 }
-function colorValue(label: string, color: string, image = "") {
-  return `${label.trim()}::${color}${image ? `::${image}` : ""}`;
+function colorValue(label: string, color: string, image = "", video = "") {
+  return `${label.trim()}::${color}${image || video ? `::${image}::${video}` : ""}`;
 }
 function colorSwatch(name: string) {
   const parsed = parseOptionValue(name);
@@ -8317,7 +8331,7 @@ function ProductEditor({
         return values.length ? values.map((value) => {
           const parsed = parseOptionValue(value);
           return foodVariants && /^Color \d+$/i.test(parsed.label)
-            ? colorValue(parsed.label.replace(/^Color/i, "Tipo"), parsed.color || "#8d96a5", parsed.image)
+            ? colorValue(parsed.label.replace(/^Color/i, "Tipo"), parsed.color || "#8d96a5", parsed.image, parsed.video)
             : value;
         }) : [colorValue(`${variantLabel} 1`, "#8d96a5")];
       })(),
@@ -8521,6 +8535,7 @@ function OptionGroupEditor({
               label,
               color || colorSwatch(value),
               image === undefined ? parsed.image : image,
+              parsed.video,
             )
           : label;
       }),
@@ -8551,13 +8566,38 @@ function OptionGroupEditor({
     } else setPhotoError("No se pudo subir la foto de color.");
     setUploadingIndex(null);
   }
-  async function uploadColorAngles(index:number, files:FileList|null){
-    if(!files?.length)return;
-    setUploadingIndex(index);setPhotoError("");
-    const parsed=parseOptionValue(group.values[index]);
-    const uploaded:string[]=[];
-    for(const file of Array.from(files)){const form=new FormData();form.append("file",await optimizeImageBeforeUpload(file));const response=await fetch("/api/upload?template=" + encodeURIComponent(new URLSearchParams(location.search).get("catalogo") || "ropa"),{method:"POST",body:form});if(response.ok){const result=await response.json();uploaded.push(String(result.url))}}
-    if(uploaded.length){const replacePlaceholder=!parsed.image;const base=group.values.map((value,i)=>i===index&&replacePlaceholder?colorValue(parsed.label,parsed.color||colorSwatch(value),uploaded[0]):value);const extras=(replacePlaceholder?uploaded.slice(1):uploaded).map(url=>colorValue(parsed.label,parsed.color||colorSwatch(group.values[index]),url));updateValues([...base,...extras])}else setPhotoError("No se pudieron subir las fotos.");
+  async function uploadColorAngles(index: number, files: FileList | null) {
+    if (!files?.length) return;
+    setUploadingIndex(index); setPhotoError("");
+    const parsed = parseOptionValue(group.values[index]);
+    const uploaded: { url: string; video: boolean }[] = [];
+    for (const file of Array.from(files)) {
+      const form = new FormData();
+      form.append("file", file.type === "video/mp4" ? file : await optimizeImageBeforeUpload(file));
+      const response = await fetch("/api/upload?template=" + encodeURIComponent(new URLSearchParams(location.search).get("catalogo") || "ropa"), { method: "POST", body: form });
+      if (response.ok) {
+        const result = await response.json();
+        uploaded.push({ url: String(result.url), video: file.type === "video/mp4" });
+      }
+    }
+    if (uploaded.length) {
+      let next = [...group.values];
+      for (const item of uploaded) {
+        const sameColor = next.map((value, valueIndex) => ({ value, valueIndex, parsed: parseOptionValue(value) }))
+          .filter((entry) => entry.parsed.label === parsed.label);
+        if (item.video) {
+          const existing = sameColor.find((entry) => entry.parsed.video);
+          const encoded = colorValue(parsed.label, parsed.color || colorSwatch(group.values[index]), parsed.image, item.url);
+          if (existing) next[existing.valueIndex] = encoded;
+          else next.push(colorValue(parsed.label, parsed.color || colorSwatch(group.values[index]), "", item.url));
+        } else {
+          const placeholder = sameColor.find((entry) => !entry.parsed.image && !entry.parsed.video);
+          if (placeholder) next[placeholder.valueIndex] = colorValue(parsed.label, parsed.color || colorSwatch(group.values[index]), item.url, placeholder.parsed.video);
+          else next.push(colorValue(parsed.label, parsed.color || colorSwatch(group.values[index]), item.url));
+        }
+      }
+      updateValues(next);
+    } else setPhotoError("No se pudieron subir los archivos.");
     setUploadingIndex(null);
   }
   if (isColor) {
@@ -8580,7 +8620,7 @@ function OptionGroupEditor({
       updateValues(group.values.map((value) => {
         const parsed = parseOptionValue(value);
         return parsed.label === activeColor
-          ? colorValue(nextName, parsed.color || "#8d96a5", parsed.image)
+          ? colorValue(nextName, parsed.color || "#8d96a5", parsed.image, parsed.video)
           : value;
       }));
       setOpenColor(nextName);
@@ -8597,11 +8637,11 @@ function OptionGroupEditor({
         </div>
         <div className="color-folder-list">
           {colorNames.map((name) => {
-            const first = group.values.map(parseOptionValue).find((item) => item.label === name && item.image);
+            const first = group.values.map(parseOptionValue).find((item) => item.label === name && (item.image || item.video));
             return (
               <div className={`color-folder${activeColor === name ? " active" : ""}`} key={name}>
                 <button type="button" onClick={() => setOpenColor(name)}>
-                  {first?.image ? <ProductMedia src={first.image} alt={name} /> : <span>Sin archivos</span>}
+                  {first?.image || first?.video ? <ProductMedia src={first.image || first.video} alt={name} /> : <span>Sin archivos</span>}
                   <b>{name}</b>
                 </button>
                 <button
@@ -8621,8 +8661,8 @@ function OptionGroupEditor({
             <div className="variant-photo-grid active-color-photos">
               {activePhotos.map(({ index, parsed }) => (
                 <div className="variant-photo-card" key={`${parsed.image}-${index}`}>
-                  {parsed.image ? <ProductMedia src={parsed.image} alt={`${activeColor}, archivo ${index + 1}`} controls /> : <span>Sin archivos</span>}
-                  {parsed.image && <button type="button" onClick={() => activePhotos.length === 1 ? changeValue(index, activeColor, parsed.color, "") : removeValue(index)} aria-label="Borrar foto">×</button>}
+                  {parsed.image || parsed.video ? <ProductMedia src={parsed.image || parsed.video} alt={`${activeColor}, archivo ${index + 1}`} controls /> : <span>Sin archivos</span>}
+                  {(parsed.image || parsed.video) && <button type="button" onClick={() => activePhotos.length === 1 ? updateValues(group.values.map((value, valueIndex) => valueIndex === index ? colorValue(activeColor, parsed.color || "#8d96a5") : value)) : removeValue(index)} aria-label="Borrar archivo">×</button>}
                 </div>
               ))}
               <label className="add-color-photos">
