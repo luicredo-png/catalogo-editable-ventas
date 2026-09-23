@@ -1,0 +1,1 @@
+import{t as e}from"./generated-business-metadata-O-QFQ2EB.js";var t=e(`zapatos-mujer`);function n({children:e}){return e}export{n as default,t as metadata};

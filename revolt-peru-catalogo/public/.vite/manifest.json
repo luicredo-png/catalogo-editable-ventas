@@ -1,0 +1,241 @@
+{
+  "_demo-sites-CaAlBDzm.js": {
+    "file": "_next/static/chunks/demo-sites-CaAlBDzm.js",
+    "name": "demo-sites"
+  },
+  "_framework-BgSIrAUN.js": {
+    "file": "_next/static/chunks/framework-BgSIrAUN.js",
+    "name": "framework",
+    "imports": [
+      "_rolldown-runtime-C60lm6uB.js"
+    ]
+  },
+  "_rolldown-runtime-C60lm6uB.js": {
+    "file": "_next/static/chunks/rolldown-runtime-C60lm6uB.js",
+    "name": "rolldown-runtime"
+  },
+  "app/accesorios/page.tsx": {
+    "file": "_next/static/chunks/page-B59BwmkG.js",
+    "name": "page",
+    "src": "app/accesorios/page.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "app/page.tsx",
+      "_framework-BgSIrAUN.js"
+    ]
+  },
+  "app/admin/page.tsx": {
+    "file": "_next/static/chunks/page-Wk_RJMYC.js",
+    "name": "page",
+    "src": "app/admin/page.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_rolldown-runtime-C60lm6uB.js",
+      "app/page.tsx",
+      "_framework-BgSIrAUN.js"
+    ]
+  },
+  "app/comida-rapida/page.tsx": {
+    "file": "_next/static/chunks/page-D2lVKnaW.js",
+    "name": "page",
+    "src": "app/comida-rapida/page.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "app/page.tsx",
+      "_framework-BgSIrAUN.js"
+    ]
+  },
+  "app/demo-sitios/admin/page.tsx": {
+    "file": "_next/static/chunks/page-D6NgPYX5.js",
+    "name": "page",
+    "src": "app/demo-sitios/admin/page.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_rolldown-runtime-C60lm6uB.js",
+      "_demo-sites-CaAlBDzm.js",
+      "_framework-BgSIrAUN.js"
+    ]
+  },
+  "app/demo-sitios/page.tsx": {
+    "file": "_next/static/chunks/page-DugCgL1-.js",
+    "name": "page",
+    "src": "app/demo-sitios/page.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_rolldown-runtime-C60lm6uB.js",
+      "_demo-sites-CaAlBDzm.js",
+      "_framework-BgSIrAUN.js"
+    ],
+    "css": [
+      "_next/static/css/page.DQ_HCW5n.css"
+    ]
+  },
+  "app/detalles-romanticos/page.tsx": {
+    "file": "_next/static/chunks/page-CvE0dfU2.js",
+    "name": "page",
+    "src": "app/detalles-romanticos/page.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "app/page.tsx",
+      "_framework-BgSIrAUN.js"
+    ]
+  },
+  "app/estudio-contable/accounting-landing.tsx": {
+    "file": "_next/static/chunks/accounting-landing-j0tV5bdP.js",
+    "name": "accounting-landing",
+    "src": "app/estudio-contable/accounting-landing.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_rolldown-runtime-C60lm6uB.js",
+      "_framework-BgSIrAUN.js"
+    ]
+  },
+  "app/inventario/page.tsx": {
+    "file": "_next/static/chunks/page-DrlKrOm-.js",
+    "name": "page",
+    "src": "app/inventario/page.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_rolldown-runtime-C60lm6uB.js",
+      "_framework-BgSIrAUN.js"
+    ]
+  },
+  "app/login/page.tsx": {
+    "file": "_next/static/chunks/page-CzI1qWhh.js",
+    "name": "page",
+    "src": "app/login/page.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_rolldown-runtime-C60lm6uB.js",
+      "_framework-BgSIrAUN.js"
+    ]
+  },
+  "app/mujer/page.tsx": {
+    "file": "_next/static/chunks/page-D_5O3e3-.js",
+    "name": "page",
+    "src": "app/mujer/page.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "app/page.tsx",
+      "_framework-BgSIrAUN.js"
+    ]
+  },
+  "app/page.tsx": {
+    "file": "_next/static/chunks/page-B4FlTz19.js",
+    "name": "page",
+    "src": "app/page.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_rolldown-runtime-C60lm6uB.js",
+      "virtual:vinext-app-browser-entry",
+      "_framework-BgSIrAUN.js"
+    ],
+    "dynamicImports": [
+      "node_modules/.pnpm/html-to-image@1.11.13/node_modules/html-to-image/es/index.js",
+      "node_modules/.pnpm/mp4-muxer@5.2.2/node_modules/mp4-muxer/build/mp4-muxer.mjs"
+    ]
+  },
+  "app/perfumeria/page.tsx": {
+    "file": "_next/static/chunks/page-CFQyvEDL.js",
+    "name": "page",
+    "src": "app/perfumeria/page.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "app/page.tsx",
+      "_framework-BgSIrAUN.js"
+    ]
+  },
+  "app/postres/page.tsx": {
+    "file": "_next/static/chunks/page-DgtRX8nH.js",
+    "name": "page",
+    "src": "app/postres/page.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "app/page.tsx",
+      "_framework-BgSIrAUN.js"
+    ]
+  },
+  "app/restaurantes/page.tsx": {
+    "file": "_next/static/chunks/page-DWBgqyPG.js",
+    "name": "page",
+    "src": "app/restaurantes/page.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "app/page.tsx",
+      "_framework-BgSIrAUN.js"
+    ]
+  },
+  "app/ropa/page.tsx": {
+    "file": "_next/static/chunks/page-BcyByYWK.js",
+    "name": "page",
+    "src": "app/ropa/page.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "app/page.tsx",
+      "_framework-BgSIrAUN.js"
+    ]
+  },
+  "app/zapatos-mujer/page.tsx": {
+    "file": "_next/static/chunks/page-D39LgC-U.js",
+    "name": "page",
+    "src": "app/zapatos-mujer/page.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "app/page.tsx",
+      "_framework-BgSIrAUN.js"
+    ]
+  },
+  "node_modules/.pnpm/html-to-image@1.11.13/node_modules/html-to-image/es/index.js": {
+    "file": "_next/static/chunks/es-r-mJRF1q.js",
+    "name": "es",
+    "src": "node_modules/.pnpm/html-to-image@1.11.13/node_modules/html-to-image/es/index.js",
+    "isDynamicEntry": true
+  },
+  "node_modules/.pnpm/mp4-muxer@5.2.2/node_modules/mp4-muxer/build/mp4-muxer.mjs": {
+    "file": "_next/static/chunks/mp4-muxer-CWccNJLx.js",
+    "name": "mp4-muxer",
+    "src": "node_modules/.pnpm/mp4-muxer@5.2.2/node_modules/mp4-muxer/build/mp4-muxer.mjs",
+    "isDynamicEntry": true
+  },
+  "node_modules/.pnpm/vinext@1.0.0-beta.3_@vitejs_748a896778a71e344840307e29c9c079/node_modules/vinext/dist/shims/layout-segment-context.js": {
+    "file": "_next/static/chunks/layout-segment-context-D5q4lUTw.js",
+    "name": "layout-segment-context",
+    "src": "node_modules/.pnpm/vinext@1.0.0-beta.3_@vitejs_748a896778a71e344840307e29c9c079/node_modules/vinext/dist/shims/layout-segment-context.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_rolldown-runtime-C60lm6uB.js",
+      "virtual:vinext-app-browser-entry",
+      "_framework-BgSIrAUN.js"
+    ]
+  },
+  "virtual:vinext-app-browser-entry": {
+    "file": "_next/static/chunks/index-BaA4NcQv.js",
+    "name": "index",
+    "src": "virtual:vinext-app-browser-entry",
+    "isEntry": true,
+    "imports": [
+      "_rolldown-runtime-C60lm6uB.js",
+      "_framework-BgSIrAUN.js"
+    ],
+    "dynamicImports": [
+      "app/restaurantes/page.tsx",
+      "node_modules/.pnpm/vinext@1.0.0-beta.3_@vitejs_748a896778a71e344840307e29c9c079/node_modules/vinext/dist/shims/layout-segment-context.js",
+      "app/accesorios/page.tsx",
+      "virtual:vinext-app-browser-entry",
+      "app/zapatos-mujer/page.tsx",
+      "app/page.tsx",
+      "app/demo-sitios/admin/page.tsx",
+      "app/estudio-contable/accounting-landing.tsx",
+      "app/demo-sitios/page.tsx",
+      "app/mujer/page.tsx",
+      "app/ropa/page.tsx",
+      "app/detalles-romanticos/page.tsx",
+      "app/postres/page.tsx",
+      "app/comida-rapida/page.tsx",
+      "app/admin/page.tsx",
+      "app/login/page.tsx",
+      "app/inventario/page.tsx",
+      "app/perfumeria/page.tsx"
+    ]
+  }
+}

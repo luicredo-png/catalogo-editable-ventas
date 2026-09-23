@@ -1,0 +1,1 @@
+var e;function t(t){return e??=n(t),e}async function n(e){let t=await e.prepare(`PRAGMA table_info(stores)`).all(),n=new Set(t.results.map(e=>e.name));for(let[t,r]of[[`location_url`,`ALTER TABLE stores ADD COLUMN location_url TEXT NOT NULL DEFAULT ''`],[`tiktok_url`,`ALTER TABLE stores ADD COLUMN tiktok_url TEXT NOT NULL DEFAULT ''`]])n.has(t)||await e.prepare(r).run()}export{t};

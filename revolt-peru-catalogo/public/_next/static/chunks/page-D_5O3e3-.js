@@ -1,0 +1,1 @@
+import{i as e}from"./framework-BgSIrAUN.js";import t from"./page-B4FlTz19.js";var n=e();function r(){return(0,n.jsx)(t,{template:`mujer`,instantDemo:!0})}export{r as default};

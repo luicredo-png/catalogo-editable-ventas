@@ -1,0 +1,1 @@
+import{n as e,t}from"./inventory-db-CSJIJgiW.js";async function n(){return await t(),Response.json(await e())}export{n as GET};

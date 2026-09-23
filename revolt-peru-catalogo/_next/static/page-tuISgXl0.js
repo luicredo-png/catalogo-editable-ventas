@@ -1,0 +1,1 @@
+import{t as e}from"./framework~index~page~page~layout~page~app-page-cache-render~app-page-cache~app-route-handle~mmx89tzp-Bp2VtgvD.js";import{t}from"./accounting-landing-Bv7OZlns.js";var n=e();function r(){return(0,n.jsx)(t,{admin:!0})}export{r as default};

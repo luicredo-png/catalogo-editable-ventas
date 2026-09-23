@@ -1,0 +1,1 @@
+import{f as e}from"../../index.js";import t from"./page-KsjCXBb_.js";var n=e();function r(){return(0,n.jsx)(t,{template:`mujer`,instantDemo:!0})}export{r as default};

@@ -1,0 +1,1 @@
+var e={title:`SitioWeb.shop | Sitios web editables para negocios`,description:`Páginas web profesionales con subdominio y panel administrador para cada cliente.`};function t({children:e}){return e}export{t as default,e as metadata};
