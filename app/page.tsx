@@ -1893,8 +1893,10 @@ function ProductOrderModal({
   const selectedColor = colorGroup ? choices[colorGroup.name] : "";
   const selectedColorLabel = optionLabel(selectedColor || "");
   const uniqueColorValues = colorGroup
-    ? Array.from(
-        new Map(colorGroup.values.map((value) => [optionLabel(value), value])).values(),
+    ? Array.from(new Set(colorGroup.values.map(optionLabel))).map((label) =>
+        colorGroup.values.find((value) => optionLabel(value) === label && parseOptionValue(value).image)
+          || colorGroup.values.find((value) => optionLabel(value) === label)
+          || label,
       )
     : [];
   const colorPhotos = colorGroup?.values.filter(
