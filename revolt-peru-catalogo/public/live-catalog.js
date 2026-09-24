@@ -52,6 +52,8 @@
   };
   const bind = () => {
     document.addEventListener('click', event => {
+      const controlled = event.target.closest('[data-brand], .gender-tabs [data-gender], [data-thumb], [data-open], [data-close], [data-modal-thumb], [data-toggle-media]');
+      if (controlled) { event.preventDefault(); event.stopPropagation(); event.stopImmediatePropagation(); }
       const brand = event.target.closest('[data-brand]');
       if (brand) { state.brand = brand.dataset.brand; render(); return; }
       const gender = event.target.closest('.gender-tabs [data-gender]');
@@ -64,7 +66,7 @@
       const modalThumb = event.target.closest('[data-modal-thumb]');
       if (modalThumb) { state.modalIndex = Number(modalThumb.dataset.modalThumb); state.showVideo = false; renderModal(); return; }
       if (event.target.closest('[data-toggle-media]') && state.modal?.videoUrl) { state.showVideo = !state.showVideo; renderModal(); }
-    });
+    }, true);
     document.querySelector('.catalog-search input')?.addEventListener('input', event => { state.query = event.target.value; render(); });
   };
   const start = async () => {
