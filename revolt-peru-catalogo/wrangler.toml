@@ -1,12 +1,16 @@
 name = "revolt-peru-catalogo"
-main = "index.js"
+main = "entry-normalized.js"
 compatibility_date = "2026-05-15"
 compatibility_flags = ["nodejs_compat"]
+
+routes = [
+  { pattern = "revoltperu.shop/*", zone_name = "revoltperu.shop" }
+]
 
 [assets]
 directory = "./public"
 binding = "ASSETS"
-run_worker_first = false
+run_worker_first = true
 
 [[d1_databases]]
 binding = "DB"
