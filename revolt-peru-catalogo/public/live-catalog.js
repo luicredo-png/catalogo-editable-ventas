@@ -10,6 +10,22 @@
     document.body.classList.toggle('gender-mujer', state.gender === 'MUJER');
     document.documentElement.dataset.liveGender = state.gender;
   };
+  const applyMobileType = () => {
+    if (document.getElementById('mobile-type-live')) return;
+    const style = document.createElement('style');
+    style.id = 'mobile-type-live';
+    style.textContent = `@media (max-width:600px){
+      .product-card h2{font-size:18px!important;line-height:1.15!important;min-height:42px!important;font-weight:900!important}
+      .product-brand{font-size:11px!important;letter-spacing:.12em!important;font-weight:900!important}
+      .card-sizes{font-size:13px!important;line-height:1.35!important}
+      .card-sizes span{font-size:10px!important;display:block!important;margin-bottom:3px}
+      .models-button{font-size:13px!important;min-height:38px!important;font-weight:900!important}
+      .whatsapp-button{font-size:12px!important;min-height:44px!important;font-weight:900!important}
+      .catalog-meta strong{font-size:12px!important}.catalog-meta span{font-size:12px!important}
+      .brand-strip button,.gender-tabs button{font-size:11px!important;font-weight:850!important;padding:8px 12px!important}
+    }`;
+    document.head.appendChild(style);
+  };
   const whatsapp = (product, index) => {
     const number = String(state.data.settings.whatsapp || '51981395069').replace(/\D/g, '');
     const text = ['Quiero pedir este modelo:', '', `Modelo: ${product.name}`, `Color elegido: Foto ${index + 1}`, `Precio: S/${Math.round(product.price)}`, 'Talla: (por confirmar)'].join('\n');
@@ -81,7 +97,7 @@
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       state.data = await response.json();
       state.gender = location.pathname.startsWith('/mujer') ? 'MUJER' : location.pathname.startsWith('/hombre') ? 'HOMBRE' : 'TODOS';
-      applyTheme(); bind(); render(); document.documentElement.dataset.liveCatalog = 'ready';
+      applyTheme(); applyMobileType(); bind(); render(); document.documentElement.dataset.liveCatalog = 'ready';
     } catch (error) { console.error('No se pudo cargar el catálogo en vivo', error); }
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true }); else start();
