@@ -9,7 +9,7 @@ export default {
     }
     // Serve the same catalog shell for gender routes without redirecting to `/`.
     // The live client reads the preserved pathname and applies the correct filter.
-    if (url.pathname === "/mujer" || url.pathname === "/hombre") {
+      if (url.pathname === "/" || url.pathname === "/mujer" || url.pathname === "/hombre") {
       const shell = await env.ASSETS.fetch(new Request(new URL("/", request.url)));
       const headers = new Headers(shell.headers);
       headers.set("content-type", "text/html; charset=UTF-8");
