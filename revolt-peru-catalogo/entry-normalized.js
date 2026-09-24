@@ -3,6 +3,10 @@ import app from "./index.js";
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    // Static assets must bypass the application router when worker-first is enabled.
+    if (url.pathname.startsWith("/_next/") || url.pathname.startsWith("/assets/") || url.pathname === "/live-catalog.js" || url.pathname === "/favicon.svg" || url.pathname === "/manifest.webmanifest") {
+      return env.ASSETS.fetch(request);
+    }
     // Serve the same catalog shell for gender routes without redirecting to `/`.
     // The live client reads the preserved pathname and applies the correct filter.
     if (url.pathname === "/mujer" || url.pathname === "/hombre") {
