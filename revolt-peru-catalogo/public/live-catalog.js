@@ -7,30 +7,8 @@
   const applyTheme = () => {
     const id = 'gender-theme-live';
     document.getElementById(id)?.remove();
-    if (state.gender !== 'MUJER') return;
-    const style = document.createElement('style');
-    style.id = id;
-    style.textContent = `
-      html[data-live-gender="MUJER"],html[data-live-gender="MUJER"] body{background:#fff;color:#241b20}
-      html[data-live-gender="MUJER"] body{background:radial-gradient(circle at 12% 8%,#ffe7f1 0,transparent 34%),radial-gradient(circle at 92% 18%,#fff0f6 0,transparent 30%),#fff}
-      html[data-live-gender="MUJER"] .catalog-page{background:linear-gradient(180deg,#fff7fa 0%,#fff 30%,#fff 100%)!important;color:#241b20}
-      html[data-live-gender="MUJER"] .catalog-header{background:linear-gradient(135deg,#fff 0%,#fff5f9 58%,#ffd9e8 100%);border-bottom:1px solid #f3c1d4}
-      html[data-live-gender="MUJER"] .promo-pill{background:#fff;border-color:#f2b7cc;color:#6c3047}
-      html[data-live-gender="MUJER"] .catalog-controls,html[data-live-gender="MUJER"] .catalog-intro{background:transparent!important}
-      html[data-live-gender="MUJER"] .catalog-search{background:#fff;border-color:#efbfd1;box-shadow:0 8px 20px #d94f8212}
-      html[data-live-gender="MUJER"] .catalog-search input{color:#542338}
-      html[data-live-gender="MUJER"] .catalog-meta span{color:#9b6078}
-      html[data-live-gender="MUJER"] .product-grid{background:transparent}
-      html[data-live-gender="MUJER"] .catalog-heading{color:#7b3152}
-      html[data-live-gender="MUJER"] .gender-tabs button.active,html[data-live-gender="MUJER"] .brand-strip button.active{background:#d94f82;border-color:#d94f82;color:#fff}
-      html[data-live-gender="MUJER"] .gender-tabs button,html[data-live-gender="MUJER"] .brand-strip button{border-color:#e8b4c8;color:#7b3152;background:#fff}
-      html[data-live-gender="MUJER"] .product-card{background:#fff;border-color:#f0c7d7;box-shadow:0 14px 35px #d94f821c}
-      html[data-live-gender="MUJER"] .product-card-body h2,html[data-live-gender="MUJER"] .product-brand{color:#542338}
-      html[data-live-gender="MUJER"] .models-button{background:linear-gradient(90deg,#c83f73,#ed7ca4);color:#fff}
-      html[data-live-gender="MUJER"] .catalog-meta{color:#7b3152}
-    `;
-    document.head.appendChild(style);
-    document.documentElement.dataset.liveGender = 'MUJER';
+    document.body.classList.toggle('gender-mujer', state.gender === 'MUJER');
+    document.documentElement.dataset.liveGender = state.gender;
   };
   const whatsapp = (product, index) => {
     const number = String(state.data.settings.whatsapp || '51981395069').replace(/\D/g, '');
