@@ -20,7 +20,8 @@
       .card-sizes{font-size:13px!important;line-height:1.35!important}
       .card-sizes span{font-size:10px!important;display:block!important;margin-bottom:3px}
       .models-button{font-size:13px!important;min-height:38px!important;font-weight:900!important}
-      .whatsapp-button{font-size:12px!important;min-height:44px!important;font-weight:900!important}
+      .whatsapp-button{font-size:11px!important;min-height:44px!important;font-weight:800!important;letter-spacing:.035em!important;justify-content:center!important;gap:8px!important}
+      .whatsapp-icon-image{width:24px!important;height:24px!important;flex:0 0 24px!important}
       .catalog-meta strong{font-size:12px!important}.catalog-meta span{font-size:12px!important}
       .brand-strip button,.gender-tabs button{font-size:11px!important;font-weight:850!important;padding:8px 12px!important}
     }`;
