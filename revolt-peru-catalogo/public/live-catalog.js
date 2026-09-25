@@ -27,7 +27,7 @@
     style.id = 'mobile-type-live';
     style.textContent = `
     .catalog-controls{position:relative!important;top:auto!important}.catalog-intro{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important}.catalog-intro .catalog-search{width:min(760px,92vw)!important;margin-left:auto!important;margin-right:auto!important}.revoluciona-hero{display:block;width:min(760px,92vw);max-height:230px;object-fit:contain;margin:4px auto 12px;align-self:center;filter:drop-shadow(0 10px 24px #0008)}
-    .brand-scroll-shell{position:sticky;top:0;z-index:62;display:flex;align-items:flex-end;gap:4px;padding:7px max(10px,calc((100vw - 1840px)/2));background:#070a0deF;border-bottom:1px solid #ffffff16;backdrop-filter:blur(12px)}.brand-scroll-shell .brand-strip{flex:1;min-width:0;scroll-behavior:smooth}
+    .brand-scroll-shell{position:sticky;top:var(--revolt-header-offset,86px);z-index:62;display:flex;align-items:flex-end;gap:4px;padding:7px max(10px,calc((100vw - 1840px)/2));background:#070a0deF;border-bottom:1px solid #ffffff16;backdrop-filter:blur(12px)}.brand-scroll-shell .brand-strip{flex:1;min-width:0;scroll-behavior:smooth}
     .brand-scroll-arrow{display:none;border:0;background:#262626;color:#fff;border-radius:2px;width:28px;height:8px;flex:0 0 28px;padding:0;font-size:9px;font-weight:900;align-items:center;justify-content:center;line-height:8px;margin-bottom:1px}.brand-scroll-shell.is-start [data-brand-scroll="-1"],.brand-scroll-shell.is-end [data-brand-scroll="1"]{visibility:hidden;pointer-events:none}
     .angle-cycle{transition:opacity .55s ease,transform .55s ease}.angle-cycle.angle-changing{opacity:.22;transform:scale(.985)}
     .cart-add-button{width:100%;margin-top:8px;min-height:42px;border:1px solid #ffd21c;border-radius:8px;background:#151515;color:#ffd21c;font-weight:900;letter-spacing:.03em;cursor:pointer}
@@ -127,6 +127,7 @@
     if (!strip.dataset.arrowBound) { strip.addEventListener('scroll', update, { passive:true }); addEventListener('resize', update); new ResizeObserver(update).observe(strip); strip.dataset.arrowBound = '1'; }
     requestAnimationFrame(update);
   };
+  const setupStickyOffset = () => { const header = document.querySelector('.catalog-header'); if (!header) return; const update = () => document.documentElement.style.setProperty('--revolt-header-offset', `${Math.ceil(header.getBoundingClientRect().height)}px`); update(); new ResizeObserver(update).observe(header); addEventListener('resize', update); };
   const setupHero = () => {
     const intro = document.querySelector('.catalog-intro'), search = intro?.querySelector('.catalog-search');
     if (!intro || !search || intro.querySelector('.revoluciona-hero')) return;
@@ -212,7 +213,7 @@
       try { state.cart = JSON.parse(localStorage.getItem('revolt-cart') || '[]'); } catch { state.cart = []; }
       if (state.cart.length) { let position = 0; state.cart = state.cart.flatMap(item => Array.from({ length: Math.max(1, Number(item.qty) || 1) }, () => { const product = state.data.products.find(p => p.id === item.id), price = position === 0 ? (product ? basePrice(product) : Number(item.price) || 95) : position === 1 ? 80 : 70; position += 1; return { ...item, qty:1, price, key:`${item.id}:${item.index}:${Date.now()}:${position}:${Math.random().toString(36).slice(2,6)}` }; })); localStorage.setItem('revolt-cart', JSON.stringify(state.cart)); }
       state.gender = location.pathname.startsWith('/mujer') ? 'MUJER' : location.pathname.startsWith('/hombre') ? 'HOMBRE' : 'TODOS';
-      applyTheme(); applyMobileType(); setupHero(); setupBrandScroller(); bind(); render();
+      applyTheme(); applyMobileType(); setupHero(); setupStickyOffset(); setupBrandScroller(); bind(); render();
       setInterval(() => document.querySelectorAll('[data-angle-product]').forEach(img => { const product = state.data.products.find(p => p.id === Number(img.dataset.angleProduct)); const list = product ? anglesFor(product, Number(img.dataset.angleIndex)) : []; if (list.length < 2) return; const next = (Number(img.dataset.anglePosition || 0) + 1) % list.length; img.classList.add('angle-changing'); setTimeout(() => { if (!img.isConnected) return; img.src = list[next]; img.dataset.anglePosition = next; img.classList.remove('angle-changing'); }, 280); }), 4200);
       document.documentElement.dataset.liveCatalog = 'ready'; bootStyle.remove();
     } catch (error) { console.error('No se pudo cargar el catálogo en vivo', error); }
