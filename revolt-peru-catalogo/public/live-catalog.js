@@ -127,7 +127,7 @@
     if (!shell) { shell = document.createElement('div'); shell.className = 'brand-scroll-shell'; strip.parentNode.insertBefore(shell, strip); shell.appendChild(strip); shell.insertAdjacentHTML('afterbegin', '<button class="brand-scroll-arrow" type="button" data-brand-scroll="-1" aria-label="Ver marcas anteriores">‹</button>'); shell.insertAdjacentHTML('beforeend', '<button class="brand-scroll-arrow" type="button" data-brand-scroll="1" aria-label="Ver más marcas">›</button>'); }
     const controls = document.querySelector('.catalog-controls'); if (controls && shell.parentElement === controls) controls.insertAdjacentElement('afterend', shell);
     const update = () => { const max = Math.max(0, strip.scrollWidth - strip.clientWidth); shell.classList.toggle('is-start', strip.scrollLeft <= 2); shell.classList.toggle('is-end', strip.scrollLeft >= max - 2); };
-    if (!strip.dataset.arrowBound) { strip.addEventListener('scroll', update, { passive:true }); addEventListener('resize', update); strip.dataset.arrowBound = '1'; }
+    if (!strip.dataset.arrowBound) { strip.addEventListener('scroll', update, { passive:true }); addEventListener('resize', update); new ResizeObserver(update).observe(strip); strip.dataset.arrowBound = '1'; }
     requestAnimationFrame(update);
   };
   const setupHero = () => {
