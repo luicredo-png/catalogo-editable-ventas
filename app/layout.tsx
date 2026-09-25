@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Abril_Fatface, Bebas_Neue, Cinzel, Cormorant_Garamond, Geist, Geist_Mono, Inter, Lobster, Oswald, Outfit, Pacifico, Playfair_Display, Space_Grotesk } from 'next/font/google';
 import './globals.css';
+import './audience-tabs.css';
 import './notice.css';
 import './clothing.css';
 import './cover.css';

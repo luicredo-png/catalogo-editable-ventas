@@ -30,7 +30,7 @@ export async function GET(request:Request){
   if(!admin.owner&&(admin.demo||admin.tenant!==tenantSlug))return privateError(403,'forbidden');
   const tenant=await env.DB.prepare("SELECT * FROM stores WHERE slug=? AND owner_id LIKE 'tenant:%'").bind(tenantSlug).first<Record<string,unknown>>();
   if(!tenant)return privateError(404,'store_not_found');
-  const rows=await env.DB.prepare('SELECT id,name,category,description,price,old_price AS oldPrice,image,options_json AS optionsJson,whatsapp_message AS whatsappMessage,active FROM products WHERE store_id=? ORDER BY sort_order,id').bind(tenant.id).all();
+  const rows=await env.DB.prepare('SELECT id,name,category,description,price,old_price AS oldPrice,image,options_json AS optionsJson,whatsapp_message AS whatsappMessage,active,audience FROM products WHERE store_id=? ORDER BY sort_order,id').bind(tenant.id).all();
   return Response.json({user:{email:admin.email,displayName:String(tenant.name),guest:false},adminKey:'',store:tenant,products:rows.results.map(p=>productRow(p as Record<string,unknown>))},{headers:{'Cache-Control':'private, no-store'}});
  }
  if(!admin.owner&&!admin.demo)return privateError(403,'forbidden');
@@ -64,7 +64,7 @@ export async function GET(request:Request){
    store=await env.DB.prepare('SELECT * FROM stores WHERE id=?').bind(id).first<Record<string,unknown>>();
   }
  }
- const rows=await env.DB.prepare('SELECT id,name,category,description,price,old_price AS oldPrice,image,options_json AS optionsJson,whatsapp_message AS whatsappMessage,active FROM products WHERE store_id=? ORDER BY sort_order,id').bind(store!.id).all();
+ const rows=await env.DB.prepare('SELECT id,name,category,description,price,old_price AS oldPrice,image,options_json AS optionsJson,whatsapp_message AS whatsappMessage,active,audience FROM products WHERE store_id=? ORDER BY sort_order,id').bind(store!.id).all();
  return Response.json({user:{email:admin.email,displayName:'Editor demo',guest:admin.demo},adminKey:'',store,products:rows.results.map(p=>productRow(p as Record<string,unknown>))},{headers:{'Cache-Control':'private, no-store'}});
 }
 

@@ -110,6 +110,7 @@ type Product = {
   options?: OptionGroup[];
   whatsappMessage?: string;
   active: boolean;
+  audience?: "all" | "men" | "women";
 };
 type Store = {
   id: number;
@@ -199,6 +200,7 @@ export default function Home({
     [activeTemplate, setActiveTemplate] = useState<TemplateKey>(template),
     [query, setQuery] = useState(""),
     [filter, setFilter] = useState("TODOS"),
+    [audience, setAudience] = useState<"all" | "men" | "women">("all"),
     [catalogLoading, setCatalogLoading] = useState(!startAdmin && !instantDemo),
     [singleCatalog, setSingleCatalog] = useState(false),
     [adminLoading, setAdminLoading] = useState(startAdmin),
@@ -376,15 +378,20 @@ export default function Home({
     }, 0);
     return () => clearTimeout(timer);
   }, [startAdmin, activeTemplate, catalogLoading]);
+  const audienceTabs = audienceTabsSettings(store.categorySettings);
+  const audienceProducts = useMemo(
+    () => products.filter((product) => audience === "all" || (product.audience || "all") === "all" || product.audience === audience),
+    [products, audience],
+  );
   const visible = useMemo(
     () =>
-      products.filter(
+      audienceProducts.filter(
         (p) =>
           p.active &&
           (filter === "TODOS" || p.category === filter) &&
           `${p.name} ${p.category}`.toLowerCase().includes(query.toLowerCase()),
       ),
-    [products, filter, query],
+    [audienceProducts, filter, query],
   );
   async function saveProduct(p: Product) {
     const isNew = p.id === 0;
@@ -568,7 +575,7 @@ export default function Home({
   };
   return (
     <main
-       className={`storefront template-${activeTemplate} ${visualEffects.card3d ? "catalog-3d" : ""} ${visualEffects.heroReveal ? "dia-hero" : ""} ${visualEffects.productSparkles ? "sparkle-products" : ""} appearance-${activeAppearance} hero-size-${homeLayout.heroSize} ${homeLayout.hidden.map((item) => `home-hide-${item}`).join(" ")} ${isFood ? "food-store" : ""} ${isClothing ? "clothing-store" : ""} mobile-cols-${store.mobileColumns} surface-${store.surfaceStyle} whatsapp-button-${store.buttonStyle} secondary-button-${store.secondaryButtonStyle} hero-button-${store.heroButtonStyle}`}
+       className={`storefront template-${activeTemplate} audience-view-${audience} ${visualEffects.card3d ? "catalog-3d" : ""} ${visualEffects.heroReveal ? "dia-hero" : ""} ${visualEffects.productSparkles ? "sparkle-products" : ""} appearance-${activeAppearance} hero-size-${homeLayout.heroSize} ${homeLayout.hidden.map((item) => `home-hide-${item}`).join(" ")} ${isFood ? "food-store" : ""} ${isClothing ? "clothing-store" : ""} mobile-cols-${store.mobileColumns} surface-${store.surfaceStyle} whatsapp-button-${store.buttonStyle} secondary-button-${store.secondaryButtonStyle} hero-button-${store.heroButtonStyle}`}
       style={style}
     >
       {notice && <div className="toast">{notice}</div>}
@@ -673,8 +680,9 @@ export default function Home({
               backgroundPosition: "center",
             } as React.CSSProperties}
           >
+            {audienceTabs.enabled && <AudienceTabs settings={audienceTabs} value={audience} change={(value) => { setAudience(value); setFilter("TODOS"); }} />}
             <div className="clothing-categories">
-              {catalogTypes(products, store, clothingHero).map((c) => (
+              {catalogTypes(audienceProducts, store, clothingHero).map((c) => (
                 <button
                   className={filter === c.key ? "active" : ""}
                   onClick={() => setFilter(c.key)}
@@ -759,6 +767,7 @@ export default function Home({
               />
             </label>
           </section>
+          {audienceTabs.enabled && <AudienceTabs settings={audienceTabs} value={audience} change={(value) => { setAudience(value); setFilter("TODOS"); }} />}
           <nav
             className="category-tabs visual-category-tabs"
             id="categorias"
@@ -772,7 +781,7 @@ export default function Home({
               backgroundPosition: "center",
             }}
           >
-            {catalogTypes(products, store, currentHero).map((c) => (
+            {catalogTypes(audienceProducts, store, currentHero).map((c) => (
               <button
                 className={filter === c.key ? "active" : ""}
                 onClick={() => setFilter(c.key)}
@@ -1522,6 +1531,14 @@ function stringifyCategorySettings(
     }] : []).concat(specialSettings),
   );
 }
+type AudienceTabsSettings = { enabled:boolean; allLabel:string; menLabel:string; womenLabel:string; womenAccent:string; womenBackground:string; womenText:string };
+function audienceTabsSettings(value:string):AudienceTabsSettings {
+  const item=parseCategorySettings(value).find((entry)=>entry.key==="__AUDIENCE_TABS__");
+  try { const saved=JSON.parse(item?.image||"{}"); return {enabled:item?.label==="on",allLabel:String(saved.allLabel||"TODOS"),menLabel:String(saved.menLabel||"HOMBRE"),womenLabel:String(saved.womenLabel||"MUJER"),womenAccent:String(saved.womenAccent||"#ff4f9a"),womenBackground:String(saved.womenBackground||"#fff7fb"),womenText:String(saved.womenText||"#ff4f9a")}; }
+  catch { return {enabled:false,allLabel:"TODOS",menLabel:"HOMBRE",womenLabel:"MUJER",womenAccent:"#ff4f9a",womenBackground:"#fff7fb",womenText:"#ff4f9a"}; }
+}
+function setAudienceTabsSettings(value:string,settings:AudienceTabsSettings){let items:CatalogType[]=[];try{const parsed=JSON.parse(value||"[]");if(Array.isArray(parsed))items=parsed}catch{}return JSON.stringify([...items.filter((item)=>item?.key!=="__AUDIENCE_TABS__"),{key:"__AUDIENCE_TABS__",label:settings.enabled?"on":"off",image:JSON.stringify(settings),color:""}])}
+function AudienceTabs({settings,value,change}:{settings:AudienceTabsSettings;value:"all"|"men"|"women";change:(value:"all"|"men"|"women")=>void}){return <nav className={`audience-tabs audience-${value}`} aria-label="Tipo de público" style={{"--women-accent":settings.womenAccent,"--women-background":settings.womenBackground,"--women-text":settings.womenText} as React.CSSProperties}><button type="button" className={value==="all"?"active":""} onClick={()=>change("all")}>{settings.allLabel}</button><button type="button" className={value==="men"?"active":""} onClick={()=>change("men")}>{settings.menLabel}</button><button type="button" className={value==="women"?"active women":""} onClick={()=>change("women")}>{settings.womenLabel}</button></nav>}
 function cartSettings(value: string) {
   const item = parseCategorySettings(value).find((entry) => entry.key === "__CART_SETTINGS__");
   return { enabled: item?.label === "on" };
@@ -3633,6 +3650,7 @@ function AdminV2({
     );
   const heroColors = heroColorSettings(store.categorySettings, store);
   const visualEffects = visualEffectsSettings(store.categorySettings, template);
+  const audienceTabs = audienceTabsSettings(store.categorySettings);
   const applyCategoryBackgroundPreview = (image: string, color: string) => {
     requestAnimationFrame(() => {
       const document = catalogPreviewRef.current?.contentDocument;
@@ -3778,6 +3796,9 @@ function AdminV2({
       setVisualEffectsSettings(store.categorySettings, next),
     );
     applyVisualEffectsPreview(next);
+  };
+  const updateAudienceTabs = (patch:Partial<AudienceTabsSettings>) => {
+    update("categorySettings",setAudienceTabsSettings(store.categorySettings,{...audienceTabs,...patch}));
   };
   const saveTypeItems = (items: CatalogType[]) =>
     setStore({
@@ -4484,6 +4505,14 @@ function AdminV2({
                     }}
                   />
                 </label>
+              </div>
+              <div className="audience-tabs-editor">
+                <div><small>FILTRO TODOS / HOMBRE / MUJER</small><h2>Selector por tipo de público</h2><p>Actívalo para asignar cada producto y personalizar el diseño de Mujer.</p></div>
+                <label className="audience-feature-toggle"><span>Mostrar selector antes de las categorías</span><input type="checkbox" checked={audienceTabs.enabled} onChange={(event)=>updateAudienceTabs({enabled:event.target.checked})}/></label>
+                {audienceTabs.enabled && <>
+                  <div className="audience-label-fields"><label>Texto de Todos<input value={audienceTabs.allLabel} maxLength={24} onChange={(event)=>updateAudienceTabs({allLabel:event.target.value})}/></label><label>Texto de Hombre<input value={audienceTabs.menLabel} maxLength={24} onChange={(event)=>updateAudienceTabs({menLabel:event.target.value})}/></label><label>Texto de Mujer<input value={audienceTabs.womenLabel} maxLength={24} onChange={(event)=>updateAudienceTabs({womenLabel:event.target.value})}/></label></div>
+                  <div className="audience-women-colors"><ColorField label="Borde rosa de Mujer" value={audienceTabs.womenAccent} change={(womenAccent)=>updateAudienceTabs({womenAccent})}/><ColorField label="Fondo de Mujer" value={audienceTabs.womenBackground} change={(womenBackground)=>updateAudienceTabs({womenBackground})}/><ColorField label="Texto de Mujer" value={audienceTabs.womenText} change={(womenText)=>updateAudienceTabs({womenText})}/></div>
+                </>}
               </div>
               <div className="search-editor-fields">
                 <label>
@@ -5343,6 +5372,7 @@ function AdminV2({
           categories={typeItems
             .filter((item) => item.key !== "TODOS")
             .map((item) => ({ key: item.key, label: item.label }))}
+          audienceEnabled={audienceTabs.enabled}
           close={() => setEditing(null)}
           save={saveProduct}
         />
@@ -8310,6 +8340,7 @@ function ProductEditor({
   template = "ropa",
   sizesEnabled = true,
   categories = [],
+  audienceEnabled = false,
   close,
   save,
 }: {
@@ -8317,6 +8348,7 @@ function ProductEditor({
   template?: TemplateKey;
   sizesEnabled?: boolean;
   categories?: { key: string; label: string }[];
+  audienceEnabled?: boolean;
   close: () => void;
   save: (p: Product) => void;
 }) {
@@ -8410,6 +8442,7 @@ function ProductEditor({
             ))}
           </select>
         </label>
+        {audienceEnabled && <label>Tipo de público<select value={d.audience||"all"} onChange={(event)=>f("audience",event.target.value)}><option value="all">Todos</option><option value="men">Hombre</option><option value="women">Mujer</option></select></label>}
         <label>
           Descripción
           <input
