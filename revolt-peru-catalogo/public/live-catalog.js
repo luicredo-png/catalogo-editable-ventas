@@ -65,8 +65,7 @@
   };
   const basePrice = (product) => Math.round(Number(product.price)) === 99 ? 99 : 95;
   const cartQuantity = () => state.cart.reduce((sum, item) => sum + item.qty, 0);
-  const cartUnitPrice = () => cartQuantity() >= 3 ? 70 : cartQuantity() === 2 ? 80 : null;
-  const catalogPrice = (product) => cartQuantity() >= 3 ? 70 : cartQuantity() === 2 ? 80 : basePrice(product);
+  const catalogPrice = (product) => cartQuantity() >= 2 ? 70 : cartQuantity() === 1 ? 80 : basePrice(product);
   const refreshVisiblePrices = () => { document.querySelectorAll('[data-product-price]').forEach(node => { const product = state.data?.products?.find(item => item.id === Number(node.dataset.productPrice)); if (!product) return; const next = catalogPrice(product), previous = Number(node.dataset.currentPrice || String(node.textContent).replace(/\D/g,'')); node.textContent = `S/${next}`; node.dataset.currentPrice = next; if (previous && previous !== next && !matchMedia('(prefers-reduced-motion: reduce)').matches) node.animate([{opacity:.2,transform:'translateY(-8px) scale(.86)',filter:'blur(3px)'},{opacity:1,transform:'translateY(0) scale(1.12)',filter:'blur(0)'},{transform:'scale(1)'}],{duration:650,easing:'cubic-bezier(.2,.8,.2,1)'}); }); document.querySelectorAll('.product-card[data-live-id]').forEach(card => { const product = state.data?.products?.find(item => item.id === Number(card.dataset.liveId)), link = card.querySelector('.whatsapp-button'); if (product && link) link.href = whatsapp(product, state.selected.get(product.id) || 0); }); if (state.modal) { const link = document.querySelector('#live-product-modal .whatsapp-button'); if (link) link.href = whatsapp(state.modal, state.modalIndex); } };
   const saveCart = () => { localStorage.setItem('revolt-cart', JSON.stringify(state.cart)); renderDock(); refreshVisiblePrices(); };
   const flyToCart = (source) => {
@@ -81,14 +80,12 @@
     flying.addEventListener('transitionend',()=>{flying.remove();target.classList.remove('cart-hit');void target.offsetWidth;target.classList.add('cart-hit')},{once:true});
   };
   const addToCart = (product, index, source) => {
-    const key = `${product.id}:${index}`;
-    const found = state.cart.find(item => item.key === key);
-    if (found) found.qty += 1;
-    else state.cart.push({ key, id: product.id, index, qty: 1, name: product.name, brand: product.brand, price: basePrice(product), image: photos(product)[index] || '/assets/logo.png' });
+    const selectedPrice = catalogPrice(product), key = `${product.id}:${index}:${Date.now()}:${Math.random().toString(36).slice(2,7)}`;
+    state.cart.push({ key, id: product.id, index, qty: 1, name: product.name, brand: product.brand, price: selectedPrice, image: photos(product)[index] || '/assets/logo.png' });
     saveCart();
     flyToCart(source);
     const after = cartQuantity();
-    if (after <= 3) { document.querySelector('.price-change-toast')?.remove(); const notice = after === 1 ? `1 producto: S/${basePrice(product)}` : after === 2 ? '¡2 productos: S/80 cada uno!' : '¡Desde 3: S/70 cada uno!'; document.body.insertAdjacentHTML('beforeend', `<div class="price-change-toast">${notice}</div>`); setTimeout(()=>document.querySelector('.price-change-toast')?.remove(),2500); }
+    if (after <= 3) { document.querySelector('.price-change-toast')?.remove(); const notice = after === 1 ? '¡El siguiente producto baja a S/80!' : after === 2 ? '¡Desde el tercero, cada producto a S/70!' : '¡Producto agregado a S/70!'; document.body.insertAdjacentHTML('beforeend', `<div class="price-change-toast">${notice}</div>`); setTimeout(()=>document.querySelector('.price-change-toast')?.remove(),2500); }
   };
   const renderDock = () => {
     let dock = document.getElementById('revolt-dock');
@@ -103,11 +100,11 @@
   const renderCartPanel = () => {
     closePanel();
     const number = String(state.data.settings.whatsapp || '51981395069').replace(/\D/g, '');
-    const unit = cartUnitPrice(), total = unit ? cartQuantity() * unit : state.cart.reduce((sum,item)=>sum + item.qty * item.price,0);
-    const itemPrice = item => unit || item.price;
+    const total = state.cart.reduce((sum,item)=>sum + item.qty * item.price,0);
+    const itemPrice = item => item.price;
     const message = ['Hola, quiero pedir:', ...state.cart.map(item => `• ${item.qty}x ${item.name} - color ${item.index + 1} - S/${itemPrice(item)} c/u`), '', `Total: S/${total}`].join('\n');
     const lines = state.cart.length ? state.cart.map(item => `<div class="cart-line"><img src="${esc(item.image)}" alt=""><div><strong>${esc(item.name)}</strong><small>${esc(item.brand)} · Color ${item.index + 1} · Cant. ${item.qty} · S/${itemPrice(item)} c/u</small></div><button type="button" data-cart-remove="${esc(item.key)}">Quitar</button></div>`).join('') : '<p>Tu carrito está vacío.</p>';
-    document.body.insertAdjacentHTML('beforeend', `<div class="revolt-panel" id="revolt-panel"><section class="revolt-panel-card"><header class="revolt-panel-head"><h2>Tu carrito</h2><button class="revolt-panel-close" type="button" data-panel-close>×</button></header>${lines}${state.cart.length ? `<p class="modal-price"><span>${cartQuantity() >= 3 ? 'PRECIO DESDE 3 PRODUCTOS' : cartQuantity() === 2 ? 'PRECIO POR 2 PRODUCTOS' : 'PRECIO ORIGINAL'}</span><strong data-cart-total>Total S/${total}</strong></p><a class="cart-send" href="https://wa.me/${number}?text=${encodeURIComponent(message)}" target="_blank">Pedir carrito por Whatsapp</a>` : ''}</section></div>`);
+    document.body.insertAdjacentHTML('beforeend', `<div class="revolt-panel" id="revolt-panel"><section class="revolt-panel-card"><header class="revolt-panel-head"><h2>Tu carrito</h2><button class="revolt-panel-close" type="button" data-panel-close>×</button></header>${lines}${state.cart.length ? `<p class="modal-price"><span>PRIMER PRODUCTO ORIGINAL · SEGUNDO S/80 · DESDE EL TERCERO S/70</span><strong data-cart-total>Total S/${total}</strong></p><a class="cart-send" href="https://wa.me/${number}?text=${encodeURIComponent(message)}" target="_blank">Pedir carrito por Whatsapp</a>` : ''}</section></div>`);
   };
   const renderDeliveredPanel = () => {
     closePanel();
