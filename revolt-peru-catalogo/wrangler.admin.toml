@@ -1,0 +1,12 @@
+name = "revolt-admin-nuevo"
+main = "admin-v2.js"
+compatibility_date = "2026-05-15"
+
+routes = [
+  { pattern = "admin.revoltperu.shop", custom_domain = true }
+]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "revolt-peru-catalogo"
+database_id = "acd0d0c2-19b9-4431-8329-bf4a8d308626"
