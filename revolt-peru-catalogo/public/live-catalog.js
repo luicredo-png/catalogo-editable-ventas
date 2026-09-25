@@ -14,7 +14,7 @@
     const url = byColor[index] || byColor[String(index)] || '';
     return url ? mediaUrl(url) : '';
   };
-  const orderFor = (product) => { const order = state.data?.orders?.[state.gender] || []; const i = order.indexOf(product.id); if (i >= 0) return i; return 10000 + (state.gender === 'HOMBRE' ? (product.sortOrderHombre ?? product.sortOrder ?? 9999) : state.gender === 'MUJER' ? (product.sortOrderMujer ?? product.sortOrder ?? 9999) : (product.sortOrder ?? 9999)); };
+  const orderFor = (product) => { const order = state.data?.orders?.[state.gender] || []; const i = order.findIndex(id => Number(id) === Number(product.id)); if (i >= 0) return i; return 10000 + (state.gender === 'HOMBRE' ? (product.sortOrderHombre ?? product.sortOrder ?? 9999) : state.gender === 'MUJER' ? (product.sortOrderMujer ?? product.sortOrder ?? 9999) : (product.sortOrder ?? 9999)); };
   const applyTheme = () => {
     const id = 'gender-theme-live';
     document.getElementById(id)?.remove();
@@ -55,7 +55,7 @@
       .brand-strip::-webkit-scrollbar-track{background:#252525!important;border-radius:10px!important}
       .brand-strip::-webkit-scrollbar-thumb{background:#ffd21c!important;border-radius:10px!important;border:1px solid #252525!important}
       .brand-scroll-arrow{display:flex!important}.revoluciona-hero{width:94vw;max-height:150px;margin-top:0}.revolt-dock{left:10px;right:10px;bottom:10px;justify-content:space-between}.revolt-dock button{padding:10px 12px;font-size:12px}.delivered-track img{width:210px;height:210px}
-      .product-modal-card{display:flex!important;flex-direction:column!important;max-height:94vh!important;overflow:hidden!important}.live-modal-media{flex:0 0 min(40vh,320px)!important;height:min(40vh,320px)!important;min-height:0!important}.live-modal-media>img,.live-modal-media>video{width:100%!important;height:100%!important;min-height:0!important;object-fit:cover!important}.modal-thumbs{flex:0 0 auto!important;padding:6px 8px!important}.modal-thumbs button{width:46px!important;height:46px!important}.modal-content{flex:1 1 auto!important;padding:10px 12px 12px!important;overflow:hidden!important}.modal-content h2{font-size:20px!important;margin:0 38px 7px 0!important}.modal-brand{margin-bottom:3px!important}.modal-sizes{margin:6px 0!important;padding:8px 0!important}.modal-review{display:none!important}.modal-actions{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:6px!important;margin-top:8px!important}.modal-actions .whatsapp-button,.modal-actions .cart-add-button{grid-column:auto!important;width:100%!important;min-width:0!important;min-height:42px!important;margin-top:0!important;padding:8px 4px!important;font-size:8.5px!important;letter-spacing:0!important;white-space:nowrap!important}
+      .product-modal-card{display:flex!important;flex-direction:column!important;max-height:96vh!important;overflow:hidden!important}.live-modal-media{flex:0 0 min(52vh,100vw,420px)!important;height:min(52vh,100vw,420px)!important;min-height:min(76vw,330px)!important}.live-modal-media>img,.live-modal-media>video{width:100%!important;height:100%!important;min-height:0!important;object-fit:cover!important}.modal-thumbs{flex:0 0 auto!important;padding:6px 8px!important}.modal-thumbs button{width:46px!important;height:46px!important}.modal-content{flex:1 1 auto!important;padding:10px 12px 12px!important;overflow:hidden!important}.modal-content h2{font-size:20px!important;margin:0 38px 7px 0!important}.modal-brand{margin-bottom:3px!important}.modal-sizes{margin:6px 0!important;padding:8px 0!important}.modal-review{display:none!important}.modal-actions{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:6px!important;margin-top:8px!important}.modal-actions .whatsapp-button,.modal-actions .cart-add-button{grid-column:auto!important;width:100%!important;min-width:0!important;min-height:42px!important;margin-top:0!important;padding:8px 4px!important;font-size:8.5px!important;letter-spacing:0!important;white-space:nowrap!important}
       .gender-mujer .gender-tabs button{background:#fff!important;color:#7b3152!important;border-color:#d3d3d6!important}
       .gender-mujer .gender-tabs button.active{background:#fff!important;color:#7b3152!important;border-color:#ff4f9a!important;box-shadow:inset 0 0 0 1px #ff4f9a!important}
       .gender-mujer .brand-scroll-shell,.gender-mujer .brand-strip{background:#fff8fb!important}.gender-mujer .brand-strip{scrollbar-color:#ff4f9a #f3e7ed!important}.gender-mujer .brand-strip::-webkit-scrollbar-track{background:#f3e7ed!important}.gender-mujer .brand-strip::-webkit-scrollbar-thumb{background:#ff4f9a!important;border-color:#f3e7ed!important}.gender-mujer .brand-scroll-arrow{background:#f3e7ed!important;color:#a31f59!important}.gender-mujer .catalog-heading{color:#111!important;text-shadow:none!important;font-style:italic!important;font-weight:900!important}
@@ -191,6 +191,26 @@
     syncMobileModalChrome(true);
     compactMobileModalActions();
   };
+  const switchModalColor = (index) => {
+    const product = state.modal, root = document.getElementById('live-product-modal');
+    if (!product || !root) return;
+    const imageUrl = photos(product)[index] || '/assets/logo.png', video = videoFor(product, index), mediaButton = root.querySelector('.live-modal-media');
+    state.modalIndex = index; state.showVideo = false;
+    root.querySelectorAll('[data-modal-thumb]').forEach(button => button.classList.toggle('active', Number(button.dataset.modalThumb) === index));
+    const link = root.querySelector('.whatsapp-button'), add = root.querySelector('[data-add-cart]');
+    if (link) link.href = whatsapp(product, index); if (add) add.dataset.addCart = product.id + ':' + index;
+    mediaButton?.animate([{opacity:1,transform:'scale(1)'},{opacity:.12,transform:'scale(.985)'},{opacity:1,transform:'scale(1)'}],{duration:480,easing:'cubic-bezier(.22,.7,.2,1)'});
+    setTimeout(() => {
+      if (!mediaButton?.isConnected) return;
+      let media = mediaButton.querySelector('img,video');
+      if (!media || media.tagName === 'VIDEO') { const img = document.createElement('img'); img.alt = product.name; media?.replaceWith(img); media = img; }
+      media.src = imageUrl;
+      let hint = mediaButton.querySelector('.live-video-hint');
+      if (video) { if (!hint) { hint = document.createElement('span'); hint.className='live-video-hint'; mediaButton.appendChild(hint); } hint.textContent='▶ VER VIDEO'; }
+      else hint?.remove();
+      mediaButton.setAttribute('aria-label', video ? 'Alternar foto y video' : 'Foto del producto');
+    }, 195);
+  };
   const render = () => {
     if (!state.data) return;
     const visible = filtered();
@@ -219,12 +239,12 @@
       const gender = event.target.closest('.gender-tabs [data-gender]');
       if (gender) { state.gender = gender.dataset.gender; state.brand = 'TODOS'; history.replaceState({}, '', state.gender === 'MUJER' ? '/mujer' : state.gender === 'HOMBRE' ? '/hombre' : '/'); applyTheme(); render(); return; }
       const thumb = event.target.closest('[data-thumb]');
-      if (thumb) { const [id, index] = thumb.dataset.thumb.split(':').map(Number); state.selected.set(id, index); render(); return; }
+      if (thumb) { const [id, index] = thumb.dataset.thumb.split(':').map(Number), product = state.data.products.find(p => Number(p.id) === id), cardNode = thumb.closest('.product-card'), image = cardNode?.querySelector('[data-angle-product]'); state.selected.set(id, index); cardNode?.querySelectorAll('[data-thumb]').forEach(button => button.classList.toggle('active', button === thumb)); if (image && product) { const next = photos(product)[index] || '/assets/logo.png'; image.animate([{opacity:1,transform:'scale(1)'},{opacity:.18,transform:'scale(.985)'},{opacity:1,transform:'scale(1)'}],{duration:460,easing:'cubic-bezier(.22,.7,.2,1)'}); setTimeout(() => { if (!image.isConnected) return; image.src=next; image.dataset.angleIndex=index; image.dataset.anglePosition=0; },190); const link=cardNode.querySelector('.whatsapp-button'),add=cardNode.querySelector('[data-add-cart]'); if(link)link.href=whatsapp(product,index);if(add)add.dataset.addCart=id+':'+index; } return; }
       const open = event.target.closest('[data-open]');
       if (open) { state.modal = state.data.products.find(p => p.id === Number(open.dataset.open)); state.modalIndex = state.selected.get(state.modal.id) || 0; state.showVideo = false; renderModal(); return; }
       if (event.target.closest('[data-close]')) { state.modal = null; renderModal(); return; }
       const modalThumb = event.target.closest('[data-modal-thumb]');
-      if (modalThumb) { state.modalIndex = Number(modalThumb.dataset.modalThumb); state.showVideo = false; renderModal(); return; }
+      if (modalThumb) { switchModalColor(Number(modalThumb.dataset.modalThumb)); return; }
       if (event.target.closest('[data-toggle-media]') && videoFor(state.modal, state.modalIndex)) { state.showVideo = !state.showVideo; renderModal(); }
       const add = event.target.closest('[data-add-cart]');
       if (add) { const [id, index] = add.dataset.addCart.split(':').map(Number); const product = state.data.products.find(p => p.id === id); if (product) addToCart(product, index, add); return; }
