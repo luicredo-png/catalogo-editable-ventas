@@ -106,7 +106,7 @@
     const number = String(state.data.settings.whatsapp || '51981395069').replace(/\D/g, '');
     const total = state.cart.reduce((sum,item)=>sum + item.qty * item.price,0);
     const itemPrice = item => item.price;
-    const message = ['Hola, quiero pedir:', ...state.cart.map(item => `• ${item.qty}x ${item.name} - color ${item.index + 1} - S/${itemPrice(item)} c/u`), '', `Total: S/${total}`].join('\n');
+    const message = `${state.cart.length === 1 ? 'Quiero pedir este modelo:' : 'Quiero pedir estos modelos:'}\n\n${state.cart.map(item => [`Modelo: ${item.name}`, `Color elegido: Foto ${item.index + 1}`, `Precio: S/${itemPrice(item)}`, 'Talla: (por confirmar)'].join('\n')).join('\n\n')}`;
     const lines = state.cart.length ? state.cart.map(item => `<div class="cart-line"><img src="${esc(item.image)}" alt=""><div><strong>${esc(item.name)}</strong><small>${esc(item.brand)} · Color ${item.index + 1} · Cant. ${item.qty} · S/${itemPrice(item)} c/u</small></div><button type="button" data-cart-remove="${esc(item.key)}">Quitar</button></div>`).join('') : '<p>Tu carrito está vacío.</p>';
     document.body.insertAdjacentHTML('beforeend', `<div class="revolt-panel" id="revolt-panel"><section class="revolt-panel-card"><header class="revolt-panel-head"><h2>Tu carrito</h2><button class="revolt-panel-close" type="button" data-panel-close>×</button></header>${lines}${state.cart.length ? `<p class="modal-price"><span>PRIMER PRODUCTO ORIGINAL · SEGUNDO S/80 · DESDE EL TERCERO S/70</span><strong data-cart-total>Total S/${total}</strong></p><a class="cart-send" href="https://wa.me/${number}?text=${encodeURIComponent(message)}" target="_blank">Pedir carrito por Whatsapp</a>` : ''}</section></div>`);
   };
