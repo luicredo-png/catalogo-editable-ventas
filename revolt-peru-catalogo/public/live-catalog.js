@@ -1,4 +1,9 @@
 (() => {
+  document.documentElement.dataset.liveCatalog = 'loading';
+  const bootStyle = document.createElement('style');
+  bootStyle.id = 'revolt-live-boot';
+  bootStyle.textContent = `html[data-live-catalog="loading"] body::after{content:"Cargando catálogo…";position:fixed;inset:0;z-index:99999;display:grid;place-items:center;background:#05090d;color:#ffd51f;font:900 18px Arial;letter-spacing:.04em}html[data-live-catalog="loading"] body>*{visibility:hidden}html[data-live-catalog="loading"] body::after{visibility:visible}`;
+  document.head.appendChild(bootStyle);
   const state = { data: null, gender: 'TODOS', brand: 'TODOS', query: '', selected: new Map(), modal: null, modalIndex: 0, showVideo: false, cart: [] };
   const esc = (value = '') => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
   const mediaUrl = (url) => !url ? '/assets/logo.png' : url.startsWith('/media/') ? `https://revoltperu.shop${url}` : url;
@@ -174,7 +179,7 @@
       state.gender = location.pathname.startsWith('/mujer') ? 'MUJER' : location.pathname.startsWith('/hombre') ? 'HOMBRE' : 'TODOS';
       applyTheme(); applyMobileType(); setupBrandScroller(); bind(); render();
       setInterval(() => document.querySelectorAll('[data-angle-product]').forEach(img => { const product = state.data.products.find(p => p.id === Number(img.dataset.angleProduct)); const list = product ? anglesFor(product, Number(img.dataset.angleIndex)) : []; if (list.length < 2) return; const next = (Number(img.dataset.anglePosition || 0) + 1) % list.length; img.classList.add('angle-changing'); setTimeout(() => { if (!img.isConnected) return; img.src = list[next]; img.dataset.anglePosition = next; img.classList.remove('angle-changing'); }, 280); }), 4200);
-      document.documentElement.dataset.liveCatalog = 'ready';
+      document.documentElement.dataset.liveCatalog = 'ready'; bootStyle.remove();
     } catch (error) { console.error('No se pudo cargar el catálogo en vivo', error); }
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true }); else start();
