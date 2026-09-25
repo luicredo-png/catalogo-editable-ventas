@@ -210,6 +210,7 @@
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       state.data = await response.json();
       try { state.cart = JSON.parse(localStorage.getItem('revolt-cart') || '[]'); } catch { state.cart = []; }
+      if (state.cart.length) { let position = 0; state.cart = state.cart.flatMap(item => Array.from({ length: Math.max(1, Number(item.qty) || 1) }, () => { const product = state.data.products.find(p => p.id === item.id), price = position === 0 ? (product ? basePrice(product) : Number(item.price) || 95) : position === 1 ? 80 : 70; position += 1; return { ...item, qty:1, price, key:`${item.id}:${item.index}:${Date.now()}:${position}:${Math.random().toString(36).slice(2,6)}` }; })); localStorage.setItem('revolt-cart', JSON.stringify(state.cart)); }
       state.gender = location.pathname.startsWith('/mujer') ? 'MUJER' : location.pathname.startsWith('/hombre') ? 'HOMBRE' : 'TODOS';
       applyTheme(); applyMobileType(); setupHero(); setupBrandScroller(); bind(); render();
       setInterval(() => document.querySelectorAll('[data-angle-product]').forEach(img => { const product = state.data.products.find(p => p.id === Number(img.dataset.angleProduct)); const list = product ? anglesFor(product, Number(img.dataset.angleIndex)) : []; if (list.length < 2) return; const next = (Number(img.dataset.anglePosition || 0) + 1) % list.length; img.classList.add('angle-changing'); setTimeout(() => { if (!img.isConnected) return; img.src = list[next]; img.dataset.anglePosition = next; img.classList.remove('angle-changing'); }, 280); }), 4200);
