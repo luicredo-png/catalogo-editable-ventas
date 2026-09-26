@@ -1710,7 +1710,6 @@ function StoreProductCard({
       <div className="store-photo clickable-product-photo" onClick={open} role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") open(); }} aria-label={`Ver opciones de ${product.name}`}>
         <span className="product-photo-blur" aria-hidden="true" style={{ backgroundImage: `url(${optimizedCatalogImage(preview)})` }} />
         <ProductMedia
-          key={preview}
           className="catalog-gallery-media"
           src={preview}
           alt={product.name}
@@ -1942,9 +1941,8 @@ function ProductOrderModal({
   const selectedColorVideo = colorGroup?.values
     .map(parseOptionValue)
     .find((value) => value.label === selectedColorLabel && value.video)?.video || "";
-  const displayImage = template === "ropa"
-    ? (showColorVideo && selectedColorVideo ? selectedColorVideo : galleryPreview)
-    : (showColorVideo && selectedColorVideo ? selectedColorVideo : parseOptionValue(selectedColor || "").image || product.image);
+  const selectedStillImage = selectedColorGallery[0]?.image || parseOptionValue(selectedColor || "").image || product.image;
+  const displayImage = showColorVideo && selectedColorVideo ? selectedColorVideo : galleryPreview || selectedStillImage;
   const visibleGallery = template === "ropa"
     ? uniqueColorValues.map((value) => {
         const label = optionLabel(value);
@@ -1957,12 +1955,20 @@ function ProductOrderModal({
     : selectedColorGallery;
   const transitionPreview = (next: string) => {
     if (!next || next === galleryPreview) return;
-    setGalleryFading(true);
-    if (galleryTransitionTimer.current) clearTimeout(galleryTransitionTimer.current);
-    galleryTransitionTimer.current = setTimeout(() => {
-      setGalleryPreview(next);
-      requestAnimationFrame(() => setGalleryFading(false));
-    }, 150);
+    const commit = () => {
+      setGalleryFading(true);
+      if (galleryTransitionTimer.current) clearTimeout(galleryTransitionTimer.current);
+      galleryTransitionTimer.current = setTimeout(() => {
+        setGalleryPreview(next);
+        requestAnimationFrame(() => requestAnimationFrame(() => setGalleryFading(false)));
+      }, 120);
+    };
+    if (isVideoMedia(next)) return commit();
+    const image = new Image();
+    image.onload = commit;
+    image.onerror = commit;
+    image.src = optimizedCatalogImage(next);
+    if (image.complete) commit();
   };
   const rotateGallery = (step: number) => {
     if (selectedColorGallery.length < 2) return;
@@ -1971,10 +1977,9 @@ function ProductOrderModal({
   };
   useEffect(() => () => { if (galleryTransitionTimer.current) clearTimeout(galleryTransitionTimer.current); }, []);
   useEffect(() => {
-    if (template !== "ropa" || !selectedColorGallery.length) return;
-    setGalleryPreview(selectedColorGallery[0].image);
+    transitionPreview(selectedStillImage);
     setShowColorVideo(false);
-  }, [product.id, template, selectedColorLabel]);
+  }, [product.id, selectedColorLabel, selectedStillImage]);
   useEffect(() => {
     if (!selectedColorVideo) { setShowColorVideo(false); return; }
     const timer = setInterval(() => setShowColorVideo((current) => !current), 4200);
@@ -2111,7 +2116,7 @@ function ProductOrderModal({
               selected={choices[group.name]}
               choose={(value) => {
                 setChoices((current) => ({ ...current, [group.name]: value }));
-                if (template === "ropa" && group.name.toLowerCase().includes("color")) {
+                if (group.name.toLowerCase().includes("color")) {
                   const firstPhoto = colorGroup?.values.find(
                     (photo) => optionLabel(photo) === optionLabel(value) && parseOptionValue(photo).image,
                   );
