@@ -417,6 +417,19 @@ export default function Home({
       toast("Producto eliminado");
     }
   }
+  async function reorderProducts(next: Product[]) {
+    const previous = products;
+    setProducts(next);
+    const response = await fetch("/api/products/reorder", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ storeId: store.id, ids: next.map((product) => product.id) }),
+    });
+    if (!response.ok) {
+      setProducts(previous);
+      toast("No se pudo actualizar el orden");
+    } else toast("Orden actualizado");
+  }
   async function saveSettings(e: FormEvent) {
     e.preventDefault();
     const r = await fetch("/api/settings", {
@@ -544,6 +557,7 @@ export default function Home({
         setEditing={setEditing}
         saveProduct={saveProduct}
         removeProduct={removeProduct}
+        reorderProducts={reorderProducts}
         saveSettings={saveSettings}
         close={() =>
           (location.href = customerSubdomain(location.hostname)
@@ -1694,6 +1708,7 @@ function StoreProductCard({
       onPointerLeave={resetCardTilt}
     >
       <div className="store-photo clickable-product-photo" onClick={open} role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") open(); }} aria-label={`Ver opciones de ${product.name}`}>
+        <span className="product-photo-blur" aria-hidden="true" style={{ backgroundImage: `url(${optimizedCatalogImage(preview)})` }} />
         <ProductMedia
           key={preview}
           className="catalog-gallery-media"
@@ -2023,6 +2038,7 @@ function ProductOrderModal({
             if (Math.abs(distance) > 45) rotateGallery(distance < 0 ? 1 : -1);
           }}
         >
+          {!isVideoMedia(displayImage) && <span className="product-photo-blur" aria-hidden="true" style={{ backgroundImage: `url(${optimizedCatalogImage(displayImage)})` }} />}
           <ProductMedia
             className={`catalog-gallery-media order-gallery-media${galleryFading ? " gallery-fading" : ""}`}
             src={displayImage}
@@ -2262,6 +2278,7 @@ function Admin({
   setEditing,
   saveProduct,
   removeProduct,
+  reorderProducts,
   saveSettings,
   close,
   notice,
@@ -2277,12 +2294,14 @@ function Admin({
   setEditing: (p: Product | null) => void;
   saveProduct: (p: Product) => void;
   removeProduct: (p: Product) => void;
+  reorderProducts: (products: Product[]) => void;
   saveSettings: (e: FormEvent) => void;
   close: () => void;
   notice: string;
   adminKey: string;
 }) {
   const [uploading, setUploading] = useState(false);
+  const [draggedProductId, setDraggedProductId] = useState<number | null>(null);
   const update = (k: keyof Store, v: string | number) =>
     setStore({ ...store, [k]: v });
   const collectionVideo = isVideoMedia(store.collectionBackgroundImage);
@@ -3512,6 +3531,7 @@ function AdminV2({
   setEditing,
   saveProduct,
   removeProduct,
+  reorderProducts,
   saveSettings,
   close,
   notice,
@@ -3526,11 +3546,13 @@ function AdminV2({
   setEditing: (p: Product | null) => void;
   saveProduct: (p: Product) => void;
   removeProduct: (p: Product) => void;
+  reorderProducts: (products: Product[]) => void;
   saveSettings: (e: FormEvent) => void;
   close: () => void;
   notice: string;
 }) {
   const [uploading, setUploading] = useState(false);
+  const [draggedProductId, setDraggedProductId] = useState<number | null>(null);
   const tenantMode = typeof window !== "undefined" && Boolean(customerSubdomain(location.hostname) || new URLSearchParams(location.search).get("tienda"));
   const [clients, setClients] = useState<Array<{id:number;slug:string;name:string;templateKey:string;adminKey:string}>>([]);
   const [clientDraft, setClientDraft] = useState({ name: "", slug: "", templateKey: "ropa", password: "" });
@@ -4049,6 +4071,17 @@ function AdminV2({
     });
     setUseCollectionColors(true);
   }
+  function dropProductAt(targetId: number) {
+    if (draggedProductId === null || draggedProductId === targetId) return setDraggedProductId(null);
+    const next = [...products];
+    const from = next.findIndex((product) => product.id === draggedProductId);
+    const to = next.findIndex((product) => product.id === targetId);
+    if (from < 0 || to < 0) return setDraggedProductId(null);
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    setDraggedProductId(null);
+    reorderProducts(next);
+  }
   const title =
     section === "products"
       ? "Categorías y productos"
@@ -4218,6 +4251,17 @@ function AdminV2({
                 <label className="upload-action cover-carousel-upload"><b>Cargar carrusel</b><small>Solo horizontales · varias imágenes o videos</small><input type="file" multiple accept="image/png,image/jpeg,image/webp,video/mp4" disabled={uploading} onChange={e=>uploadHeroMedia(e.target.files)}/></label>
               </div>
             </section>
+            {products.some((product) => product.active && product.image) && (
+              <section className="admin-card product-background-picker">
+                <div><small>USAR UN PRODUCTO</small><h2>Escoge una foto del catálogo como fondo</h2><p>El cambio se refleja de inmediato en la vista previa.</p></div>
+                <div className="product-background-picker-grid">
+                  {products.filter((product) => product.active && product.image).map((product) => {
+                    const media = productGallery(product)[0]?.image || product.image;
+                    return <button type="button" key={product.id} className={store.collectionBackgroundImage === media ? "active" : ""} onClick={() => useProductAsBackground(product)}><ProductMedia src={media} alt={product.name} loading="lazy" decoding="async"/><span>{product.name}</span></button>;
+                  })}
+                </div>
+              </section>
+            )}
             <div className="admin-card cover-preview-card">
               <div className="admin-card-title">
                 <div>
@@ -4628,18 +4672,6 @@ function AdminV2({
                     }
                   />
                 </label>
-                <label>
-                  Texto del botón de galería
-                  <input
-                    value={productDisplay.galleryButtonLabel}
-                    maxLength={32}
-                    placeholder="Ver más"
-                    onChange={(event) =>
-                      updateProductDisplay({ galleryButtonLabel: event.target.value })
-                    }
-                  />
-                  <small>Ejemplos: Ver modelos, Ver versiones o Ver fotos.</small>
-                </label>
               </div>
               <div className="category-background-editor">
                 <div
@@ -4745,7 +4777,16 @@ function AdminV2({
                 {products.map((p) => {
                   const gallery = productGallery(p);
                   return (
-                    <article key={p.id}>
+                    <article
+                      key={p.id}
+                      draggable
+                      className={draggedProductId === p.id ? "dragging-product" : ""}
+                      onDragStart={() => setDraggedProductId(p.id)}
+                      onDragEnd={() => setDraggedProductId(null)}
+                      onDragOver={(event) => event.preventDefault()}
+                      onDrop={() => dropProductAt(p.id)}
+                    >
+                      <button type="button" className="product-drag-handle" aria-label={`Arrastrar ${p.name}`}>⋮⋮</button>
                       <AdminProductGallery product={p} />
                       <div>
                         <b>{p.name}</b>
@@ -4851,38 +4892,6 @@ function AdminV2({
                 </div>
               </div>
             </section>
-            {products.some((product) => product.active && product.image) && (
-              <section className="admin-card product-background-picker">
-                <div>
-                  <small>USAR UN PRODUCTO</small>
-                  <h2>Escoge una foto del catálogo como fondo</h2>
-                  <p>El cambio se refleja de inmediato en la vista previa.</p>
-                </div>
-                <div className="product-background-picker-grid">
-                  {products
-                    .filter((product) => product.active && product.image)
-                    .map((product) => {
-                      const media = productGallery(product)[0]?.image || product.image;
-                      return (
-                        <button
-                          type="button"
-                          key={product.id}
-                          className={store.collectionBackgroundImage === media ? "active" : ""}
-                          onClick={() => useProductAsBackground(product)}
-                        >
-                          <ProductMedia
-                            src={media}
-                            alt={product.name}
-                            loading="lazy"
-                            decoding="async"
-                          />
-                          <span>{product.name}</span>
-                        </button>
-                      );
-                    })}
-                </div>
-              </section>
-            )}
             <section className="admin-card collection-designer">
               <div className="collection-designer-head">
                 <div>
@@ -5068,6 +5077,16 @@ function AdminV2({
                       <small>BOTONES DE LA VENTANA</small>
                       <h3>Edita los botones que aparecen en los productos</h3>
                     </div>
+                    <label className="gallery-button-text-editor">
+                      Texto del botón de galería
+                      <input
+                        value={productDisplay.galleryButtonLabel}
+                        maxLength={32}
+                        placeholder="Ver más"
+                        onChange={(event) => updateProductDisplay({ galleryButtonLabel: event.target.value })}
+                      />
+                      <small>Este texto se aplica en Todos, Hombre y Mujer.</small>
+                    </label>
                     <div>
                       <ButtonStyleSelect
                         label="Diseño del botón Ver colores"
