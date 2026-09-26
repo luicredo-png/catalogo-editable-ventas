@@ -8656,6 +8656,46 @@ function OptionGroupEditor({
     } else setPhotoError("No se pudieron subir los archivos.");
     setUploadingIndex(null);
   }
+  async function uploadCarouselPhotos(files: FileList | null) {
+    if (!files?.length) return;
+    setUploadingIndex(-1); setPhotoError("");
+    const next = [...group.values];
+    let number = new Set(next.map(optionLabel)).size + 1;
+    for (const file of Array.from(files)) {
+      if (!file.type.startsWith("image/")) continue;
+      const form = new FormData();
+      form.append("file", await optimizeImageBeforeUpload(file));
+      const response = await fetch("/api/upload", { method: "POST", body: form });
+      if (response.ok) {
+        const result = await response.json();
+        next.push(colorValue(`${variantLabel} ${number++}`, "#8d96a5", String(result.url)));
+      }
+    }
+    if (next.length > group.values.length) updateValues(next);
+    else setPhotoError("No se pudieron subir las fotos del carrusel.");
+    setUploadingIndex(null);
+  }
+  async function uploadColorVideo(colorName: string, file?: File) {
+    if (!file) return;
+    setUploadingIndex(-2); setPhotoError("");
+    const form = new FormData(); form.append("file", file);
+    const response = await fetch("/api/upload?template=ropa", { method: "POST", body: form });
+    if (response.ok) {
+      const result = await response.json();
+      const next = [...group.values];
+      const entries = next.map((value, index) => ({ index, parsed: parseOptionValue(value) })).filter((item) => item.parsed.label === colorName);
+      const videoEntry = entries.find((item) => item.parsed.video);
+      const base = entries.find((item) => item.parsed.image) || entries[0];
+      if (videoEntry) {
+        const parsed = videoEntry.parsed;
+        next[videoEntry.index] = colorValue(colorName, parsed.color || "#8d96a5", parsed.image, String(result.url));
+      } else if (base) {
+        next.push(colorValue(colorName, base.parsed.color || "#8d96a5", "", String(result.url)));
+      }
+      updateValues(next);
+    } else setPhotoError("No se pudo subir el video.");
+    setUploadingIndex(null);
+  }
   if (isColor) {
     const colorNames = Array.from(
       new Set(group.values.map((value) => optionLabel(value))),
@@ -8664,6 +8704,7 @@ function OptionGroupEditor({
     const activePhotos = group.values
       .map((value, index) => ({ value, index, parsed: parseOptionValue(value) }))
       .filter((item) => item.parsed.label === activeColor);
+    const activeImagePhotos = activePhotos.filter((item) => item.parsed.image);
     const addColorSlot = () => {
       const name = `${variantLabel} ${colorNames.length + 1}`;
       updateValues([
@@ -8691,6 +8732,9 @@ function OptionGroupEditor({
             </small>
           </div>
         </div>
+        <section className="revolt-gallery-section">
+          <b>Fotos del carrusel</b>
+          <label className="revolt-file-picker">{uploadingIndex === -1 ? "Subiendo…" : "Elegir archivos"}<input type="file" multiple accept="image/png,image/jpeg,image/webp" disabled={uploadingIndex !== null} onChange={(event) => uploadCarouselPhotos(event.target.files)} /></label>
         <div className="color-folder-list">
           {colorNames.map((name) => {
             const first = group.values.map(parseOptionValue).find((item) => item.label === name && (item.image || item.video));
@@ -8711,19 +8755,30 @@ function OptionGroupEditor({
             );
           })}
         </div>
+        </section>
+        <section className="revolt-gallery-section video-by-color">
+          <b>Video por color</b>
+          <p>Cada foto corresponde a un color. El botón Ver video solo aparecerá cuando ese color tenga un video cargado.</p>
+          {colorNames.map((name) => {
+            const video = group.values.map(parseOptionValue).find((item) => item.label === name && item.video)?.video || "";
+            return <div className="color-video-row" key={`video-${name}`}><strong>{name}</strong>{video && <small>Video cargado</small>}<label>{uploadingIndex === -2 ? "Subiendo…" : video ? "Cambiar video" : "Agregar video (opcional)"}<input type="file" accept="video/mp4" disabled={uploadingIndex !== null} onChange={(event) => uploadColorVideo(name, event.target.files?.[0])}/></label></div>;
+          })}
+        </section>
         {activeColor && (
           <section className="active-color-editor">
             <label>Nombre del {variantLabel.toLowerCase()}<input value={activeColor} onChange={(event) => renameColor(event.target.value)} /></label>
+            <b>Fotos adicionales / ángulos</b>
+            <small>La foto principal permanece en el carrusel; aquí agrega otros ángulos del mismo color.</small>
             <div className="variant-photo-grid active-color-photos">
-              {activePhotos.map(({ index, parsed }) => (
+              {activeImagePhotos.slice(1).map(({ index, parsed }) => (
                 <div className="variant-photo-card" key={`${parsed.image}-${index}`}>
-                  {parsed.image || parsed.video ? <ProductMedia src={parsed.image || parsed.video} alt={`${activeColor}, archivo ${index + 1}`} controls /> : <span>Sin archivos</span>}
-                  {(parsed.image || parsed.video) && <button type="button" onClick={() => activePhotos.length === 1 ? updateValues(group.values.map((value, valueIndex) => valueIndex === index ? colorValue(activeColor, parsed.color || "#8d96a5") : value)) : removeValue(index)} aria-label="Borrar archivo">×</button>}
+                  <ProductMedia src={parsed.image} alt={`${activeColor}, ángulo ${index + 1}`} />
+                  <button type="button" onClick={() => removeValue(index)} aria-label="Borrar ángulo">×</button>
                 </div>
               ))}
               <label className="add-color-photos">
-                {uploadingIndex !== null ? "Subiendo…" : `+ Agregar fotos o videos a este ${variantLabel.toLowerCase()}`}
-                <input type="file" multiple accept="image/png,image/jpeg,image/webp,video/mp4" disabled={uploadingIndex !== null} onChange={(event) => uploadColorAngles(activePhotos[0].index, event.target.files)} />
+                {uploadingIndex !== null ? "Subiendo…" : "+ Agregar ángulos"}
+                <input type="file" multiple accept="image/png,image/jpeg,image/webp" disabled={uploadingIndex !== null} onChange={(event) => uploadColorAngles(activePhotos[0].index, event.target.files)} />
               </label>
             </div>
           </section>

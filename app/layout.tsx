@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { Abril_Fatface, Bebas_Neue, Cinzel, Cormorant_Garamond, Geist, Geist_Mono, Inter, Lobster, Oswald, Outfit, Pacifico, Playfair_Display, Space_Grotesk } from 'next/font/google';
 import './globals.css';
-import './audience-tabs.css';
 import './notice.css';
 import './clothing.css';
 import './cover.css';
@@ -10,6 +9,10 @@ import './flyer.css';
 import './appearance.css';
 import './modal-fix.css';
 import './catalog-effects.css';
+// Overrides específicos del selector de público y la galería de ropa.
+// Debe cargarse al final para que las reglas responsive generales no vuelvan
+// a superponer el carrusel sobre la imagen.
+import './audience-tabs.css';
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] });
 const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] });
