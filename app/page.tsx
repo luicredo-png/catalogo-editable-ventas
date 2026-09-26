@@ -471,6 +471,9 @@ export default function Home({
     "--surface-image": store.surfaceBackgroundImage
       ? `url(${optimizedCatalogImage(store.surfaceBackgroundImage)})`
       : "none",
+    "--women-accent": audienceTabs.womenAccent,
+    "--women-background": audienceTabs.womenBackground,
+    "--women-text": audienceTabs.womenText,
     "--heading-font": store.headingFont,
     "--hero-font": store.heroFont,
     "--store-name-font": store.storeNameFont,
