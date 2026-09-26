@@ -4530,6 +4530,7 @@ function AdminV2({
                   label="Color del texto del buscador"
                   value={catalogSearch.color}
                   change={(color) => updateSearch({ color })}
+                  hideValue
                 />
               </div>
               {homeLayout.hidden.includes("hero") && (
@@ -5414,10 +5415,12 @@ function ColorField({
   label,
   value,
   change,
+  hideValue = false,
 }: {
   label: string;
   value: string;
   change: (value: string) => void;
+  hideValue?: boolean;
 }) {
   return (
     <label className="color-field">
@@ -5428,11 +5431,11 @@ function ColorField({
           value={value}
           onChange={(e) => change(e.target.value)}
         />
-        <input
+        {!hideValue && <input
           value={value}
           onChange={(e) => change(e.target.value)}
           maxLength={7}
-        />
+        />}
       </div>
     </label>
   );
