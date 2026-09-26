@@ -1773,10 +1773,10 @@ function StoreProductCard({
       <div className="store-product-info">
         <small>{product.category}</small>
         <h2>{product.name}</h2>
-        <p>
+        {!!product.description?.trim() && <p>
           <b>{isFood ? "INCLUYE" : "DETALLES"}</b>
           {product.description}
-        </p>
+        </p>}
         {(() => {
           const sizes = product.options?.find((group) => group.name.toLowerCase().includes("talla"))?.values || [];
           return sizesEnabled && sizes.length ? <div className="preview-sizes" aria-label="Tallas disponibles">
@@ -1909,6 +1909,9 @@ function ProductOrderModal({
   );
   const [galleryPreview, setGalleryPreview] = useState(product.image);
   const [showColorVideo, setShowColorVideo] = useState(false);
+  const [galleryFading, setGalleryFading] = useState(false);
+  const [imageFullscreen, setImageFullscreen] = useState(false);
+  const galleryTransitionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const swipeStartX = useRef<number | null>(null);
   const selectedColor = colorGroup ? choices[colorGroup.name] : "";
   const selectedColorLabel = optionLabel(selectedColor || "");
@@ -1943,13 +1946,21 @@ function ProductOrderModal({
         return { label, image: parsed.image, value };
       }).filter((item) => item.image)
     : selectedColorGallery;
+  const transitionPreview = (next: string) => {
+    if (!next || next === galleryPreview) return;
+    setGalleryFading(true);
+    if (galleryTransitionTimer.current) clearTimeout(galleryTransitionTimer.current);
+    galleryTransitionTimer.current = setTimeout(() => {
+      setGalleryPreview(next);
+      requestAnimationFrame(() => setGalleryFading(false));
+    }, 150);
+  };
   const rotateGallery = (step: number) => {
     if (selectedColorGallery.length < 2) return;
-    setGalleryPreview((current) => {
-      const index = Math.max(0, selectedColorGallery.findIndex((item) => item.image === current));
-      return selectedColorGallery[(index + step + selectedColorGallery.length) % selectedColorGallery.length].image;
-    });
+    const index = Math.max(0, selectedColorGallery.findIndex((item) => item.image === galleryPreview));
+    transitionPreview(selectedColorGallery[(index + step + selectedColorGallery.length) % selectedColorGallery.length].image);
   };
+  useEffect(() => () => { if (galleryTransitionTimer.current) clearTimeout(galleryTransitionTimer.current); }, []);
   useEffect(() => {
     if (template !== "ropa" || !selectedColorGallery.length) return;
     setGalleryPreview(selectedColorGallery[0].image);
@@ -2006,6 +2017,10 @@ function ProductOrderModal({
         </button>
         <div
           className={`order-image${template === "ropa" ? " dual-product-gallery" : ""}`}
+          onClick={(event) => {
+            if ((event.target as HTMLElement).closest("button") || isVideoMedia(displayImage)) return;
+            setImageFullscreen(true);
+          }}
           onTouchStart={(event) => { swipeStartX.current = event.touches[0]?.clientX ?? null; }}
           onTouchEnd={(event) => {
             if (swipeStartX.current === null) return;
@@ -2015,8 +2030,7 @@ function ProductOrderModal({
           }}
         >
           <ProductMedia
-            key={displayImage}
-            className="catalog-gallery-media order-gallery-media"
+            className={`catalog-gallery-media order-gallery-media${galleryFading ? " gallery-fading" : ""}`}
             src={displayImage}
             alt={product.name}
             controls
@@ -2038,7 +2052,7 @@ function ProductOrderModal({
                   type="button"
                   className={displayImage === item.image ? "active" : ""}
                   key={`angle-${item.image}-${index}`}
-                  onClick={() => { setGalleryPreview(item.image); setShowColorVideo(false); }}
+                  onClick={() => { transitionPreview(item.image); setShowColorVideo(false); }}
                   title={`Ángulo ${index + 1}`}
                 >
                   <ProductMedia src={item.image} alt={`Ángulo ${index + 1} de ${product.name}`} />
@@ -2056,7 +2070,7 @@ function ProductOrderModal({
                   onClick={() => {
                     if (template === "ropa" && colorGroup) {
                       setChoices((current) => ({ ...current, [colorGroup.name]: item.value }));
-                      setGalleryPreview(item.image);
+                      transitionPreview(item.image);
                       setShowColorVideo(false);
                     } else if ("value" in item && colorGroup)
                       setChoices((current) => ({
@@ -2078,7 +2092,7 @@ function ProductOrderModal({
         <div className="order-content">
           <small>{product.category}</small>
           <h2>{product.name}</h2>
-          <p>{product.description}</p>
+          {!!product.description?.trim() && <p>{product.description}</p>}
           {visibleGroups.map((group) => (
             <OptionGroup
               key={group.name}
@@ -2091,7 +2105,7 @@ function ProductOrderModal({
                   const firstPhoto = colorGroup?.values.find(
                     (photo) => optionLabel(photo) === optionLabel(value) && parseOptionValue(photo).image,
                   );
-                  setGalleryPreview(parseOptionValue(firstPhoto || "").image || product.image);
+                  transitionPreview(parseOptionValue(firstPhoto || "").image || product.image);
                 }
               }}
             />
@@ -2110,6 +2124,12 @@ function ProductOrderModal({
           </a>
         </div>
       </article>
+      {imageFullscreen && !isVideoMedia(displayImage) && (
+        <div className="product-image-lightbox" role="dialog" aria-modal="true" aria-label={`Imagen ampliada de ${product.name}`} onClick={() => setImageFullscreen(false)}>
+          <button type="button" aria-label="Cerrar imagen" onClick={() => setImageFullscreen(false)}>×</button>
+          <img src={optimizedCatalogImage(displayImage)} alt={product.name} onClick={(event) => event.stopPropagation()} />
+        </div>
+      )}
     </div>
   );
 }
