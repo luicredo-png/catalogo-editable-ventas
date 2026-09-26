@@ -1702,12 +1702,6 @@ function StoreProductCard({
           loading={priority ? "eager" : "lazy"}
           decoding="async"
         />
-        {gallery.length > 1 && (
-          <div className="subtle-photo-arrows">
-            <button type="button" aria-label="Foto anterior" onClick={(event) => { event.stopPropagation(); setPreview(current => gallery[(Math.max(0, gallery.findIndex(item => item.image === current)) - 1 + gallery.length) % gallery.length].image); }}>‹</button>
-            <button type="button" aria-label="Foto siguiente" onClick={(event) => { event.stopPropagation(); setPreview(current => gallery[(Math.max(0, gallery.findIndex(item => item.image === current)) + 1) % gallery.length].image); }}>›</button>
-          </div>
-        )}
         {isFood && <b className="fresh-badge">PREPARADO AL MOMENTO</b>}
         {thumbGallery.length > 1 && (
           <div className="card-photo-thumbs">
@@ -2038,7 +2032,7 @@ function ProductOrderModal({
             decoding="async"
           />
           {selectedColorVideo && <button type="button" className="gallery-video-toggle" onClick={() => setShowColorVideo((current) => !current)}>{showColorVideo ? "Ver foto" : "Ver video"}</button>}
-          <span>{food ? "ARMA TU PEDIDO" : "ELIGE TU FAVORITO"}</span>
+          {food && <span>ARMA TU PEDIDO</span>}
           {template === "ropa" && selectedColorGallery.length > 1 && (
             <div className="order-gallery-arrows">
               <button type="button" aria-label="Foto anterior" onClick={() => rotateGallery(-1)}>‹</button>
@@ -2093,7 +2087,7 @@ function ProductOrderModal({
           <small>{product.category}</small>
           <h2>{product.name}</h2>
           {!!product.description?.trim() && <p>{product.description}</p>}
-          {visibleGroups.map((group) => (
+          {visibleGroups.filter((group) => template !== "ropa" || !group.name.toLowerCase().includes("color")).map((group) => (
             <OptionGroup
               key={group.name}
               title={group.name}
