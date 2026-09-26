@@ -856,7 +856,7 @@ export default function Home({
               cartEnabled={cartEnabled}
               addToCart={() => addToCart(p)}
               sizesEnabled={productDisplay.sizesEnabled}
-              galleryButtonLabel={audience === "women" ? "Ver colores y videos" : productDisplay.galleryButtonLabel}
+              galleryButtonLabel={productDisplay.galleryButtonLabel}
             />
           ))}
         </section>
@@ -4639,7 +4639,7 @@ function AdminV2({
                   <input
                     value={productDisplay.galleryButtonLabel}
                     maxLength={32}
-                    placeholder="Ver colores"
+                    placeholder="Ver más"
                     onChange={(event) =>
                       updateProductDisplay({ galleryButtonLabel: event.target.value })
                     }
@@ -6844,12 +6844,14 @@ function productDisplaySettings(value: string): ProductDisplaySettings {
   const item = parseCategorySettings(value).find((entry) => entry.key === "__PRODUCT_DISPLAY__");
   try {
     const saved = JSON.parse(item?.image || "{}");
+    const savedLabel = String(saved.galleryButtonLabel || "").trim().slice(0, 32);
+    const galleryButtonLabel = !savedLabel || /^(ver colores|ver colores y videos)$/i.test(savedLabel) ? "Ver más" : savedLabel;
     return {
       sizesEnabled: saved.sizesEnabled !== false,
-      galleryButtonLabel: String(saved.galleryButtonLabel || "Ver colores").trim().slice(0, 32) || "Ver colores",
+      galleryButtonLabel,
     };
   } catch {
-    return { sizesEnabled: true, galleryButtonLabel: "Ver colores" };
+    return { sizesEnabled: true, galleryButtonLabel: "Ver más" };
   }
 }
 function setProductDisplaySettings(value: string, settings: ProductDisplaySettings) {
