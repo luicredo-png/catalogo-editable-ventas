@@ -856,7 +856,7 @@ export default function Home({
               cartEnabled={cartEnabled}
               addToCart={() => addToCart(p)}
               sizesEnabled={productDisplay.sizesEnabled}
-              galleryButtonLabel={productDisplay.galleryButtonLabel}
+              galleryButtonLabel={audience === "women" ? "Ver colores y videos" : productDisplay.galleryButtonLabel}
             />
           ))}
         </section>
@@ -1537,10 +1537,10 @@ function stringifyCategorySettings(
 type AudienceTabsSettings = { enabled:boolean; allLabel:string; menLabel:string; womenLabel:string; womenAccent:string; womenBackground:string; womenText:string };
 function audienceTabsSettings(value:string):AudienceTabsSettings {
   const item=parseCategorySettings(value).find((entry)=>entry.key==="__AUDIENCE_TABS__");
-  try { const saved=JSON.parse(item?.image||"{}"); return {enabled:item?.label==="on",allLabel:String(saved.allLabel||"TODOS"),menLabel:String(saved.menLabel||"HOMBRE"),womenLabel:String(saved.womenLabel||"MUJER"),womenAccent:String(saved.womenAccent||"#ff4f9a"),womenBackground:String(saved.womenBackground||"#fff7fb"),womenText:String(saved.womenText||"#ff4f9a")}; }
+  try { const saved=JSON.parse(item?.image||"{}"); return {enabled:item?.label==="on",allLabel:String(saved.allLabel||"TODOS"),menLabel:String(saved.menLabel||"HOMBRE"),womenLabel:String(saved.womenLabel||"MUJER"),womenAccent:"#ff3f91",womenBackground:"#fff7fb",womenText:"#ff3f91"}; }
   catch { return {enabled:false,allLabel:"TODOS",menLabel:"HOMBRE",womenLabel:"MUJER",womenAccent:"#ff4f9a",womenBackground:"#fff7fb",womenText:"#ff4f9a"}; }
 }
-function setAudienceTabsSettings(value:string,settings:AudienceTabsSettings){let items:CatalogType[]=[];try{const parsed=JSON.parse(value||"[]");if(Array.isArray(parsed))items=parsed}catch{}return JSON.stringify([...items.filter((item)=>item?.key!=="__AUDIENCE_TABS__"),{key:"__AUDIENCE_TABS__",label:settings.enabled?"on":"off",image:JSON.stringify(settings),color:""}])}
+function setAudienceTabsSettings(value:string,settings:AudienceTabsSettings){let items:CatalogType[]=[];try{const parsed=JSON.parse(value||"[]");if(Array.isArray(parsed))items=parsed}catch{}const fixed={...settings,womenAccent:"#ff3f91",womenBackground:"#fff7fb",womenText:"#ff3f91"};return JSON.stringify([...items.filter((item)=>item?.key!=="__AUDIENCE_TABS__"),{key:"__AUDIENCE_TABS__",label:fixed.enabled?"on":"off",image:JSON.stringify(fixed),color:""}])}
 function AudienceTabs({settings,value,change}:{settings:AudienceTabsSettings;value:"all"|"men"|"women";change:(value:"all"|"men"|"women")=>void}){return <nav className={`audience-tabs audience-${value}`} aria-label="Tipo de público" style={{"--women-accent":settings.womenAccent,"--women-background":settings.womenBackground,"--women-text":settings.womenText} as React.CSSProperties}><button type="button" className={value==="all"?"active":""} onClick={()=>change("all")}>{settings.allLabel}</button><button type="button" className={value==="men"?"active":""} onClick={()=>change("men")}>{settings.menLabel}</button><button type="button" className={value==="women"?"active women":""} onClick={()=>change("women")}>{settings.womenLabel}</button></nav>}
 function cartSettings(value: string) {
   const item = parseCategorySettings(value).find((entry) => entry.key === "__CART_SETTINGS__");
@@ -4510,11 +4510,10 @@ function AdminV2({
                 </label>
               </div>
               <div className="audience-tabs-editor">
-                <div><small>FILTRO TODOS / HOMBRE / MUJER</small><h2>Selector por tipo de público</h2><p>Actívalo para asignar cada producto y personalizar el diseño de Mujer.</p></div>
-                <label className="audience-feature-toggle"><span>Mostrar selector antes de las categorías</span><input type="checkbox" checked={audienceTabs.enabled} onChange={(event)=>updateAudienceTabs({enabled:event.target.checked})}/></label>
+                <div><small>FILTROS POR GÉNERO</small><h2>Selector por tipo de público</h2><p>Actívalo para asignar cada producto a Todos, Hombre o Mujer.</p></div>
+                <label className="audience-feature-toggle"><span>Activar filtros por género</span><input type="checkbox" checked={audienceTabs.enabled} onChange={(event)=>updateAudienceTabs({enabled:event.target.checked})}/></label>
                 {audienceTabs.enabled && <>
-                  <div className="audience-label-fields"><label>Texto de Todos<input value={audienceTabs.allLabel} maxLength={24} onChange={(event)=>updateAudienceTabs({allLabel:event.target.value})}/></label><label>Texto de Hombre<input value={audienceTabs.menLabel} maxLength={24} onChange={(event)=>updateAudienceTabs({menLabel:event.target.value})}/></label><label>Texto de Mujer<input value={audienceTabs.womenLabel} maxLength={24} onChange={(event)=>updateAudienceTabs({womenLabel:event.target.value})}/></label></div>
-                  <div className="audience-women-colors"><ColorField label="Borde rosa de Mujer" value={audienceTabs.womenAccent} change={(womenAccent)=>updateAudienceTabs({womenAccent})}/><ColorField label="Fondo de Mujer" value={audienceTabs.womenBackground} change={(womenBackground)=>updateAudienceTabs({womenBackground})}/><ColorField label="Texto de Mujer" value={audienceTabs.womenText} change={(womenText)=>updateAudienceTabs({womenText})}/></div>
+                  <div className="audience-label-fields"><label>Texto 1<input value={audienceTabs.allLabel} maxLength={24} onChange={(event)=>updateAudienceTabs({allLabel:event.target.value})}/></label><label>Texto 2<input value={audienceTabs.menLabel} maxLength={24} onChange={(event)=>updateAudienceTabs({menLabel:event.target.value})}/></label><label>Texto 3<input value={audienceTabs.womenLabel} maxLength={24} onChange={(event)=>updateAudienceTabs({womenLabel:event.target.value})}/></label></div>
                 </>}
               </div>
               <div className="search-editor-fields">
