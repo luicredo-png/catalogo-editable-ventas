@@ -7,10 +7,16 @@
   const state = { data: null, gender: 'TODOS', brand: 'TODOS', query: '', selected: new Map(), modal: null, modalIndex: 0, showVideo: false, cart: [], viewerImages: [], viewerIndex: 0 };
   const promoArt = {
     deliveredTitle: 'https://res.cloudinary.com/npeuzpac/image/upload/v1790355446/tbqthcgqefxrfnhukvqp.png',
-    firstPair: '/assets/promo-primer-par.png',
-    secondPair: '/assets/promo-segundo-par.png',
-    seventyPair: '/assets/promo-tercer-par.png'
+    firstPair: '/assets/promo-primer-par.webp',
+    secondPair: '/assets/promo-segundo-par.webp',
+    seventyPair: '/assets/promo-tercer-par.webp'
   };
+  [promoArt.firstPair, promoArt.secondPair, promoArt.seventyPair].forEach((src, index) => {
+    const image = new Image();
+    image.decoding = 'async';
+    image.fetchPriority = index === 0 ? 'high' : 'auto';
+    image.src = src;
+  });
   const esc = (value = '') => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
   const mediaUrl = (url) => !url ? '/assets/logo.png' : url.startsWith('/media/') ? `https://revoltperu.shop${url}` : url;
   const photos = (product) => (product.images || []).filter(Boolean).map(mediaUrl);
