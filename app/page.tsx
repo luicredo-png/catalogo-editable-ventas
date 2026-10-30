@@ -23,7 +23,10 @@ const CLOTHING_WHATSAPP_MESSAGE =
 
 function customerSubdomain(hostname: string) {
   const host = hostname.toLowerCase().replace(/:\d+$/, "");
-  const base = host.endsWith(".xn--micatlogo-41a.shop") ? "xn--micatlogo-41a.shop" : "micatalago.shop";
+  const base = ["xn--micatlogo-41a.shop", "sitioweb.shop", "micatalago.shop"].find(
+    (candidate) => host.endsWith(`.${candidate}`),
+  );
+  if (!base) return "";
   if (!host.endsWith(`.${base}`)) return "";
   const subdomain = host.slice(0, -(base.length + 1));
   return subdomain && subdomain !== "www" && subdomain !== "creador" ? subdomain : "";
@@ -2012,11 +2015,19 @@ function ProductOrderModal({
   const clothingFallback = sizesEnabled
     ? CLOTHING_WHATSAPP_MESSAGE
     : "Hola 👋🔥 quiero pedir {producto}. ✅\nDeseo confirmar disponibilidad y realizar mi compra.\nCatálogo: {catalogo}";
-  const message = (
+  const rawMessage =
     product.whatsappMessage?.trim() ||
     store.whatsappMessage?.trim() ||
-    (template === "ropa" ? clothingFallback : fallbackMessage)
-  )
+    (template === "ropa" ? clothingFallback : fallbackMessage);
+  const messageTemplate = product.price > 0
+    ? rawMessage
+    : rawMessage
+        .replace(/(?:^|\s)(?:precio|costo|valor)\s*:?\s*(?:S\/?\.?\s*)?\{precio\}\s*[.,;:-]?/gim, "")
+        .replaceAll("{precio}", "")
+        .replace(/[ \t]+\n/g, "\n")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim();
+  const message = messageTemplate
     .replaceAll("{producto}", product.name)
     .replaceAll("{talla}", selectedSize)
     .replaceAll("{precio}", String(product.price))
