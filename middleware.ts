@@ -17,7 +17,7 @@ export async function middleware(request: NextRequest) {
   // /admin is a static client shell. Its data and every mutation remain protected
   // by /api/me and the private API middleware. Avoiding a D1 lookup while serving
   // the shell keeps the Worker below the 10 ms CPU limit.
-  const selfAuthorizedApi = pathname === '/api/me' || pathname.startsWith('/api/tenants') || pathname.startsWith('/api/site-tenants') || pathname === '/api/bootstrap-el-martillazo';
+  const selfAuthorizedApi = pathname === '/api/me' || pathname.startsWith('/api/tenants') || pathname.startsWith('/api/site-tenants');
   const privateRoute = (pathname.startsWith('/api/') && !publicRead && !selfAuthorizedApi) ||
     pathname === '/inventario' || pathname.startsWith('/inventario/') ||
     pathname === '/estudio-contable/admin' || pathname.startsWith('/estudio-contable/admin/') ||
